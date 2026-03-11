@@ -1,0 +1,157 @@
+{
+  "category_id": "OPERATIONAL",
+  "question_id": "Q6_1",
+  "question": "What are your uptime, performance, and support SLAs? What happens if you miss them?",
+  "title": "Service Level Agreements: Uptime, Performance, Support, and Remedies",
+  "bullets": [
+    "Define uptime SLA with calculation methodology, measurement window, and exclusions (e.g., scheduled maintenance)",
+    "Specify performance SLAs (latency, throughput, error rates) with measurable thresholds",
+    "Detail support SLAs (response/resolution times by severity, escalation paths)",
+    "Explain remedies for SLA breaches (service credits, termination rights, automatic vs. request-based application)"
+  ],
+  "suggested_inputs": [
+    "SLA document with definitions (outage, degradation, maintenance) and formulas",
+    "Public status page and 12–24 month incident/uptime history",
+    "Support policy with severity tiers, response/resolution SLAs, and escalation matrix",
+    "Service credit policy and examples of calculation/application"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 CP-2",
+      "NIST SP 800-53 IR-4"
+    ],
+    "iso": [
+      "ISO 27001 A.12.1",
+      "ISO 27001 A.16.1"
+    ],
+    "soc2": [
+      "CC7.3",
+      "CC7.4"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "clear_uptime_sla_with_methodology",
+        "type": "good",
+        "weight": 1.0,
+        "text": "Uptime SLA: 99.9% monthly, measured as (total minutes − downtime)/total minutes, excluding scheduled maintenance with advance notice. Definitions for outage vs. degradation are documented. Historical uptime and incidents are published on a public status page."
+      },
+      {
+        "anchor_id": "quantified_performance_and_slos",
+        "type": "good",
+        "weight": 0.95,
+        "text": "Performance SLAs/SLOs include p95 latency targets, throughput limits, and error rate thresholds with dashboards for real-time monitoring. Degraded performance is explicitly defined and tracked."
+      },
+      {
+        "anchor_id": "tiered_support_sla_with_escalation",
+        "type": "good",
+        "weight": 0.9,
+        "text": "Support tiers: Critical (≤1 hour response, 24x7), High (≤4 hours), Medium (≤1 business day), Low (≤2 business days). Clear escalation paths and on-call procedures are documented, including incident communication cadence."
+      },
+      {
+        "anchor_id": "remedies_with_credits_and_termination_rights",
+        "type": "good",
+        "weight": 0.9,
+        "text": "SLA breaches trigger service credits based on severity/duration (e.g., tiered % credits). Credits are automatically applied or available upon request. Repeated breaches grant termination rights. Post-incident RCAs and corrective actions are provided."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "sla_claims_without_full_definitions",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We offer a 99.9% uptime SLA, but definitions for downtime, degradation, and measurement methodology are not fully specified."
+      },
+      {
+        "anchor_id": "limited_performance_metrics",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We monitor performance, but do not publish concrete latency/error SLOs or dashboards for customers."
+      },
+      {
+        "anchor_id": "basic_support_without_clear_escalation",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "Support response times are defined, but escalation paths, on-call coverage, or resolution targets are not clearly documented."
+      },
+      {
+        "anchor_id": "remedies_not_well_defined",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "Service credits may be available for outages, but calculation methods and application (automatic vs. request) are unclear."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "best_effort_no_commitment",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We provide best-effort availability without formal SLAs or guarantees."
+      },
+      {
+        "anchor_id": "unrealistic_no_downtime_claim",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "We have never experienced downtime."
+      },
+      {
+        "anchor_id": "sla_without_remedies",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We offer SLAs but do not provide service credits or remedies if they are missed."
+      },
+      {
+        "anchor_id": "percentage_without_methodology",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We guarantee 99.9% uptime without defining how it is measured or calculated."
+      }
+    ]
+  },
+  "signals": {
+    "defines_sla_methodology": {
+      "keywords": [
+        "calculated",
+        "measurement",
+        "monthly",
+        "downtime",
+        "excludes maintenance"
+      ]
+    },
+    "mentions_performance_slos": {
+      "keywords": [
+        "latency",
+        "p95",
+        "throughput",
+        "error rate",
+        "slo"
+      ]
+    },
+    "mentions_support_tiers": {
+      "keywords": [
+        "critical",
+        "high",
+        "response time",
+        "escalation",
+        "on-call"
+      ]
+    },
+    "vague_or_no_commitment": {
+      "keywords": [
+        "best effort",
+        "no downtime",
+        "not defined",
+        "no credits",
+        "guarantee without details"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Provide the last 12–24 months of uptime/incident history and a link to your public status page.",
+    "Define 'outage', 'degraded performance', and 'scheduled maintenance' and how each impacts SLA calculations.",
+    "Show how service credits are calculated and whether they are applied automatically.",
+    "What is your longest outage in the past two years? Provide RCA and corrective actions.",
+    "Do you provide real-time availability dashboards and incident communications?"
+  ]
+}

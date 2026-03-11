@@ -1,0 +1,159 @@
+{
+  "category_id": "TRUST",
+  "question_id": "Q7_2",
+  "question": "What's on your product roadmap? What have you promised but not yet delivered?",
+  "title": "Roadmap Transparency, Delivery Track Record, and Vaporware Risk",
+  "bullets": [
+    "Provide a concrete roadmap with named features, scopes, and realistic timelines (quarters/releases)",
+    "Disclose delayed or slipped features with reasons and revised timelines",
+    "Show historical delivery performance (on-time %, shipped vs. planned) and evidence (release notes)",
+    "Clarify prioritization model (customer input, votes) and explicitly out-of-scope items"
+  ],
+  "suggested_inputs": [
+    "Public or NDA roadmap with timelines and statuses",
+    "Release notes/changelog for last 12–18 months",
+    "Roadmap tracking metrics (on-time delivery %, slip rates)",
+    "Customer feedback/voting mechanism documentation"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 CA-7",
+      "NIST SP 800-53 SA-10"
+    ],
+    "iso": [
+      "ISO 27001 A.14.2",
+      "ISO 27001 A.12.1"
+    ],
+    "soc2": [
+      "CC3.2",
+      "CC7.2"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "specific_roadmap_with_timelines_and_scope",
+        "type": "good",
+        "weight": 1.0,
+        "text": "Roadmap lists specific features with defined scope and timelines (e.g., Q2/Q3 releases). Items are categorized (committed vs. exploratory). Customers can view a public/NDA roadmap with status updates."
+      },
+      {
+        "anchor_id": "transparent_delays_and_rebaselining",
+        "type": "good",
+        "weight": 0.95,
+        "text": "We explicitly disclose delayed features, reasons for slippage, and revised timelines. We avoid selling features not yet shipped and differentiate clearly between GA, beta, and planned items."
+      },
+      {
+        "anchor_id": "evidence_of_delivery_track_record",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We provide historical delivery metrics (e.g., on-time % over last 12 months) with release notes showing shipped vs. planned items, including any misses and corrective actions."
+      },
+      {
+        "anchor_id": "clear_prioritization_and_out_of_scope",
+        "type": "good",
+        "weight": 0.9,
+        "text": "Roadmap prioritization incorporates customer feedback (voting/CSM inputs) and strategic goals. We explicitly state what we will not build and why, to avoid ambiguity."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "high_level_roadmap_without_dates",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We share a high-level roadmap, but timelines are vague or not tied to specific releases."
+      },
+      {
+        "anchor_id": "limited_visibility_on_delays",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We acknowledge some delays, but do not consistently publish reasons, revised timelines, or status updates."
+      },
+      {
+        "anchor_id": "insufficient_delivery_metrics",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "We provide release notes, but lack clear metrics on on-time delivery or planned vs. shipped comparisons."
+      },
+      {
+        "anchor_id": "unclear_prioritization_process",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "Customer input is considered, but the prioritization model and decision criteria are not transparent."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "everything_on_roadmap_claim",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "Everything is on the roadmap."
+      },
+      {
+        "anchor_id": "perpetual_coming_soon_statements",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "Multiple features are described as 'coming soon' or 'in the next release' without firm timelines."
+      },
+      {
+        "anchor_id": "no_roadmap_or_timeline",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We do not maintain or share a product roadmap or timelines."
+      },
+      {
+        "anchor_id": "sells_unshipped_features_as_available",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We present planned features as if they are already available or guaranteed imminently."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_roadmap_and_timelines": {
+      "keywords": [
+        "roadmap",
+        "q1",
+        "q2",
+        "timeline",
+        "release",
+        "ga",
+        "beta"
+      ]
+    },
+    "mentions_delays_and_reasons": {
+      "keywords": [
+        "delayed",
+        "slipped",
+        "rebaseline",
+        "reason",
+        "dependency"
+      ]
+    },
+    "mentions_delivery_metrics": {
+      "keywords": [
+        "on-time",
+        "delivery",
+        "release notes",
+        "shipped",
+        "planned"
+      ]
+    },
+    "vaporware_or_vague_claims": {
+      "keywords": [
+        "coming soon",
+        "in progress",
+        "next release",
+        "everything",
+        "no timeline"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Provide your public/NDA roadmap and a 12-month view of shipped vs. planned features.",
+    "What is your on-time delivery rate over the last 12 months? Provide evidence.",
+    "Which features have been 'in progress' the longest and why?",
+    "How do customers influence roadmap priorities (voting, councils, CSM input)?",
+    "What features are explicitly out of scope and will not be built?"
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "category_id": "AFEM",
+  "question_id": "Q1_2",
+  "question": "Where in the technology stack does your enforcement/detection occur? Specifically, what access methods do you cover vs. what's out of scope?",
+  "title": "Enforcement Point Coverage and Visibility Boundaries",
+  "bullets": [
+    "Identify exact enforcement/detection layers (client, network, API, application, endpoint, cloud)",
+    "Enumerate covered access methods (browser, SDKs, APIs, mobile, CLI, etc.)",
+    "Explicitly list uncovered methods and blind spots",
+    "Quantify coverage where possible and describe compensating controls"
+  ],
+  "suggested_inputs": [
+    "Architecture diagrams showing enforcement points",
+    "Coverage matrix across access methods",
+    "Logs demonstrating visibility across different entry points",
+    "Documentation of integrations (proxy, CASB, SDK, endpoint agents)"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 AC-4",
+      "NIST SP 800-53 CA-7"
+    ],
+    "iso": [
+      "ISO 27001 A.13.1",
+      "ISO 27001 A.12.4"
+    ],
+    "soc2": [
+      "CC6.6",
+      "CC7.1"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "multi_layer_coverage_with_explicit_gaps",
+        "type": "good",
+        "weight": 1.0,
+        "text": "We enforce controls at the API gateway and network proxy layers, with visibility into browser, SDK, and managed endpoint traffic. This covers approximately 75–85% of typical usage. We do not cover direct CLI (curl), unmanaged devices, or offline transfers. Customers use endpoint agents and CASB for those gaps."
+      },
+      {
+        "anchor_id": "quantified_workflow_visibility",
+        "type": "good",
+        "weight": 0.95,
+        "text": "We monitor around 70–80% of common AI workflows, including browser access, API integrations, and authenticated SDK usage. The remaining 20–30%, such as direct API calls from unmanaged environments or mobile apps, requires additional controls like device management or network enforcement."
+      },
+      {
+        "anchor_id": "detailed_access_method_matrix",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We provide a coverage matrix: browser (full visibility and prevention), API via gateway (full), SDKs (partial depending on integration), mobile apps (limited), CLI tools like curl (no coverage unless routed through proxy). Each method is clearly mapped to detection or prevention capability."
+      },
+      {
+        "anchor_id": "clear_layered_architecture_explanation",
+        "type": "good",
+        "weight": 0.9,
+        "text": "Our enforcement occurs at multiple layers: network proxy for inline prevention, API gateway for authentication and policy checks, and observability via logs. Endpoint-level and OS-level monitoring are not natively covered and require third-party integrations."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "high_level_layer_description_only",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We operate at the network and API layers, providing monitoring and some enforcement, but coverage depends on how customers deploy the solution."
+      },
+      {
+        "anchor_id": "mentions_some_methods_without_gaps",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We cover browser and API-based access to AI systems, but other access methods may not be fully supported."
+      },
+      {
+        "anchor_id": "vague_partial_coverage_statement",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "We provide broad visibility across most user interactions with AI tools, though there may be some edge cases not covered."
+      },
+      {
+        "anchor_id": "unclear_enforcement_points",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "Our system monitors activity across the stack, but enforcement points and exact coverage areas are not strictly defined."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "claims_full_coverage_all_methods",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We cover all access methods including browser, API, mobile, and command-line without any gaps."
+      },
+      {
+        "anchor_id": "dismisses_uncovered_vectors",
+        "type": "bad",
+        "weight": 0.15,
+        "text": "Most users don’t use alternative access methods like curl or mobile apps, so those are not a concern."
+      },
+      {
+        "anchor_id": "cannot_identify_gaps",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "We are not aware of any specific gaps in our coverage."
+      },
+      {
+        "anchor_id": "vague_marketing_claims",
+        "type": "bad",
+        "weight": 0.2,
+        "text": "We provide complete visibility and control across the entire AI stack."
+      }
+    ]
+  },
+  "signals": {
+    "overclaims_full_coverage": {
+      "keywords": [
+        "all access methods",
+        "no gaps",
+        "complete coverage",
+        "everything is covered"
+      ]
+    },
+    "acknowledges_gaps": {
+      "keywords": [
+        "do not cover",
+        "out of scope",
+        "requires additional controls",
+        "unmanaged devices"
+      ]
+    },
+    "mentions_specific_layers": {
+      "keywords": [
+        "api gateway",
+        "proxy",
+        "network layer",
+        "endpoint",
+        "client-side"
+      ]
+    },
+    "quantifies_coverage": {
+      "keywords": [
+        "70%",
+        "80%",
+        "coverage",
+        "percentage",
+        "typical workflows"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Create a detailed table listing all possible access methods (browser, SDK, API, CLI, mobile) and indicate whether you provide visibility, detection, or prevention for each.",
+    "What percentage of total data access or exfiltration paths do you realistically cover in a typical enterprise deployment?",
+    "If a user accesses AI systems via curl or a custom Python script from an unmanaged device, what visibility or control do you have?",
+    "Can you demonstrate coverage gaps and how you recommend customers mitigate them?"
+  ]
+}

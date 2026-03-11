@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "comprehensive_base_and_addon_breakdown",
+    "type": "good",
+    "weight": 1.0,
+    "text": "Base pricing includes a clearly enumerated set of features (core functionality, defined usage quotas, standard support). Add-ons are explicitly listed with unit pricing (e.g., per user/API call/GB) and no hidden fees."
+  },
+  {
+    "anchor_id": "transparent_overage_and_cost_formula",
+    "type": "good",
+    "weight": 0.95,
+    "text": "Overages are defined with precise formulas and thresholds (e.g., $X per 1k requests beyond quota). A total cost calculator and sample invoices are provided for common scenarios."
+  },
+  {
+    "anchor_id": "price_protection_with_caps_and_notice",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Pricing increases are contractually capped (e.g., \u2264X% annually) with Y months advance notice. Mid-term price changes are not allowed; adjustments apply only at renewal with agreed limits."
+  },
+  {
+    "anchor_id": "full_tco_disclosure_and_examples",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We disclose total cost of ownership, including implementation, migration, support tiers, data egress, and premium features. We provide a detailed example bill for a representative workload."
+  },
+  {
+    "anchor_id": "high_level_pricing_without_line_items",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We provide general pricing tiers, but detailed inclusions, add-ons, and unit pricing are not fully itemized."
+  },
+  {
+    "anchor_id": "usage_based_without_clear_metrics",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "Pricing depends on usage, but the exact metrics, thresholds, and formulas for overages are not clearly defined."
+  },
+  {
+    "anchor_id": "limited_visibility_on_extra_fees",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "Additional fees may apply (e.g., support, storage), but a complete list and costs are not transparently documented."
+  },
+  {
+    "anchor_id": "unclear_price_increase_terms",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "Price changes are possible at renewal, but caps, notice periods, and mid-contract protections are not clearly specified."
+  },
+  {
+    "anchor_id": "no_transparent_pricing_contact_sales",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "Pricing is not disclosed; customers must contact sales for details."
+  },
+  {
+    "anchor_id": "vague_usage_based_pricing",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "Pricing depends on usage without defining units, thresholds, or formulas."
+  },
+  {
+    "anchor_id": "unspecified_additional_fees",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "Additional fees may apply, but they are not listed or quantified."
+  },
+  {
+    "anchor_id": "unbounded_price_changes",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "Prices are subject to change without caps or notice periods."
+  }
+]

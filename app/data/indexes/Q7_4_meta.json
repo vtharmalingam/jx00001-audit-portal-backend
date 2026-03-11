@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "relevant_references_with_introductions",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We provide three references from customers with similar industry, scale, and regulatory requirements. Each includes named contacts (roles) and we arrange introductions with their consent for candid discussions."
+  },
+  {
+    "anchor_id": "balanced_case_studies_with_metrics",
+    "type": "good",
+    "weight": 0.95,
+    "text": "We provide detailed case studies with measurable outcomes (e.g., risk reduction, performance improvements) and openly discuss both strengths and limitations experienced by customers."
+  },
+  {
+    "anchor_id": "references_cover_security_and_support",
+    "type": "good",
+    "weight": 0.9,
+    "text": "References are prepared to discuss security posture, incidents (if any), compensating controls, and support experience including escalations and responsiveness."
+  },
+  {
+    "anchor_id": "recent_and_relevant_customer_examples",
+    "type": "good",
+    "weight": 0.9,
+    "text": "References are current (recent deployments within 12\u201318 months) and reflect similar compliance requirements (e.g., HIPAA, GDPR, FedRAMP) to ensure relevance."
+  },
+  {
+    "anchor_id": "generic_references_without_matching_profile",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We provide references, but they are not closely aligned with your industry, size, or regulatory requirements."
+  },
+  {
+    "anchor_id": "case_studies_without_direct_contacts",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We share case studies or testimonials, but do not provide direct customer contacts for verification."
+  },
+  {
+    "anchor_id": "older_or_less_relevant_references",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "References are available but from older deployments or customers with different security maturity levels."
+  },
+  {
+    "anchor_id": "limited_transparency_on_challenges",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "References highlight positive outcomes but provide limited insight into challenges, incidents, or trade-offs."
+  },
+  {
+    "anchor_id": "nda_used_to_avoid_references",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "All customers are under NDA, so we cannot provide any references."
+  },
+  {
+    "anchor_id": "no_recent_or_relevant_references",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We only provide references from older customers that do not match your use case."
+  },
+  {
+    "anchor_id": "overly_curated_positive_references",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "References are uniformly positive and appear coached, without discussion of any limitations."
+  },
+  {
+    "anchor_id": "refuses_to_share_customer_list",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "Our customer list is confidential and cannot be shared."
+  }
+]

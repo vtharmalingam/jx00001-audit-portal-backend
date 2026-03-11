@@ -1,0 +1,19 @@
+{
+  "columns": [
+    "System Name",
+    "Vendor",
+    "Approved Use Cases",
+    "Restrictions"
+  ],
+  "rows": [
+    [
+      "[Example: Meeting Tool]",
+      "[Vendor]",
+      "Internal meetings, customer calls (with disclosure)",
+      "Do not record meetings containing PHI or legal privilege"
+    ],
+    [
+      "[Add your systems]"
+    ]
+  ]
+}

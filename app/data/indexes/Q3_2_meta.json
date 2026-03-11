@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "strong_encryption_with_customer_managed_keys",
+    "type": "good",
+    "weight": 1.0,
+    "text": "Data in transit is encrypted using TLS 1.3 with certificate validation. At rest, we use AES-256-GCM. Customers can use customer-managed keys (CMK) via AWS KMS/Azure Key Vault/HashiCorp Vault, with full control over key rotation and revocation. We cannot decrypt data without customer authorization."
+  },
+  {
+    "anchor_id": "end_to_end_encryption_zero_knowledge",
+    "type": "good",
+    "weight": 0.95,
+    "text": "We support end-to-end encryption where data is encrypted client-side before transmission and only decrypted on authorized endpoints. Our architecture is zero-knowledge, meaning we cannot access plaintext data even for support operations."
+  },
+  {
+    "anchor_id": "detailed_key_lifecycle_and_access_controls",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Key management includes strict lifecycle policies: generation, rotation, revocation, and destruction. Access to keys is tightly controlled via IAM policies, with audit logging for all key usage. Customers can revoke keys at any time, rendering stored data inaccessible."
+  },
+  {
+    "anchor_id": "clear_shared_responsibility_model",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We offer both provider-managed and customer-managed key options. Responsibilities are clearly defined: provider-managed keys simplify operations, while CMKs give customers full control. All models include strong encryption and auditable access controls."
+  },
+  {
+    "anchor_id": "mentions_encryption_without_specifics",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We encrypt data in transit and at rest, but do not specify exact protocols, algorithms, or key management details."
+  },
+  {
+    "anchor_id": "provider_managed_keys_without_transparency",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We manage encryption keys on behalf of customers, but details about access, rotation, and control boundaries are not clearly defined."
+  },
+  {
+    "anchor_id": "limited_key_lifecycle_information",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We rotate encryption keys periodically, though policies and processes are not fully documented or exposed to customers."
+  },
+  {
+    "anchor_id": "unclear_decryption_access",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "Encryption is implemented, but it is not \u0938\u094d\u092a\u0937\u094d\u091f whether internal teams can access or decrypt customer data."
+  },
+  {
+    "anchor_id": "uses_marketing_term_military_grade",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We use military-grade encryption to protect all customer data."
+  },
+  {
+    "anchor_id": "vague_256_bit_encryption_claim",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We use 256-bit encryption without specifying algorithms, modes, or key management."
+  },
+  {
+    "anchor_id": "provider_controls_all_keys",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "We handle all encryption and key management so customers do not need to worry about it."
+  },
+  {
+    "anchor_id": "cannot_explain_key_management",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "We are unable to explain how encryption keys are generated, stored, or controlled."
+  }
+]

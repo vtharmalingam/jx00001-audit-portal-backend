@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "comprehensive_data_inventory_with_purpose_mapping",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We maintain a detailed data inventory listing all elements (user inputs, metadata, logs, identifiers). Each item is mapped to a specific purpose and retention period. We explicitly list data we do NOT collect and justify necessity for each collected element."
+  },
+  {
+    "anchor_id": "technical_and_contractual_purpose_controls",
+    "type": "good",
+    "weight": 0.95,
+    "text": "Purpose limitation is enforced via data tagging/classification, RBAC/ABAC policies, and policy engines that restrict access by purpose. Organizational controls (training, audits) and contractual terms (DPA) prohibit secondary use without consent."
+  },
+  {
+    "anchor_id": "ongoing_minimization_audits_and_reduction",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We conduct quarterly data minimization audits. We regularly remove unnecessary fields and reduce retention where possible. Changes are documented with impact assessments and approvals."
+  },
+  {
+    "anchor_id": "monitoring_and_prevention_of_function_creep",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We prevent function creep through change management controls, purpose-based access logs, anomaly detection for unusual data usage, and approval workflows for any new data use. All usage is auditable against declared purposes."
+  },
+  {
+    "anchor_id": "lists_some_data_without_full_inventory",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We collect certain user data and logs necessary for service operation, but a complete, auditable inventory with purpose mapping is not consistently maintained."
+  },
+  {
+    "anchor_id": "general_purpose_limitation_statement",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "Data is used only for intended purposes, though enforcement relies primarily on internal policies rather than technical controls."
+  },
+  {
+    "anchor_id": "limited_minimization_practices",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We review data collection periodically, but there is no formal cadence or documented minimization audit process."
+  },
+  {
+    "anchor_id": "unclear_third_party_and_secondary_use_controls",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "Data may be used to improve services, but controls around secondary use and third-party sharing are not clearly defined."
+  },
+  {
+    "anchor_id": "vague_necessary_data_claim",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We collect only what is necessary without specifying data elements or purposes."
+  },
+  {
+    "anchor_id": "standard_practices_without_detail",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We follow standard data collection practices without detailing what is collected or why."
+  },
+  {
+    "anchor_id": "unspecified_secondary_use",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "We may use customer data to improve our services without clearly defining scope, consent, or controls."
+  },
+  {
+    "anchor_id": "cannot_enumerate_collected_data",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "We are unable to provide a complete list of data elements we collect or how they are used."
+  }
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "tiered_support_with_24_7_critical_and_channels",
+    "type": "good",
+    "weight": 1.0,
+    "text": "Support tiers: Standard (business hours via email/portal), Premium (24/7 coverage via phone/Slack, dedicated CSM). P0 incidents receive immediate response with on-call engineers engaged. Channels and coverage are clearly defined."
+  },
+  {
+    "anchor_id": "clear_severity_definitions_and_slas",
+    "type": "good",
+    "weight": 0.95,
+    "text": "Severity levels (P0\u2013P3) are explicitly defined with response and resolution SLAs (e.g., P0 \u22641 hour response, continuous work until resolution). Ownership and decision criteria for severity are documented."
+  },
+  {
+    "anchor_id": "explicit_escalation_ladder_with_exec_access",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Escalation path includes on-call engineer \u2192 incident commander \u2192 senior engineering leadership \u2192 executive escalation (e.g., VP/CTO) for P0. Direct contact methods are provided for off-hours critical incidents."
+  },
+  {
+    "anchor_id": "measured_support_quality_and_communication",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We track MTTR by severity, CSAT/NPS, and publish incident updates via status page and dedicated channels (e.g., Slack bridge). Post-incident RCAs and regular reviews (QBRs) ensure continuous improvement."
+  },
+  {
+    "anchor_id": "basic_support_channels_without_24_7",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "Support is available via email/portal during business hours, with limited after-hours coverage for critical issues."
+  },
+  {
+    "anchor_id": "unclear_severity_and_slas",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We prioritize issues by severity, but definitions and SLAs are not consistently documented or communicated."
+  },
+  {
+    "anchor_id": "limited_escalation_visibility",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "Escalation is possible internally, but customers are not provided with a clear escalation ladder or direct contacts."
+  },
+  {
+    "anchor_id": "minimal_metrics_and_reporting",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "We track support performance internally, but do not share MTTR or customer satisfaction metrics with customers."
+  },
+  {
+    "anchor_id": "community_forum_only_support",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "Support is primarily provided via a community forum without dedicated response commitments."
+  },
+  {
+    "anchor_id": "email_only_business_hours",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "Support is limited to email during business hours, even for critical issues."
+  },
+  {
+    "anchor_id": "chatbot_replaces_human_support",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "An AI chatbot handles most support requests without escalation to human engineers."
+  },
+  {
+    "anchor_id": "no_defined_escalation_path",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "There is no clearly defined escalation process for critical incidents."
+  }
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "explicit_bypass_methods_with_detection",
+    "type": "good",
+    "weight": 1.0,
+    "text": "Top bypass methods include: direct API calls via curl or scripts, use of unmanaged devices, disabling browser extensions or agents, routing traffic outside enforced proxies, and offline data exfiltration. We detect these via anomaly detection, missing telemetry signals, device posture checks, and proxy evasion alerts. These are documented in our threat model and deployment guide."
+  },
+  {
+    "anchor_id": "quantified_detection_and_limitations",
+    "type": "good",
+    "weight": 0.95,
+    "text": "Users can bypass controls by uninstalling the agent or using alternative access paths like personal devices. We detect this with ~80\u201390% reliability using heartbeat monitoring, device compliance checks, and traffic correlation. However, sophisticated adversaries using encrypted tunnels or air-gapped methods may evade detection."
+  },
+  {
+    "anchor_id": "layered_bypass_detection_strategy",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We assume bypass attempts will occur and design layered detection: endpoint signals (agent status), network anomalies (unexpected traffic patterns), and identity-based inconsistencies. Each bypass vector is mapped to a detection mechanism with defined coverage and limitations."
+  },
+  {
+    "anchor_id": "transparent_threat_model_reference",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Our threat model explicitly lists bypass scenarios such as proxy evasion, agent tampering, and alternate API usage. For each, we define detection strategies and clearly state which scenarios are out of scope without additional controls."
+  },
+  {
+    "anchor_id": "mentions_some_bypass_without_depth",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "Users might bypass controls by using different devices or tools, and we try to monitor such behavior where possible."
+  },
+  {
+    "anchor_id": "generic_detection_claims",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We have monitoring systems in place to detect unusual activity, including potential bypass attempts."
+  },
+  {
+    "anchor_id": "limited_threat_model_visibility",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We consider bypass scenarios in our design, but details depend on customer configuration and deployment."
+  },
+  {
+    "anchor_id": "no_quantification_of_detection",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "We can detect most bypass attempts, though exact coverage and reliability are not formally measured."
+  },
+  {
+    "anchor_id": "denies_bypass_possibility",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "Our tool cannot be bypassed under any circumstances."
+  },
+  {
+    "anchor_id": "claims_no_observed_bypass",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We have never seen any bypass attempts in our system."
+  },
+  {
+    "anchor_id": "dismisses_user_behavior_risk",
+    "type": "bad",
+    "weight": 0.15,
+    "text": "Users typically don\u2019t try to bypass controls, so this is not a concern."
+  },
+  {
+    "anchor_id": "cannot_enumerate_methods",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "We are not aware of specific ways users could bypass our tool."
+  }
+]

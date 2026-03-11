@@ -1,0 +1,15 @@
+{
+  "rules": [
+    {
+      "rule_id": "preventive_without_enforcement",
+      "if": {
+        "Q1_1.claims_preventive": true,
+        "Q1_2.lists_gaps": false
+      },
+      "then": {
+        "severity": "CRITICAL",
+        "message": "Preventive claim without clear enforcement coverage"
+      }
+    }
+  ]
+}

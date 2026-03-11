@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "specific_certifications_with_scope_and_auditor",
+    "type": "good",
+    "weight": 1.0,
+    "text": "Certifications: SOC 2 Type II (Security, Availability, Confidentiality), ISO 27001. Reports are available under NDA. Scope covers our SaaS platform (API, web app, data processing). Auditor: [recognized firm]. Audit period: [dates]. Next audit scheduled: [date]."
+  },
+  {
+    "anchor_id": "explicit_tsc_and_report_access",
+    "type": "good",
+    "weight": 0.95,
+    "text": "Our SOC 2 Type II includes TSC: Security, Availability, and Confidentiality. We provide the full report under NDA, including control descriptions, tests, and results, along with a bridge letter for the current period."
+  },
+  {
+    "anchor_id": "clear_scope_exclusions_and_roadmap",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Scope exclusions are clearly documented (e.g., mobile app not in scope). We disclose these in the report and are pursuing additional coverage with expected completion timelines."
+  },
+  {
+    "anchor_id": "transparent_exceptions_and_remediation",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Any audit exceptions are disclosed with remediation plans and timelines. We track remediation to closure and provide evidence of fixes in subsequent audits."
+  },
+  {
+    "anchor_id": "mentions_certifications_without_details",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We are SOC 2 and ISO 27001 certified, but do not provide details on type, scope, audit period, or auditor."
+  },
+  {
+    "anchor_id": "limited_report_access_or_summary_only",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We can share a summary of our certifications, but full reports are not readily available or require extended processes."
+  },
+  {
+    "anchor_id": "unclear_scope_and_exclusions",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "Certifications apply to our platform broadly, though exact scope boundaries and exclusions are not clearly documented."
+  },
+  {
+    "anchor_id": "incomplete_audit_details",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "We have been audited, but details such as audit period, Trust Services Criteria, or exceptions are not clearly communicated."
+  },
+  {
+    "anchor_id": "vague_soc2_claim_without_type",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We are SOC 2 compliant without specifying Type I or Type II or providing evidence."
+  },
+  {
+    "anchor_id": "working_toward_certification_only",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "We are currently working toward certification but do not yet hold it."
+  },
+  {
+    "anchor_id": "non_standard_certification_language",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We are certified secure without referencing any recognized standards or audits."
+  },
+  {
+    "anchor_id": "cannot_provide_reports",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "We cannot provide certification reports or audit evidence."
+  }
+]

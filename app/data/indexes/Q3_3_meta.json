@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "granular_retention_and_deletion_policy",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We define retention by data type: raw inputs (30 days), logs (90 days), backups (30\u201360 days). Deletion includes immediate soft delete, followed by hard delete and cryptographic erasure via key destruction. Policies are documented and configurable."
+  },
+  {
+    "anchor_id": "end_to_end_deletion_across_systems",
+    "type": "good",
+    "weight": 0.95,
+    "text": "Deletion propagates across all systems: production databases, caches, logs, analytics pipelines, and backups. We track deletion status to ensure no residual data remains beyond defined retention windows."
+  },
+  {
+    "anchor_id": "verifiable_proof_of_deletion",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We provide proof of deletion through immutable audit logs, deletion certificates, and optional third-party attestations. Cryptographic erasure ensures data cannot be reconstructed once keys are destroyed."
+  },
+  {
+    "anchor_id": "customer_configurable_and_gdpr_aligned",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Customers can configure retention periods and request immediate deletion. Our processes are aligned with GDPR Article 17 (Right to Erasure), including handling of backups and derived data."
+  },
+  {
+    "anchor_id": "general_retention_without_granularity",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We retain data for a defined period, but retention is not clearly broken down by data type or system."
+  },
+  {
+    "anchor_id": "basic_deletion_process_without_propagation",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We delete data upon request, but details on how deletion propagates across backups and logs are limited."
+  },
+  {
+    "anchor_id": "limited_proof_of_deletion",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We maintain internal logs for deletion, but do not provide formal certificates or third-party verification."
+  },
+  {
+    "anchor_id": "unclear_backup_handling",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "Backups are retained for operational purposes, but selective deletion or overwrite timelines are not clearly defined."
+  },
+  {
+    "anchor_id": "vague_standard_retention_policy",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We follow standard retention policies without specifying durations or data categories."
+  },
+  {
+    "anchor_id": "deletion_on_cancellation_without_detail",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "Data is deleted when the customer cancels, without explaining how or providing proof."
+  },
+  {
+    "anchor_id": "indefinite_anonymized_retention",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "We retain anonymized data indefinitely for product improvement without clarifying re-identification risks."
+  },
+  {
+    "anchor_id": "long_term_backup_without_selective_deletion",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "Backups are retained for several years and cannot be selectively deleted."
+  }
+]

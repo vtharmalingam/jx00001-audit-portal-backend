@@ -1,0 +1,26 @@
+{
+  "columns": [
+    "Group",
+    "Total Applicants",
+    "Selected by AI",
+    "Selection Rate"
+  ],
+  "rows": [
+    [
+      "Male",
+      "%"
+    ],
+    [
+      "Female",
+      "%"
+    ],
+    [
+      "Non-binary / Other",
+      "%"
+    ],
+    [
+      "Unknown",
+      "%"
+    ]
+  ]
+}

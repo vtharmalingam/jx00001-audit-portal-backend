@@ -1,0 +1,12 @@
+ai_assessment:
+  # 
+  data_dir: "/app/app/data/questions"
+  indexes_dir: "/app/app/data/indexes"
+  llm: qwen2.5:latest
+  embedding:
+    collection_name: "docling_rag_9779f7ae79ed15ae"
+    model_name: "BAAI/bge-base-en-v1.5"
+    normalize: true
+    show_progress: false
+  s3:
+    bucket: "audit-system-data"

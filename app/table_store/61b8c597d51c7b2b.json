@@ -1,0 +1,30 @@
+{
+  "columns": [
+    "Evidence Item",
+    "Points",
+    "Have It?",
+    "Score"
+  ],
+  "rows": [
+    [
+      "⚠ Month 1 bias testing report",
+      "12",
+      "☐ Yes ☐ No"
+    ],
+    [
+      "⚠ Month 2 bias testing report",
+      "13",
+      "☐ Yes ☐ No"
+    ],
+    [
+      "⚠ Month 3 bias testing report",
+      "13",
+      "☐ Yes ☐ No"
+    ],
+    [
+      "Bias testing passed all 3 months",
+      "12",
+      "☐ Yes ☐ No"
+    ]
+  ]
+}

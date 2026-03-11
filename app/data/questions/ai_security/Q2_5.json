@@ -1,0 +1,155 @@
+{
+  "category_id": "AI_SECURITY",
+  "question_id": "Q2_5",
+  "question": "How do you test for and mitigate bias in your AI outputs? What content moderation controls do you have?",
+  "title": "Bias Detection, Fairness Assurance, and Content Moderation Controls",
+  "bullets": [
+    "Describe bias testing methodologies (frameworks, datasets, protected attributes, evaluation metrics)",
+    "Provide measurable outcomes (disparity metrics, error rates across groups) and auditability",
+    "Explain mitigation strategies (rebalancing, debiasing, post-processing, human review)",
+    "Detail content moderation controls across input and output (policy filters, classifiers, escalation workflows)"
+  ],
+  "suggested_inputs": [
+    "Bias and fairness audit reports (e.g., Fairlearn, AIF360 outputs)",
+    "Documentation of evaluation datasets and protected attributes",
+    "Content moderation policy and rule sets",
+    "Logs showing moderation decisions and escalation cases"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST AI RMF 1.3",
+      "NIST SP 800-53 IA-2"
+    ],
+    "iso": [
+      "ISO 27001 A.18.1",
+      "ISO 27001 A.14.2"
+    ],
+    "soc2": [
+      "CC7.2",
+      "CC8.1"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "formal_bias_testing_with_metrics",
+        "type": "good",
+        "weight": 1.0,
+        "text": "We use established frameworks such as Fairlearn and AI Fairness 360 to evaluate bias across protected attributes (e.g., gender, ethnicity). We report disparity metrics (e.g., equal opportunity difference, demographic parity) and track them over time with documented evaluation datasets."
+      },
+      {
+        "anchor_id": "regular_audits_and_transparent_disclosure",
+        "type": "good",
+        "weight": 0.95,
+        "text": "We conduct periodic fairness audits across multiple dimensions (demographic, linguistic, regional). Known biases are documented and disclosed, with mitigation plans. Independent audit reports are available for customer review."
+      },
+      {
+        "anchor_id": "multi_layer_mitigation_and_monitoring",
+        "type": "good",
+        "weight": 0.9,
+        "text": "Bias mitigation includes data balancing, adversarial debiasing, and post-processing adjustments. We also monitor outputs in production for drift and emerging bias patterns, with alerting and retraining workflows."
+      },
+      {
+        "anchor_id": "comprehensive_content_moderation_controls",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We enforce content moderation through input and output filtering, classification models, and rule-based policies covering hate speech, violence, sexual content, and regulated advice. High-risk outputs trigger human review and escalation workflows."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "mentions_bias_testing_without_depth",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We test for bias in our models, but specific methodologies and metrics are not consistently documented."
+      },
+      {
+        "anchor_id": "basic_content_filtering",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We apply basic content filtering to reduce harmful outputs, though coverage across categories may be limited."
+      },
+      {
+        "anchor_id": "limited_audit_visibility",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "We perform internal reviews for fairness, but results and reports are not always shared externally."
+      },
+      {
+        "anchor_id": "unclear_mitigation_process",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "We attempt to mitigate bias during model development, but there is no clearly defined ongoing monitoring or correction process."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "claims_no_bias",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "Our AI is unbiased and does not produce discriminatory outputs."
+      },
+      {
+        "anchor_id": "dismisses_bias_due_to_no_demographics",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We do not collect demographic data, so bias is not a concern."
+      },
+      {
+        "anchor_id": "shifts_responsibility_to_users",
+        "type": "bad",
+        "weight": 0.15,
+        "text": "Users are responsible for interpreting outputs and identifying any bias."
+      },
+      {
+        "anchor_id": "no_testing_or_documentation",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "We do not perform formal bias testing or maintain documentation on fairness or moderation."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_fairness_frameworks": {
+      "keywords": [
+        "fairlearn",
+        "aif360",
+        "bias testing",
+        "fairness metrics",
+        "disparity"
+      ]
+    },
+    "provides_metrics": {
+      "keywords": [
+        "demographic parity",
+        "equal opportunity",
+        "false positive rate",
+        "disparity",
+        "evaluation dataset"
+      ]
+    },
+    "mentions_content_moderation": {
+      "keywords": [
+        "moderation",
+        "filtering",
+        "hate speech",
+        "violence",
+        "regulated advice"
+      ]
+    },
+    "denies_bias": {
+      "keywords": [
+        "no bias",
+        "unbiased",
+        "not a concern",
+        "users responsibility"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Provide your bias testing report, including datasets, protected attributes, and fairness metrics tracked.",
+    "What actions are taken if the model generates discriminatory or harmful content in production?",
+    "Do you enforce moderation across categories like hate speech, violence, sexual content, and regulated advice (medical, legal, financial)?",
+    "Can customers audit your bias testing methodology and review independent audit results?"
+  ]
+}

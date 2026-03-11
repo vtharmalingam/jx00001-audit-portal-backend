@@ -1,0 +1,157 @@
+{
+  "category_id": "SUPPLY_CHAIN",
+  "question_id": "Q4_1",
+  "question": "What is your software development lifecycle? How do you ensure dependencies haven't been compromised?",
+  "title": "Secure SDLC, Dependency Integrity, and Software Supply Chain Security",
+  "bullets": [
+    "Describe SDLC stages with embedded security gates (design reviews, threat modeling, code scanning, approvals)",
+    "Explain dependency management (SBOM generation, version pinning, signature verification, vulnerability scanning)",
+    "Detail build pipeline security (isolated builds, signed artifacts, provenance/attestation, access controls)",
+    "Provide incident response examples for supply chain vulnerabilities (e.g., Log4Shell, XZ Utils)"
+  ],
+  "suggested_inputs": [
+    "SDLC documentation with security checkpoints and approval gates",
+    "SBOM (SPDX/CycloneDX) for current release",
+    "Dependency scanning reports (e.g., Snyk, Dependabot, OSS Index)",
+    "Build pipeline architecture and artifact signing/provenance documentation"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 SA-11",
+      "NIST SP 800-53 RA-5"
+    ],
+    "iso": [
+      "ISO 27001 A.14.2",
+      "ISO 27001 A.12.6"
+    ],
+    "soc2": [
+      "CC7.1",
+      "CC8.1"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "secure_sdlc_with_defined_security_gates",
+        "type": "good",
+        "weight": 1.0,
+        "text": "Our SDLC includes defined stages (design, development, testing, release) with mandatory security gates such as threat modeling, SAST/DAST scans, peer reviews, and approval workflows before deployment."
+      },
+      {
+        "anchor_id": "comprehensive_dependency_management_and_sbom",
+        "type": "good",
+        "weight": 0.95,
+        "text": "We maintain an SBOM (SPDX/CycloneDX) for every release. Dependencies are version-pinned, verified via signatures, and continuously scanned (e.g., Snyk/Dependabot). Vulnerabilities are tracked with defined SLAs."
+      },
+      {
+        "anchor_id": "hardened_build_pipeline_and_artifact_signing",
+        "type": "good",
+        "weight": 0.9,
+        "text": "Build pipelines are isolated and auditable. We sign artifacts, enforce provenance attestation (e.g., SLSA Level 2/3), and maintain reproducible builds to ensure integrity."
+      },
+      {
+        "anchor_id": "proven_incident_response_to_supply_chain_threats",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We actively monitor supply chain threats and have documented responses (e.g., Log4Shell, XZ Utils). We assess impact, patch within defined timelines, and notify customers with mitigation steps."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "mentions_secure_sdlc_without_detail",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We follow secure development practices, but specific stages, controls, or enforcement mechanisms are not clearly defined."
+      },
+      {
+        "anchor_id": "basic_dependency_updates_without_controls",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We regularly update dependencies, but lack formal processes such as SBOM tracking, signature verification, or strict version pinning."
+      },
+      {
+        "anchor_id": "limited_visibility_into_build_security",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "We have a CI/CD pipeline, but details on isolation, artifact signing, or provenance are not fully documented."
+      },
+      {
+        "anchor_id": "unclear_vulnerability_response_process",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "We address vulnerabilities as they arise, but do not provide clear SLAs or documented response procedures."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "vague_secure_development_claim",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We use secure development practices without providing specifics."
+      },
+      {
+        "anchor_id": "dependency_updates_without_validation",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We regularly update dependencies without formal validation or tracking mechanisms."
+      },
+      {
+        "anchor_id": "no_sbom_or_dependency_tracking",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We do not maintain an SBOM or track dependencies at a detailed level."
+      },
+      {
+        "anchor_id": "no_supply_chain_visibility",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We do not monitor or manage supply chain risks in our software development process."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_sdlc_and_security_gates": {
+      "keywords": [
+        "sdlc",
+        "threat modeling",
+        "code review",
+        "sast",
+        "dast"
+      ]
+    },
+    "mentions_sbom_and_dependency_tools": {
+      "keywords": [
+        "sbom",
+        "spdx",
+        "cyclonedx",
+        "snyk",
+        "dependabot"
+      ]
+    },
+    "mentions_build_security_and_slsa": {
+      "keywords": [
+        "slsa",
+        "artifact signing",
+        "provenance",
+        "reproducible",
+        "pipeline"
+      ]
+    },
+    "weak_or_missing_supply_chain_controls": {
+      "keywords": [
+        "secure practices",
+        "regular updates",
+        "not tracked",
+        "no sbom",
+        "no detail"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Provide your SBOM for the current release in SPDX or CycloneDX format.",
+    "Show evidence of dependency scanning tools and define your vulnerability remediation SLAs.",
+    "How did you respond to major supply chain incidents (e.g., Log4Shell, XZ Utils)?",
+    "What is your process when a critical dependency vulnerability is discovered? Timeline for patching and customer notification?",
+    "Do you follow the SLSA framework? What level have you achieved?"
+  ]
+}

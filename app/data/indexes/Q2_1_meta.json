@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "layered_defense_with_testing_and_limits",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We implement defense-in-depth: input sanitization and validation, model-level guardrails, output filtering, and behavioral monitoring. We regularly test against prompt injection, jailbreak, and adversarial scenarios (including OWASP LLM Top 10). Known bypasses are documented, and we continuously update controls through red teaming and bug bounty programs."
+  },
+  {
+    "anchor_id": "explicit_multi_layer_architecture_with_metrics",
+    "type": "good",
+    "weight": 0.95,
+    "text": "Our approach includes Layer 1: input validation (pattern and semantic checks), Layer 2: model guardrails (system prompts and policy tuning), Layer 3: output filtering (toxicity and policy checks), Layer 4: monitoring and alerting. We track effectiveness via detection rates and false positive metrics, typically achieving 85\u201395% coverage for known attack patterns."
+  },
+  {
+    "anchor_id": "real_time_detection_and_response",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We detect prompt injection attempts in real time using pattern recognition, context analysis, and anomaly detection. Suspicious inputs trigger blocking or sanitization, and alerts are generated for further investigation. Controls are updated frequently as new attack techniques emerge."
+  },
+  {
+    "anchor_id": "transparent_limitations_and_update_process",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We acknowledge that no system is fully immune to prompt injection or jailbreaking. We maintain a documented list of known bypass techniques and update defenses within defined SLAs when new vulnerabilities are disclosed. Customers are advised on compensating controls."
+  },
+  {
+    "anchor_id": "mentions_basic_filtering_without_depth",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We use input and output filtering to reduce the risk of prompt injection and unsafe responses."
+  },
+  {
+    "anchor_id": "generic_guardrails_claim",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We apply safety guardrails within the model to prevent misuse, though specific techniques are not detailed."
+  },
+  {
+    "anchor_id": "limited_testing_visibility",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We test our system against some adversarial scenarios, but coverage and methodology may vary."
+  },
+  {
+    "anchor_id": "no_clear_update_process",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "We update our defenses periodically, though there is no defined response timeline for new attack methods."
+  },
+  {
+    "anchor_id": "denies_jailbreak_possibility",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "Our AI cannot be jailbroken or manipulated \u0628\u0623\u064a \u0634\u0643\u0644."
+  },
+  {
+    "anchor_id": "vague_use_of_latest_models",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We use the latest safety models, so prompt injection is not a concern."
+  },
+  {
+    "anchor_id": "dismisses_threat",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "Prompt injection is not a real threat in practical deployments."
+  },
+  {
+    "anchor_id": "no_testing_or_validation",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We do not perform specific testing for prompt injection or adversarial inputs."
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "columns": [
+    "Evidence Item",
+    "Points",
+    "Have It?",
+    "Score"
+  ],
+  "rows": [
+    [
+      "AI incident response playbook",
+      "15",
+      "☐ Yes ☐ No"
+    ],
+    [
+      "Incident logging system",
+      "8",
+      "☐ Yes ☐ No"
+    ],
+    [
+      "Tabletop exercise conducted (Unacceptable Risk only)",
+      "7",
+      "☐ Yes ☐ No"
+    ]
+  ]
+}

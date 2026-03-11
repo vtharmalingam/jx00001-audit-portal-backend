@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "layered_extraction_defense_with_detection",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We implement layered controls including rate limiting (e.g., X requests per minute), query pattern analysis to detect systematic probing, output variability/randomization for similar inputs, and watermarking. Extraction attempts are detected via behavioral analytics, abnormal query distribution, and repeated structured probing patterns."
+  },
+  {
+    "anchor_id": "explicit_risk_acknowledgment_and_controls",
+    "type": "good",
+    "weight": 0.95,
+    "text": "We explicitly acknowledge model extraction risk. Mitigations include API throttling, anomaly detection for bulk and patterned queries, monitoring for membership inference and model inversion attempts, and enforcement of usage policies through access controls and terms of service."
+  },
+  {
+    "anchor_id": "detection_with_response_workflow",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We detect extraction attempts using query clustering, entropy analysis, and rate anomalies. When detected, we trigger automated throttling, session blocking, and alerting to security teams, followed by investigation and potential account suspension."
+  },
+  {
+    "anchor_id": "combination_of_prevention_and_monitoring",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Our approach combines preventive controls (rate limiting, access restrictions) with continuous monitoring for adversarial patterns. We recognize that no single control is sufficient and rely on defense-in-depth to reduce extraction risk."
+  },
+  {
+    "anchor_id": "rate_limiting_focus_only",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We use rate limiting to control the number of queries and reduce the risk of model extraction."
+  },
+  {
+    "anchor_id": "generic_monitoring_claim",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We monitor usage patterns and look for unusual activity that may indicate abuse."
+  },
+  {
+    "anchor_id": "limited_awareness_of_attack_types",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We are aware of potential risks like excessive querying but do not specifically address advanced attacks like model inversion or membership inference."
+  },
+  {
+    "anchor_id": "unclear_response_mechanism",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "If suspicious activity is detected, we may take action, though response processes are not clearly defined."
+  },
+  {
+    "anchor_id": "vague_model_protection_claim",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "Our model is protected from extraction without needing additional controls."
+  },
+  {
+    "anchor_id": "underestimates_threat",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "No one is likely to attempt to steal or reverse-engineer our model."
+  },
+  {
+    "anchor_id": "single_control_dependency",
+    "type": "bad",
+    "weight": 0.15,
+    "text": "Rate limiting alone is sufficient to prevent any model extraction attempts."
+  },
+  {
+    "anchor_id": "no_detection_or_monitoring",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "We do not monitor for model extraction attempts or adversarial query behavior."
+  }
+]

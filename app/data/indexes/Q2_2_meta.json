@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "clear_training_sources_and_no_customer_data",
+    "type": "good",
+    "weight": 1.0,
+    "text": "Training data includes curated public datasets, licensed data, and synthetic data. No customer data is used in base model training. Fine-tuning on customer data is strictly opt-in, isolated per tenant, encrypted, and deleted per policy. Full data provenance documentation is available."
+  },
+  {
+    "anchor_id": "foundation_model_with_audited_finetuning",
+    "type": "good",
+    "weight": 0.95,
+    "text": "We use a specific foundation model with a controlled fine-tuning layer. All training datasets are audited for bias, toxicity, copyright, and PII/PHI exposure. Customers can review audit reports and validate compliance."
+  },
+  {
+    "anchor_id": "strong_isolation_and_no_leakage_guarantee",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Customer data used for fine-tuning is logically and cryptographically isolated per tenant. It is never mixed across customers, and model updates are scoped to that tenant. We provide guarantees and technical controls to prevent cross-customer data leakage."
+  },
+  {
+    "anchor_id": "transparent_data_usage_policy_and_controls",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We maintain a transparent policy: customer data is never used for model improvement unless explicitly opted in. Customers can audit usage, control retention, and request deletion. Data lineage is traceable for all datasets used in training."
+  },
+  {
+    "anchor_id": "mentions_public_and_proprietary_without_detail",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We use a mix of public and proprietary datasets for training, but specific sources and lineage details are not fully disclosed."
+  },
+  {
+    "anchor_id": "limited_visibility_into_finetuning_controls",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "Customer data may be used for improving the model, but isolation and usage policies depend on configuration and are not always clearly defined."
+  },
+  {
+    "anchor_id": "generic_audit_claims",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We review training data for quality and compliance, though detailed audit reports are not always available to customers."
+  },
+  {
+    "anchor_id": "unclear_opt_in_policy",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "Customer data may be used to enhance services, but opt-in and opt-out mechanisms are not explicitly defined."
+  },
+  {
+    "anchor_id": "vague_industry_standard_data",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We use industry-standard training data without specifying sources or controls."
+  },
+  {
+    "anchor_id": "internet_scraping_admission",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "We trained our models by scraping large amounts of data from the internet."
+  },
+  {
+    "anchor_id": "proprietary_data_no_transparency",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "Our training data is proprietary, and we cannot disclose details about it."
+  },
+  {
+    "anchor_id": "cannot_explain_data_lineage",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "We are not able to explain where our training data comes from or how it is managed."
+  }
+]

@@ -1,0 +1,5 @@
+{
+  "category_id": "AI_SECURITY",
+  "display_name": "AI-Specific Security Risks",
+  "description": "Assess prompt injection, adversarial risks, and model security."
+}

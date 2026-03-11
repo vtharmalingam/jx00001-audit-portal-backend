@@ -1,0 +1,24 @@
+{
+  "columns": [
+    "Sys tem Na me",
+    "Ve nd or",
+    "Pri mar y Fun ctio n",
+    "Depart ment(s ) Using",
+    "Data Proc esse d",
+    "Risk Tier",
+    "Deplo yment Date",
+    "Sys tem Ow ner",
+    "Last Revi ewe d"
+  ],
+  "rows": [
+    [
+      "☐ Min ☐ Ltd ☐ Hig h ☐ Una ccep t"
+    ],
+    [
+      "☐ Min ☐ Ltd ☐"
+    ],
+    [
+      "Hig h ☐"
+    ]
+  ]
+}

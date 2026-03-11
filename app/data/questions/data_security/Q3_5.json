@@ -1,0 +1,157 @@
+{
+  "category_id": "DATA_SECURITY",
+  "question_id": "Q3_5",
+  "question": "Do you share our data with third parties? Who are your sub-processors? Where are they located?",
+  "title": "Third-Party Data Sharing, Sub-processor Transparency, and Jurisdictional Control",
+  "bullets": [
+    "Provide a complete and current list of sub-processors with name, purpose, data accessed, and geographic location",
+    "Explain data sharing boundaries (what data is shared, under what conditions, and for which services)",
+    "Describe contractual and technical controls (DPAs, SCCs, encryption, least-privilege access) ensuring equivalent protections",
+    "Detail governance for onboarding/changes (due diligence, risk assessments, customer notification/opt-out)"
+  ],
+  "suggested_inputs": [
+    "Sub-processor registry (URL or document) with version history",
+    "Data Processing Agreements (DPAs) and Standard Contractual Clauses (SCCs)",
+    "Third-party risk assessment and due diligence reports",
+    "Access logs and diagrams showing data flows to each sub-processor"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 SA-9",
+      "NIST SP 800-53 AC-20"
+    ],
+    "iso": [
+      "ISO 27001 A.15.1",
+      "ISO 27001 A.13.2"
+    ],
+    "soc2": [
+      "CC9.2",
+      "CC6.6"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "complete_subprocessor_list_with_details",
+        "type": "good",
+        "weight": 1.0,
+        "text": "We maintain a complete, public sub-processor list including company name, service (e.g., hosting, logging), specific data accessed, and geographic location. The list is versioned and updated within 30 days of any change."
+      },
+      {
+        "anchor_id": "strict_contractual_and_technical_controls",
+        "type": "good",
+        "weight": 0.95,
+        "text": "All sub-processors are bound by DPAs with equivalent protections (including SCCs where applicable). Data is shared on a least-privilege basis, encrypted in transit/at rest, and access is audited. We can provide DPA summaries and evidence of controls."
+      },
+      {
+        "anchor_id": "clear_scope_of_sharing_and_jurisdiction_control",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We share data only with specific providers (e.g., cloud hosting, monitoring). Data residency is enforced so processing remains within selected regions/jurisdictions. Cross-border transfers are controlled and documented."
+      },
+      {
+        "anchor_id": "governance_and_customer_notification",
+        "type": "good",
+        "weight": 0.9,
+        "text": "New sub-processors undergo formal due diligence (security, privacy, legal). Customers are notified in advance with an objection window. We support alternatives (e.g., regional/on-prem options) where feasible."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "partial_list_without_full_details",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We use several third-party providers and can share a list on request, but details on data accessed, locations, or update cadence are limited."
+      },
+      {
+        "anchor_id": "general_partner_security_claims",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "Our partners meet high security standards, though specific contractual controls and verification processes are not fully disclosed."
+      },
+      {
+        "anchor_id": "unclear_data_sharing_scope",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "Data may be shared with service providers for operations, but the exact scope, categories of data, and purposes are not clearly defined."
+      },
+      {
+        "anchor_id": "limited_change_notification_process",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "We may update sub-processors over time, but customer notification timelines and objection rights are not clearly specified."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "vague_industry_partners_statement",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We use industry-standard partners without listing who they are or what they do."
+      },
+      {
+        "anchor_id": "cannot_disclose_partners",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We cannot disclose our partners for competitive reasons."
+      },
+      {
+        "anchor_id": "claims_no_third_parties_but_uses_cloud",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "We do not use third parties, despite relying on cloud providers for hosting and operations."
+      },
+      {
+        "anchor_id": "assumes_partner_security_without_evidence",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "Our partners are secure, but we do not provide evidence of due diligence or contractual protections."
+      }
+    ]
+  },
+  "signals": {
+    "provides_subprocessor_details": {
+      "keywords": [
+        "sub-processor",
+        "list",
+        "location",
+        "purpose",
+        "registry"
+      ]
+    },
+    "mentions_dpa_and_scc": {
+      "keywords": [
+        "dpa",
+        "data processing agreement",
+        "scc",
+        "standard contractual clauses",
+        "contractual controls"
+      ]
+    },
+    "mentions_residency_and_transfer_controls": {
+      "keywords": [
+        "data residency",
+        "region",
+        "jurisdiction",
+        "cross-border",
+        "transfer"
+      ]
+    },
+    "vague_or_non_disclosure": {
+      "keywords": [
+        "industry standard partners",
+        "cannot disclose",
+        "not applicable",
+        "no third parties",
+        "trust us"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Provide a complete sub-processor list including company name, service provided, data accessed, and geographic location.",
+    "Share DPA details for each sub-processor—are protections equivalent to our contract with you?",
+    "Describe your due diligence and risk assessment process before onboarding a new sub-processor.",
+    "If a sub-processor experiences a breach, what is your notification timeline and containment process?",
+    "Can we restrict specific sub-processors or require regional/on-prem alternatives?"
+  ]
+}

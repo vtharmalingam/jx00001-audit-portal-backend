@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "full_data_and_config_export_non_proprietary",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We provide full export of all customer assets via API and UI: raw data, configurations, models, workflows, and audit logs. Exports are in standard, machine-readable formats (JSON/CSV/SQL) with documented schemas. No proprietary lock-in."
+  },
+  {
+    "anchor_id": "comprehensive_migration_support_and_examples",
+    "type": "good",
+    "weight": 0.95,
+    "text": "We offer migration tooling, documentation, and hands-on assistance. Typical migrations complete within defined timelines based on data size. We can provide references of past migrations (including to competitors) and lessons learned."
+  },
+  {
+    "anchor_id": "clear_limitations_and_no_hidden_fees",
+    "type": "good",
+    "weight": 0.9,
+    "text": "All export capabilities and any limitations are transparently documented. There are no additional fees for standard data export. Any non-exportable items (if any) are minimal and clearly justified."
+  },
+  {
+    "anchor_id": "api_first_portability_and_continuous_access",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Data portability is API-first with bulk export and pagination support, enabling continuous access and incremental migration. Customers can run parallel systems during transition without disruption."
+  },
+  {
+    "anchor_id": "partial_export_capabilities",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We support export of core data, but configurations, models, or logs may have limited or manual export options."
+  },
+  {
+    "anchor_id": "formats_not_fully_standardized",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "Exports are available, but formats may include some proprietary structures or lack full schema documentation."
+  },
+  {
+    "anchor_id": "limited_migration_support",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We provide basic documentation for migration, but limited hands-on support or tooling."
+  },
+  {
+    "anchor_id": "unclear_scope_of_export",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "It is not clearly defined whether all components (e.g., audit logs, workflows, models) are exportable."
+  },
+  {
+    "anchor_id": "defensive_response_on_exit",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "Why would you want to leave our platform?"
+  },
+  {
+    "anchor_id": "migration_complex_by_design",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "Migration is complex and typically requires significant effort without clear tooling or support."
+  },
+  {
+    "anchor_id": "export_for_additional_fee",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "Data export is available but requires additional fees or premium support."
+  },
+  {
+    "anchor_id": "no_customer_exit_history",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "No customers have ever left our platform."
+  }
+]

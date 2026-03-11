@@ -1,0 +1,155 @@
+{
+  "category_id": "AFEM",
+  "question_id": "Q1_4",
+  "question": "What deployment models do you support: SaaS, on-premise, hybrid? Where does our data go in each model?",
+  "title": "Deployment Models and Data Residency Transparency",
+  "bullets": [
+    "List all supported deployment models (SaaS, on-premise, hybrid) with clear definitions",
+    "Explain end-to-end data flow for each model, including storage, processing, and transit",
+    "Specify data residency options (regions, customer control, regulatory alignment)",
+    "Clarify differences in control, responsibility, and risk across deployment models"
+  ],
+  "suggested_inputs": [
+    "Architecture diagrams for SaaS, on-premise, and hybrid deployments",
+    "Data flow diagrams with classification (PII, logs, metadata)",
+    "Region and data residency documentation",
+    "Customer deployment references or case studies"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 SC-4",
+      "NIST SP 800-53 SA-9"
+    ],
+    "iso": [
+      "ISO 27001 A.13.2",
+      "ISO 27001 A.18.1"
+    ],
+    "soc2": [
+      "CC6.7",
+      "CC8.1"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "multi_model_with_detailed_data_flow",
+        "type": "good",
+        "weight": 1.0,
+        "text": "We support SaaS, on-premise, and hybrid deployments. In SaaS, data is processed in customer-selected regions with strict residency controls. In on-premise, all sensitive data remains within the customer environment, with optional metadata sent for analytics. Hybrid allows policy enforcement on-prem while aggregated telemetry is processed in the cloud. We provide detailed diagrams for each model."
+      },
+      {
+        "anchor_id": "saas_with_residency_and_region_control",
+        "type": "good",
+        "weight": 0.95,
+        "text": "We offer SaaS deployment with region-specific processing and storage. Customers can select regions (e.g., EU, US, APAC), and data never leaves the chosen boundary. We provide data residency guarantees aligned with GDPR and similar regulations."
+      },
+      {
+        "anchor_id": "explicit_regulatory_alignment_guidance",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We guide customers based on regulatory needs: for GDPR, we recommend EU-hosted SaaS or on-premise; for highly regulated environments, on-premise ensures full control. Each model includes documented data flows and control boundaries."
+      },
+      {
+        "anchor_id": "transparent_hybrid_data_split",
+        "type": "good",
+        "weight": 0.9,
+        "text": "In our hybrid model, sensitive payload data remains on-premise, while anonymized metadata and policy logs are sent to the cloud for analytics. Customers can configure what data is shared and retain full control over sensitive information."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "lists_models_without_data_flow_detail",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We support SaaS and on-premise deployments, but the exact data flow depends on the configuration and customer setup."
+      },
+      {
+        "anchor_id": "saas_only_with_limited_residency_info",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We are primarily SaaS-based and store data in our cloud environment, with some regional options available."
+      },
+      {
+        "anchor_id": "unclear_hybrid_definition",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "We offer hybrid deployments, though the split between on-premise and cloud processing may vary and is not strictly defined."
+      },
+      {
+        "anchor_id": "generic_data_handling_statement",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "Customer data is handled securely across all deployment models, but specific data flow details are not always documented."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "saas_only_no_residency_explanation",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We are SaaS-only and do not provide details on data residency or regional control."
+      },
+      {
+        "anchor_id": "fixed_us_data_location",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "All customer data is stored and processed in the US regardless of customer location."
+      },
+      {
+        "anchor_id": "cannot_explain_data_flow",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We cannot clearly describe how data flows across different deployment models."
+      },
+      {
+        "anchor_id": "claims_on_prem_without_real_usage",
+        "type": "bad",
+        "weight": 0.15,
+        "text": "We support on-premise deployments, but we do not have active customers using this model."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_data_residency": {
+      "keywords": [
+        "data residency",
+        "region",
+        "gdpr",
+        "data stays",
+        "geographic boundary"
+      ]
+    },
+    "explains_data_flow": {
+      "keywords": [
+        "data flow",
+        "processed",
+        "stored",
+        "transit",
+        "architecture diagram"
+      ]
+    },
+    "lacks_residency_detail": {
+      "keywords": [
+        "saas only",
+        "no region option",
+        "default location",
+        "not configurable"
+      ]
+    },
+    "acknowledges_model_differences": {
+      "keywords": [
+        "on-premise",
+        "hybrid",
+        "saas",
+        "deployment model",
+        "control boundary"
+      ]
+    }
+  },
+  "follow_ups": [
+    "For SaaS: Which cloud providers and regions are supported? Can customers explicitly select and restrict regions?",
+    "For on-premise: What is the deployment complexity and how many customers are actively using this model?",
+    "For hybrid: What specific data remains on-premise versus sent to the cloud? Can customers configure this boundary?",
+    "Provide architecture diagrams for each deployment model with data classification (PII, metadata, logs) clearly mapped."
+  ]
+}

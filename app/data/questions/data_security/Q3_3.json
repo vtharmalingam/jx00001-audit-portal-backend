@@ -1,0 +1,157 @@
+{
+  "category_id": "DATA_SECURITY",
+  "question_id": "Q3_3",
+  "question": "How long do you retain our data? What is your data deletion process? How do you prove deletion?",
+  "title": "Data Retention Policies, Deletion Mechanisms, and Proof of Erasure",
+  "bullets": [
+    "Define retention periods by data type (raw data, logs, backups, analytics, metadata)",
+    "Describe deletion workflow (soft delete, hard delete, cryptographic erasure, key destruction)",
+    "Explain how deletion propagates across all systems (production, caches, backups, logs, partners)",
+    "Provide verifiable proof of deletion (audit logs, certificates, attestations)"
+  ],
+  "suggested_inputs": [
+    "Data retention policy documentation by data category",
+    "Deletion workflow diagrams across system components",
+    "Sample deletion certificates or audit logs",
+    "Backup retention and overwrite policy documentation"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 MP-6",
+      "NIST SP 800-53 SI-12"
+    ],
+    "iso": [
+      "ISO 27001 A.18.1",
+      "ISO 27001 A.11.2"
+    ],
+    "soc2": [
+      "CC8.1",
+      "CC7.2"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "granular_retention_and_deletion_policy",
+        "type": "good",
+        "weight": 1.0,
+        "text": "We define retention by data type: raw inputs (30 days), logs (90 days), backups (30–60 days). Deletion includes immediate soft delete, followed by hard delete and cryptographic erasure via key destruction. Policies are documented and configurable."
+      },
+      {
+        "anchor_id": "end_to_end_deletion_across_systems",
+        "type": "good",
+        "weight": 0.95,
+        "text": "Deletion propagates across all systems: production databases, caches, logs, analytics pipelines, and backups. We track deletion status to ensure no residual data remains beyond defined retention windows."
+      },
+      {
+        "anchor_id": "verifiable_proof_of_deletion",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We provide proof of deletion through immutable audit logs, deletion certificates, and optional third-party attestations. Cryptographic erasure ensures data cannot be reconstructed once keys are destroyed."
+      },
+      {
+        "anchor_id": "customer_configurable_and_gdpr_aligned",
+        "type": "good",
+        "weight": 0.9,
+        "text": "Customers can configure retention periods and request immediate deletion. Our processes are aligned with GDPR Article 17 (Right to Erasure), including handling of backups and derived data."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "general_retention_without_granularity",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We retain data for a defined period, but retention is not clearly broken down by data type or system."
+      },
+      {
+        "anchor_id": "basic_deletion_process_without_propagation",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We delete data upon request, but details on how deletion propagates across backups and logs are limited."
+      },
+      {
+        "anchor_id": "limited_proof_of_deletion",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "We maintain internal logs for deletion, but do not provide formal certificates or third-party verification."
+      },
+      {
+        "anchor_id": "unclear_backup_handling",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "Backups are retained for operational purposes, but selective deletion or overwrite timelines are not clearly defined."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "vague_standard_retention_policy",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We follow standard retention policies without specifying durations or data categories."
+      },
+      {
+        "anchor_id": "deletion_on_cancellation_without_detail",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "Data is deleted when the customer cancels, without explaining how or providing proof."
+      },
+      {
+        "anchor_id": "indefinite_anonymized_retention",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "We retain anonymized data indefinitely for product improvement without clarifying re-identification risks."
+      },
+      {
+        "anchor_id": "long_term_backup_without_selective_deletion",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "Backups are retained for several years and cannot be selectively deleted."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_retention_periods": {
+      "keywords": [
+        "retention",
+        "days",
+        "policy",
+        "lifecycle",
+        "duration"
+      ]
+    },
+    "mentions_deletion_methods": {
+      "keywords": [
+        "soft delete",
+        "hard delete",
+        "cryptographic erasure",
+        "key destruction",
+        "overwrite"
+      ]
+    },
+    "mentions_proof": {
+      "keywords": [
+        "audit log",
+        "deletion certificate",
+        "attestation",
+        "evidence",
+        "verification"
+      ]
+    },
+    "vague_or_non_compliant": {
+      "keywords": [
+        "standard policy",
+        "deleted on request",
+        "indefinite",
+        "not possible",
+        "no proof"
+      ]
+    }
+  },
+  "follow_ups": [
+    "If we delete data today, explain how deletion propagates across production systems, caches, backups, logs, and partner systems.",
+    "Provide a sample deletion certificate or audit log proving data erasure.",
+    "How do you handle deletion in immutable backup systems where selective removal is not possible?",
+    "What metadata or derived data persists after deletion (e.g., logs, analytics)?",
+    "Can you guarantee compliance with GDPR Article 17 (Right to Erasure) across all systems?"
+  ]
+}

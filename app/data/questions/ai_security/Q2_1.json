@@ -1,0 +1,155 @@
+{
+  "category_id": "AI_SECURITY",
+  "question_id": "Q2_1",
+  "question": "How do you protect against prompt injection attacks, jailbreaking, and adversarial inputs designed to bypass safety controls?",
+  "title": "Prompt Injection, Jailbreaking, and Adversarial Input Defense",
+  "bullets": [
+    "Describe defense-in-depth controls across input validation, model guardrails, output filtering, and monitoring",
+    "Explain how prompt injection and jailbreak attempts are detected and mitigated in real-time",
+    "Provide details of testing strategies (red teaming, adversarial simulations, OWASP LLM Top 10)",
+    "Acknowledge known limitations and response mechanisms for emerging attack techniques"
+  ],
+  "suggested_inputs": [
+    "Red team or adversarial testing reports",
+    "Prompt filtering and validation rules documentation",
+    "Monitoring and alerting logs for injection attempts",
+    "Evidence of participation in OWASP LLM Top 10 or bug bounty programs"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST AI RMF 1.2",
+      "NIST SP 800-53 SI-10"
+    ],
+    "iso": [
+      "ISO 27001 A.14.2",
+      "ISO 27001 A.12.6"
+    ],
+    "soc2": [
+      "CC7.1",
+      "CC7.2"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "layered_defense_with_testing_and_limits",
+        "type": "good",
+        "weight": 1.0,
+        "text": "We implement defense-in-depth: input sanitization and validation, model-level guardrails, output filtering, and behavioral monitoring. We regularly test against prompt injection, jailbreak, and adversarial scenarios (including OWASP LLM Top 10). Known bypasses are documented, and we continuously update controls through red teaming and bug bounty programs."
+      },
+      {
+        "anchor_id": "explicit_multi_layer_architecture_with_metrics",
+        "type": "good",
+        "weight": 0.95,
+        "text": "Our approach includes Layer 1: input validation (pattern and semantic checks), Layer 2: model guardrails (system prompts and policy tuning), Layer 3: output filtering (toxicity and policy checks), Layer 4: monitoring and alerting. We track effectiveness via detection rates and false positive metrics, typically achieving 85–95% coverage for known attack patterns."
+      },
+      {
+        "anchor_id": "real_time_detection_and_response",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We detect prompt injection attempts in real time using pattern recognition, context analysis, and anomaly detection. Suspicious inputs trigger blocking or sanitization, and alerts are generated for further investigation. Controls are updated frequently as new attack techniques emerge."
+      },
+      {
+        "anchor_id": "transparent_limitations_and_update_process",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We acknowledge that no system is fully immune to prompt injection or jailbreaking. We maintain a documented list of known bypass techniques and update defenses within defined SLAs when new vulnerabilities are disclosed. Customers are advised on compensating controls."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "mentions_basic_filtering_without_depth",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We use input and output filtering to reduce the risk of prompt injection and unsafe responses."
+      },
+      {
+        "anchor_id": "generic_guardrails_claim",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We apply safety guardrails within the model to prevent misuse, though specific techniques are not detailed."
+      },
+      {
+        "anchor_id": "limited_testing_visibility",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "We test our system against some adversarial scenarios, but coverage and methodology may vary."
+      },
+      {
+        "anchor_id": "no_clear_update_process",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "We update our defenses periodically, though there is no defined response timeline for new attack methods."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "denies_jailbreak_possibility",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "Our AI cannot be jailbroken or manipulated بأي شكل."
+      },
+      {
+        "anchor_id": "vague_use_of_latest_models",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We use the latest safety models, so prompt injection is not a concern."
+      },
+      {
+        "anchor_id": "dismisses_threat",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "Prompt injection is not a real threat in practical deployments."
+      },
+      {
+        "anchor_id": "no_testing_or_validation",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We do not perform specific testing for prompt injection or adversarial inputs."
+      }
+    ]
+  },
+  "signals": {
+    "denies_risk": {
+      "keywords": [
+        "cannot be jailbroken",
+        "fully secure",
+        "no risk",
+        "impossible to bypass"
+      ]
+    },
+    "mentions_layers": {
+      "keywords": [
+        "layer",
+        "defense in depth",
+        "guardrails",
+        "multi-layer",
+        "input validation"
+      ]
+    },
+    "mentions_testing": {
+      "keywords": [
+        "red team",
+        "owasp",
+        "testing",
+        "adversarial",
+        "simulation"
+      ]
+    },
+    "acknowledges_limitations": {
+      "keywords": [
+        "limitations",
+        "known bypass",
+        "not immune",
+        "evolving threats",
+        "update controls"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Can we test now? I will attempt prompt injection attacks—show how your system detects or blocks them.",
+    "What happens if I include instructions like 'ignore previous instructions' or encode malicious payloads?",
+    "How frequently are your prompt injection defenses updated, and what is your response SLA for new attack techniques?",
+    "Do you participate in OWASP LLM Top 10 evaluations or external red teaming? Provide results."
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "columns": [
+    "Knowle dge Source",
+    "Owner",
+    "Rights/Li cense",
+    "Sensitiv e Data?",
+    "Last Upda ted",
+    "Review Frequen cy"
+  ],
+  "rows": [
+    [
+      "Product manual v2.3",
+      "Compa ny",
+      "Own",
+      "No",
+      "2025- 01-15",
+      "Quarterly"
+    ],
+    [
+      "Custom er support tickets",
+      "Custom ers",
+      "Consent obtained?",
+      "Yes (PII, emails)",
+      "Real- time sync",
+      "Monthly audit"
+    ],
+    [
+      "Compet itor website scrape",
+      "Compe titor X",
+      "None",
+      "No",
+      "2024- 12-01",
+      "VIOLAT ION - Remove"
+    ]
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "columns": [
+    "Dat e",
+    "Candidate/C ase ID",
+    "AI Recommenda tion",
+    "Huma n Decisi on",
+    "Overri de Reaso n",
+    "Review er Name"
+  ],
+  "rows": []
+}

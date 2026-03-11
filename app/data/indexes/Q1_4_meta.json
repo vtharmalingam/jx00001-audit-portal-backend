@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "multi_model_with_detailed_data_flow",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We support SaaS, on-premise, and hybrid deployments. In SaaS, data is processed in customer-selected regions with strict residency controls. In on-premise, all sensitive data remains within the customer environment, with optional metadata sent for analytics. Hybrid allows policy enforcement on-prem while aggregated telemetry is processed in the cloud. We provide detailed diagrams for each model."
+  },
+  {
+    "anchor_id": "saas_with_residency_and_region_control",
+    "type": "good",
+    "weight": 0.95,
+    "text": "We offer SaaS deployment with region-specific processing and storage. Customers can select regions (e.g., EU, US, APAC), and data never leaves the chosen boundary. We provide data residency guarantees aligned with GDPR and similar regulations."
+  },
+  {
+    "anchor_id": "explicit_regulatory_alignment_guidance",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We guide customers based on regulatory needs: for GDPR, we recommend EU-hosted SaaS or on-premise; for highly regulated environments, on-premise ensures full control. Each model includes documented data flows and control boundaries."
+  },
+  {
+    "anchor_id": "transparent_hybrid_data_split",
+    "type": "good",
+    "weight": 0.9,
+    "text": "In our hybrid model, sensitive payload data remains on-premise, while anonymized metadata and policy logs are sent to the cloud for analytics. Customers can configure what data is shared and retain full control over sensitive information."
+  },
+  {
+    "anchor_id": "lists_models_without_data_flow_detail",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We support SaaS and on-premise deployments, but the exact data flow depends on the configuration and customer setup."
+  },
+  {
+    "anchor_id": "saas_only_with_limited_residency_info",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We are primarily SaaS-based and store data in our cloud environment, with some regional options available."
+  },
+  {
+    "anchor_id": "unclear_hybrid_definition",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We offer hybrid deployments, though the split between on-premise and cloud processing may vary and is not strictly defined."
+  },
+  {
+    "anchor_id": "generic_data_handling_statement",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "Customer data is handled securely across all deployment models, but specific data flow details are not always documented."
+  },
+  {
+    "anchor_id": "saas_only_no_residency_explanation",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We are SaaS-only and do not provide details on data residency or regional control."
+  },
+  {
+    "anchor_id": "fixed_us_data_location",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "All customer data is stored and processed in the US regardless of customer location."
+  },
+  {
+    "anchor_id": "cannot_explain_data_flow",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "We cannot clearly describe how data flows across different deployment models."
+  },
+  {
+    "anchor_id": "claims_on_prem_without_real_usage",
+    "type": "bad",
+    "weight": 0.15,
+    "text": "We support on-premise deployments, but we do not have active customers using this model."
+  }
+]

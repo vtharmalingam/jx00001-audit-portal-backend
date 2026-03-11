@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "multi_layer_coverage_with_explicit_gaps",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We enforce controls at the API gateway and network proxy layers, with visibility into browser, SDK, and managed endpoint traffic. This covers approximately 75\u201385% of typical usage. We do not cover direct CLI (curl), unmanaged devices, or offline transfers. Customers use endpoint agents and CASB for those gaps."
+  },
+  {
+    "anchor_id": "quantified_workflow_visibility",
+    "type": "good",
+    "weight": 0.95,
+    "text": "We monitor around 70\u201380% of common AI workflows, including browser access, API integrations, and authenticated SDK usage. The remaining 20\u201330%, such as direct API calls from unmanaged environments or mobile apps, requires additional controls like device management or network enforcement."
+  },
+  {
+    "anchor_id": "detailed_access_method_matrix",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We provide a coverage matrix: browser (full visibility and prevention), API via gateway (full), SDKs (partial depending on integration), mobile apps (limited), CLI tools like curl (no coverage unless routed through proxy). Each method is clearly mapped to detection or prevention capability."
+  },
+  {
+    "anchor_id": "clear_layered_architecture_explanation",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Our enforcement occurs at multiple layers: network proxy for inline prevention, API gateway for authentication and policy checks, and observability via logs. Endpoint-level and OS-level monitoring are not natively covered and require third-party integrations."
+  },
+  {
+    "anchor_id": "high_level_layer_description_only",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We operate at the network and API layers, providing monitoring and some enforcement, but coverage depends on how customers deploy the solution."
+  },
+  {
+    "anchor_id": "mentions_some_methods_without_gaps",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We cover browser and API-based access to AI systems, but other access methods may not be fully supported."
+  },
+  {
+    "anchor_id": "vague_partial_coverage_statement",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We provide broad visibility across most user interactions with AI tools, though there may be some edge cases not covered."
+  },
+  {
+    "anchor_id": "unclear_enforcement_points",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "Our system monitors activity across the stack, but enforcement points and exact coverage areas are not strictly defined."
+  },
+  {
+    "anchor_id": "claims_full_coverage_all_methods",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We cover all access methods including browser, API, mobile, and command-line without any gaps."
+  },
+  {
+    "anchor_id": "dismisses_uncovered_vectors",
+    "type": "bad",
+    "weight": 0.15,
+    "text": "Most users don\u2019t use alternative access methods like curl or mobile apps, so those are not a concern."
+  },
+  {
+    "anchor_id": "cannot_identify_gaps",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "We are not aware of any specific gaps in our coverage."
+  },
+  {
+    "anchor_id": "vague_marketing_claims",
+    "type": "bad",
+    "weight": 0.2,
+    "text": "We provide complete visibility and control across the entire AI stack."
+  }
+]

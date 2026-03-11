@@ -1,0 +1,160 @@
+{
+  "category_id": "SUPPLY_CHAIN",
+  "question_id": "Q4_3",
+  "question": "How many of your employees have access to production systems? What insider threat controls do you have?",
+  "title": "Production Access Control, Insider Threat Mitigation, and Privileged Access Governance",
+  "bullets": [
+    "Quantify and justify production access (named roles/individuals, least privilege, separation of duties)",
+    "Describe access model (zero standing access/JIT, break-glass procedures, approval workflows)",
+    "Detail authentication and session controls (MFA with hardware tokens, session recording, command logging)",
+    "Explain insider threat detection (behavioral analytics, anomaly detection) and auditability (immutable logs, periodic reviews)"
+  ],
+  "suggested_inputs": [
+    "Privileged Access Management (PAM) policy and role matrix",
+    "List of roles with production access and justification (anonymized if needed)",
+    "Access logs and audit trail samples (last 90 days)",
+    "Insider threat monitoring reports and background check policy"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 AC-6",
+      "NIST SP 800-53 IA-2",
+      "NIST SP 800-53 AU-12"
+    ],
+    "iso": [
+      "ISO 27001 A.9.2",
+      "ISO 27001 A.12.4",
+      "ISO 27001 A.7.1"
+    ],
+    "soc2": [
+      "CC6.1",
+      "CC6.2",
+      "CC7.2"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "quantified_access_with_least_privilege",
+        "type": "good",
+        "weight": 1.0,
+        "text": "Production access is limited to a small, defined set of roles/individuals with clear justification. Access follows least privilege and separation of duties, with periodic reviews and removal of unused privileges."
+      },
+      {
+        "anchor_id": "jit_access_and_break_glass_controls",
+        "type": "good",
+        "weight": 0.95,
+        "text": "We use zero standing access (Just-In-Time). Break-glass access requires dual authorization, is time-limited, fully logged, and reviewed post-use by security."
+      },
+      {
+        "anchor_id": "strong_authentication_and_session_controls",
+        "type": "good",
+        "weight": 0.9,
+        "text": "All privileged access requires MFA with hardware tokens. Sessions are recorded with command-level logging, and all actions are captured in immutable audit logs."
+      },
+      {
+        "anchor_id": "insider_threat_detection_and_auditability",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We implement behavioral analytics and anomaly detection for insider threats. Access is continuously monitored, with alerts for unusual activity and regular audits. Background checks are mandatory for privileged roles."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "limited_visibility_on_access_numbers",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We restrict production access to authorized personnel, but do not provide specific numbers or detailed role-based breakdowns."
+      },
+      {
+        "anchor_id": "basic_mfa_without_advanced_controls",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "MFA is enforced, but hardware tokens, session recording, or detailed command logging may not be consistently applied."
+      },
+      {
+        "anchor_id": "manual_or_inconsistent_access_reviews",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "Access reviews are performed periodically, but processes may be manual or inconsistently enforced."
+      },
+      {
+        "anchor_id": "limited_insider_threat_monitoring",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "We monitor access logs, but lack advanced behavioral analytics or real-time anomaly detection."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "vague_authorized_personnel",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "Only authorized personnel have access."
+      },
+      {
+        "anchor_id": "broad_engineer_access",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "All engineers have production access for agility."
+      },
+      {
+        "anchor_id": "nda_as_primary_control",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "Employees sign NDAs to protect data."
+      },
+      {
+        "anchor_id": "no_specific_access_controls",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We cannot provide details on who has access or how it is controlled."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_least_privilege_and_jit": {
+      "keywords": [
+        "least privilege",
+        "jit",
+        "just in time",
+        "break glass",
+        "dual approval"
+      ]
+    },
+    "mentions_mfa_and_session_controls": {
+      "keywords": [
+        "mfa",
+        "hardware token",
+        "session recording",
+        "audit log",
+        "command logging"
+      ]
+    },
+    "mentions_insider_threat_detection": {
+      "keywords": [
+        "behavioral",
+        "anomaly",
+        "monitoring",
+        "alerts",
+        "audit"
+      ]
+    },
+    "weak_access_controls": {
+      "keywords": [
+        "authorized personnel",
+        "all engineers",
+        "nda",
+        "no detail",
+        "unknown"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Provide a list of roles (or anonymized individuals) with production access, their permissions, and justification.",
+    "Do you implement Just-In-Time access? Describe the break-glass process and approval workflow.",
+    "Can you provide audit logs showing who accessed our data in the last 90 days?",
+    "How do you detect insider threats (behavioral analytics, anomaly detection)?",
+    "What is your background check process for employees with privileged access?"
+  ]
+}

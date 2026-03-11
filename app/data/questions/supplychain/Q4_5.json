@@ -1,0 +1,161 @@
+{
+  "category_id": "SUPPLY_CHAIN",
+  "question_id": "Q4_5",
+  "question": "Have you ever had a security incident? Walk me through your incident response process.",
+  "title": "Incident History Transparency, Response Capability, and Continuous Improvement",
+  "bullets": [
+    "Disclose incident history (including minor/near-miss events) with timelines and impact",
+    "Describe incident response lifecycle (detect, triage, contain, eradicate, recover, post-incident review)",
+    "Provide metrics and SLAs (MTTD, MTTR, customer notification timelines, severity classification)",
+    "Demonstrate readiness (tabletop exercises, IR retainer, playbooks) and lessons learned with concrete improvements"
+  ],
+  "suggested_inputs": [
+    "Incident response (IR) playbook/runbooks with severity definitions and escalation criteria",
+    "Post-incident reports (RCA) and improvement actions",
+    "Metrics dashboard (MTTD/MTTR by severity, last 12–24 months)",
+    "Evidence of tabletop exercises and third-party IR retainer details"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 IR-4",
+      "NIST SP 800-53 IR-5",
+      "NIST SP 800-53 IR-8"
+    ],
+    "iso": [
+      "ISO 27001 A.16.1",
+      "ISO 27001 A.12.4"
+    ],
+    "soc2": [
+      "CC7.4",
+      "CC7.2"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "honest_incident_history_and_near_misses",
+        "type": "good",
+        "weight": 1.0,
+        "text": "We transparently disclose incident history (including minor incidents and near-misses) with timelines, scope, and customer impact, along with what was learned."
+      },
+      {
+        "anchor_id": "structured_ir_process_with_slas_and_metrics",
+        "type": "good",
+        "weight": 0.95,
+        "text": "Our IR process follows a defined lifecycle (detect, triage, contain, eradicate, recover) with SLAs and metrics such as MTTD/MTTR by severity, and clear customer notification timelines."
+      },
+      {
+        "anchor_id": "documented_playbooks_exercises_and_ir_retainer",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We maintain detailed IR playbooks and run quarterly tabletop exercises. We have a 24/7 IR contact and a third-party incident response retainer for major events."
+      },
+      {
+        "anchor_id": "post_incident_rca_and_continuous_improvement",
+        "type": "good",
+        "weight": 0.9,
+        "text": "Each incident results in a root cause analysis (RCA), corrective actions, and tracked improvements. We can show how controls were strengthened based on past events and threat intelligence."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "no_major_incidents_but_basic_ir_plan",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We report no major incidents and have an IR plan, but provide limited detail on metrics, exercises, or real-world handling."
+      },
+      {
+        "anchor_id": "ir_process_without_metrics_or_slas",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We describe the incident response steps, but do not provide clear SLAs, MTTD/MTTR metrics, or notification timelines."
+      },
+      {
+        "anchor_id": "limited_transparency_on_history",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "We acknowledge incidents in general terms, but avoid specifics on impact, timelines, or lessons learned."
+      },
+      {
+        "anchor_id": "infrequent_testing_or_no_external_support",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "We have an IR plan but do not regularly test it or lack a third-party IR retainer."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "claims_no_incidents_ever",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We have never had a security incident."
+      },
+      {
+        "anchor_id": "refuses_to_discuss_incidents",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We cannot discuss incidents for legal reasons."
+      },
+      {
+        "anchor_id": "dismisses_incidents_as_irrelevant",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "Nothing worth mentioning."
+      },
+      {
+        "anchor_id": "defensive_or_evasive_response",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "Responds defensively or avoids providing details about incident handling."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_ir_lifecycle_and_metrics": {
+      "keywords": [
+        "detect",
+        "triage",
+        "contain",
+        "eradicate",
+        "recover",
+        "mttd",
+        "mttr"
+      ]
+    },
+    "mentions_notification_and_slas": {
+      "keywords": [
+        "notification",
+        "sla",
+        "timeline",
+        "severity",
+        "escalation"
+      ]
+    },
+    "mentions_exercises_and_rca": {
+      "keywords": [
+        "tabletop",
+        "exercise",
+        "rca",
+        "postmortem",
+        "lessons learned"
+      ]
+    },
+    "denial_or_evasion": {
+      "keywords": [
+        "never",
+        "cannot discuss",
+        "nothing",
+        "confidential",
+        "not applicable"
+      ]
+    }
+  },
+  "follow_ups": [
+    "What are your MTTD and MTTR by severity over the last 12 months?",
+    "Who is the 24/7 incident response contact and escalation chain?",
+    "Provide your IR playbook and define escalation criteria for P0/P1 incidents.",
+    "What is your customer notification SLA for security incidents?",
+    "Describe a recent incident or near-miss and the improvements made afterward.",
+    "What threat intelligence-driven improvements have you implemented in the last 12 months?"
+  ]
+}

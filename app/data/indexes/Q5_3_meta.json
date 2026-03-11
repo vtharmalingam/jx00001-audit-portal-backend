@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "comprehensive_dsar_api_and_slas",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We provide APIs and a customer portal for DSARs: access (export via API within defined SLA), rectification (self-service or ticketed update), erasure (verified deletion across systems within SLA), and portability (machine-readable formats like JSON/CSV). Full documentation and SLAs are published."
+  },
+  {
+    "anchor_id": "end_to_end_workflow_with_audit_trail",
+    "type": "good",
+    "weight": 0.95,
+    "text": "End-to-end DSAR workflow includes intake, identity verification, scoping across systems, execution, and confirmation. All requests are logged with immutable audit trails, timestamps, and outcomes for compliance audits."
+  },
+  {
+    "anchor_id": "strong_identity_verification_and_controls",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We enforce robust identity verification (multi-factor verification, token-based validation) before fulfilling requests. Access is restricted via RBAC/ABAC and approvals for sensitive operations."
+  },
+  {
+    "anchor_id": "assistance_for_customer_end_users",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We support our customers in handling their end-users\u2019 requests, including tooling, guidance, and operational support. We can pause processing and enforce restriction/objection requests where applicable."
+  },
+  {
+    "anchor_id": "support_based_dsar_handling",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "Data subject requests are handled via support tickets, with general timelines but limited automation or APIs."
+  },
+  {
+    "anchor_id": "limited_portability_or_format",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We can provide data exports, but formats or schemas may not be standardized or fully machine-readable."
+  },
+  {
+    "anchor_id": "basic_logging_without_full_auditability",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We keep internal records of requests, but audit trails are not comprehensive or easily accessible to customers."
+  },
+  {
+    "anchor_id": "unclear_verification_and_slas",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "We process requests, but identity verification methods and SLAs are not clearly defined or documented."
+  },
+  {
+    "anchor_id": "support_only_no_process",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "Users should contact support for data requests without defined processes, SLAs, or tooling."
+  },
+  {
+    "anchor_id": "denies_responsibility_for_end_users",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "We do not interact with end-users, so data subject rights are not our responsibility."
+  },
+  {
+    "anchor_id": "shifts_full_responsibility_to_customer",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "Handling data subject rights is entirely the customer\u2019s responsibility."
+  },
+  {
+    "anchor_id": "cannot_explain_rights_fulfillment",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "We cannot clearly explain how access, deletion, or portability requests are fulfilled."
+  }
+]

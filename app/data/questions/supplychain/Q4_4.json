@@ -1,0 +1,158 @@
+{
+  "category_id": "SUPPLY_CHAIN",
+  "question_id": "Q4_4",
+  "question": "What is your financial runway? What happens to our data if your company is acquired or goes out of business?",
+  "title": "Financial Stability, Exit Scenarios, and Data Protection Guarantees",
+  "bullets": [
+    "Disclose financial health (runway, burn rate, revenue, funding/profitability) with concrete metrics",
+    "Define contractual protections for acquisition scenarios (notification, continuity of terms, data handling equivalence)",
+    "Detail bankruptcy/cessation plans (data return/deletion timelines, escrow arrangements, transition support)",
+    "Explain data portability guarantees (formats, access methods, timelines) and customer transition support"
+  ],
+  "suggested_inputs": [
+    "Summary of financial metrics (runway, funding, revenue mix) under NDA",
+    "MSA/DPA clauses covering acquisition, bankruptcy, and data handling",
+    "Source code escrow agreement (provider, triggers, scope)",
+    "Data export procedures and sample exports (formats, completeness)"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 CP-2",
+      "NIST SP 800-53 SA-4"
+    ],
+    "iso": [
+      "ISO 27001 A.17.1",
+      "ISO 27001 A.15.1"
+    ],
+    "soc2": [
+      "CC3.2",
+      "CC8.1"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "specific_financial_metrics_and_runway",
+        "type": "good",
+        "weight": 1.0,
+        "text": "We provide concrete financial metrics (runway in months/years, burn rate, revenue/profitability). Information is shared under NDA to support enterprise due diligence."
+      },
+      {
+        "anchor_id": "contractual_protections_for_acquisition",
+        "type": "good",
+        "weight": 0.95,
+        "text": "Contracts define acquisition scenarios: customer notification, continuity of service and terms, and equivalent or stronger data protection obligations for any successor entity."
+      },
+      {
+        "anchor_id": "bankruptcy_plan_with_escrow_and_data_return",
+        "type": "good",
+        "weight": 0.9,
+        "text": "In bankruptcy/cessation, we provide documented procedures: source code escrow (with defined release triggers), data export in standard formats, and deletion within a defined timeframe, with transition support (e.g., 60–90 days)."
+      },
+      {
+        "anchor_id": "guaranteed_data_portability_and_transition_support",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We guarantee full data portability (raw data, configurations, logs) via API/UI in standard formats (JSON/CSV/SQL), with documented timelines and assistance for migration during exit scenarios."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "general_financial_assurance_without_detail",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We indicate financial stability or funding, but do not provide specific runway, burn rate, or revenue metrics."
+      },
+      {
+        "anchor_id": "high_level_exit_terms_without_clarity",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "Contracts mention continuity and data handling in acquisition/bankruptcy, but lack detailed procedures, timelines, or enforcement clarity."
+      },
+      {
+        "anchor_id": "limited_or_optional_escrow",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "Source code escrow is available optionally or partially defined, with unclear triggers or scope."
+      },
+      {
+        "anchor_id": "data_export_without_full_guarantees",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "Data export is supported, but completeness (e.g., configurations, logs) or timelines for access during shutdown are not fully guaranteed."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "vague_well_funded_claim",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We are well-funded."
+      },
+      {
+        "anchor_id": "dismisses_exit_risk",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "That scenario will not happen."
+      },
+      {
+        "anchor_id": "refuses_financial_transparency",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "Financial information is confidential and cannot be shared even under NDA."
+      },
+      {
+        "anchor_id": "no_documented_exit_or_data_protection_plan",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We do not have documented procedures for acquisition or shutdown scenarios."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_financial_metrics": {
+      "keywords": [
+        "runway",
+        "burn rate",
+        "revenue",
+        "profitability",
+        "funding"
+      ]
+    },
+    "mentions_contractual_protections": {
+      "keywords": [
+        "msa",
+        "dpa",
+        "acquisition",
+        "continuity",
+        "notification"
+      ]
+    },
+    "mentions_escrow_and_exit_plans": {
+      "keywords": [
+        "escrow",
+        "bankruptcy",
+        "shutdown",
+        "release trigger",
+        "transition"
+      ]
+    },
+    "weak_or_evasive_financial_answers": {
+      "keywords": [
+        "well funded",
+        "confidential",
+        "won't happen",
+        "not applicable",
+        "no details"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Provide financial runway (months) and key metrics under NDA (burn rate, revenue, funding).",
+    "Share the contract clauses covering acquisition and bankruptcy scenarios (notification, continuity, data handling).",
+    "Is source code escrowed? With which provider, and what are the release triggers and scope?",
+    "If you shut down tomorrow, how do we retrieve our data (formats, completeness, timelines)?",
+    "What transition support do you provide (duration, assistance) during exit scenarios?",
+    "What is your customer concentration risk (top 3 customers as % of revenue)?"
+  ]
+}

@@ -1,0 +1,68 @@
+[
+  {
+    "anchor_id": "clear_control_classification_with_mechanism",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We explicitly provide preventive controls via inline API interception and policy enforcement, blocking unauthorized actions before execution. We also generate logs for audit. For full coverage, integration with identity and endpoint controls is required."
+  },
+  {
+    "anchor_id": "honest_detective_positioning",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We are a detective control. We monitor and alert on violations using event logs and anomaly detection but do not block actions. Prevention requires integration with gateways or endpoint enforcement tools."
+  },
+  {
+    "anchor_id": "layered_control_explanation",
+    "type": "good",
+    "weight": 0.95,
+    "text": "Our platform provides both preventive and detective capabilities. Prevention is enforced through policy checks at request time via proxy, while detection is handled through continuous monitoring and alerting pipelines. Observability is also provided via dashboards."
+  },
+  {
+    "anchor_id": "explicit_limitations_and_dependencies",
+    "type": "good",
+    "weight": 0.85,
+    "text": "We provide observability and partial detection. We do not natively block actions. Customers typically combine our tool with CASB or API gateways to achieve prevention."
+  },
+  {
+    "anchor_id": "unclear_control_scope",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We provide security controls across detection and prevention, but specifics depend on deployment and configuration."
+  },
+  {
+    "anchor_id": "limited_mechanism_explanation",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We can detect and sometimes prevent issues depending on the use case, but enforcement points are not clearly defined."
+  },
+  {
+    "anchor_id": "overlapping_terms_without_precision",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "Our tool supports prevention and detection, though these capabilities may overlap and are not strictly separated."
+  },
+  {
+    "anchor_id": "overpromise_full_prevention",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We prevent all security violations across all scenarios."
+  },
+  {
+    "anchor_id": "misunderstanding_control_types",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "Detection and prevention are essentially the same thing in our system."
+  },
+  {
+    "anchor_id": "claims_all_without_explanation",
+    "type": "bad",
+    "weight": 0.2,
+    "text": "We are preventive, detective, and observability\u2014all in one\u2014without needing any additional controls."
+  },
+  {
+    "anchor_id": "vague_no_technical_detail",
+    "type": "bad",
+    "weight": 0.15,
+    "text": "We provide complete security coverage but cannot go into technical details."
+  }
+]

@@ -1,0 +1,39 @@
+{
+  "columns": [
+    "Role",
+    "Name",
+    "Phone",
+    "Email",
+    "Escalation Time"
+  ],
+  "rows": [
+    [
+      "AI Governance Committee Chair",
+      "[Name]",
+      "[Phone]",
+      "[Email]",
+      "Immediate"
+    ],
+    [
+      "General Counsel",
+      "[Name]",
+      "[Phone]",
+      "[Email]",
+      "Within 1 hour"
+    ],
+    [
+      "Compliance Officer",
+      "[Name]",
+      "[Phone]",
+      "[Email]",
+      "Within 1 hour"
+    ],
+    [
+      "CISO / IT Security",
+      "[Name]",
+      "[Phone]",
+      "[Email]",
+      "Immediate"
+    ]
+  ]
+}

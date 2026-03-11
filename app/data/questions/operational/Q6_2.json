@@ -1,0 +1,158 @@
+{
+  "category_id": "OPERATIONAL",
+  "question_id": "Q6_2",
+  "question": "What is your RTO and RPO? How do you ensure business continuity during disasters?",
+  "title": "Business Continuity, Disaster Recovery Objectives (RTO/RPO), and Resilience Testing",
+  "bullets": [
+    "Define RTO (time to restore service) and RPO (acceptable data loss window) with clear values and scope",
+    "Describe DR architecture (multi-region, active-active/active-passive, failover mechanisms, backups)",
+    "Explain backup strategy (frequency, retention, geographic diversity, point-in-time recovery)",
+    "Provide evidence of DR testing (frequency, last test date, results, runbooks, and improvements)"
+  ],
+  "suggested_inputs": [
+    "Business Continuity Plan (BCP) and Disaster Recovery (DR) runbooks",
+    "Architecture diagrams (multi-region/failover, replication topology)",
+    "Backup policy (frequency, retention, geographic locations)",
+    "DR test reports (latest results, issues, remediation actions)"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 CP-2",
+      "NIST SP 800-53 CP-9"
+    ],
+    "iso": [
+      "ISO 27001 A.17.1",
+      "ISO 27001 A.17.2"
+    ],
+    "soc2": [
+      "CC7.3",
+      "CC7.5"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "defined_rto_rpo_with_tested_dr_plan",
+        "type": "good",
+        "weight": 1.0,
+        "text": "RTO: [e.g., 2 hours], RPO: [e.g., 5 minutes]. DR architecture uses multi-region replication with automated failover. Backups are continuous with point-in-time recovery. DR is tested at least annually (or quarterly), with last test date and results documented. Runbooks are maintained and updated."
+      },
+      {
+        "anchor_id": "active_active_architecture_with_continuous_replication",
+        "type": "good",
+        "weight": 0.95,
+        "text": "We operate an active-active multi-region architecture, minimizing downtime without manual failover. Data is continuously replicated, achieving near-zero RPO. Failures are handled transparently with health checks and traffic routing."
+      },
+      {
+        "anchor_id": "comprehensive_backup_and_geographic_redundancy",
+        "type": "good",
+        "weight": 0.9,
+        "text": "Backups are taken continuously or at frequent intervals, stored in geographically separate regions, and retained per policy. Restoration is regularly validated through drills and integrity checks."
+      },
+      {
+        "anchor_id": "documented_testing_and_improvement_cycle",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We conduct regular DR exercises with documented outcomes, identified gaps, and remediation actions. Results are tracked, and runbooks are updated to improve resilience over time."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "mentions_backups_without_rto_rpo",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We maintain backups and recovery processes, but do not clearly define RTO/RPO targets."
+      },
+      {
+        "anchor_id": "cloud_dependency_without_shared_responsibility",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We rely on our cloud provider for resilience, but our own DR responsibilities and controls are not fully detailed."
+      },
+      {
+        "anchor_id": "infrequent_or_undocumented_testing",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "DR testing is performed occasionally, but results, frequency, or improvements are not formally documented."
+      },
+      {
+        "anchor_id": "unclear_backup_and_failover_strategy",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "We have failover and backup mechanisms, but architecture, geographic distribution, and recovery processes are not clearly defined."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "no_defined_rto_rpo",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We do not define RTO or RPO for our services."
+      },
+      {
+        "anchor_id": "backup_only_no_strategy",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We have backups, but no defined recovery objectives or tested DR processes."
+      },
+      {
+        "anchor_id": "cloud_provider_responsibility_only",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "Disaster recovery is handled entirely by our cloud provider."
+      },
+      {
+        "anchor_id": "no_testing_or_never_used",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We have never needed to use or test our disaster recovery plan."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_rto_rpo": {
+      "keywords": [
+        "rto",
+        "rpo",
+        "recovery time",
+        "recovery point",
+        "minutes",
+        "hours"
+      ]
+    },
+    "mentions_multi_region_and_replication": {
+      "keywords": [
+        "multi-region",
+        "replication",
+        "failover",
+        "active-active",
+        "redundancy"
+      ]
+    },
+    "mentions_backup_and_retention": {
+      "keywords": [
+        "backup",
+        "retention",
+        "point in time",
+        "restore",
+        "geographic"
+      ]
+    },
+    "vague_or_inadequate_dr": {
+      "keywords": [
+        "we have backups",
+        "cloud handles",
+        "never tested",
+        "not defined",
+        "best effort"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Walk through a disaster scenario: primary region fails—what happens step-by-step until full recovery?",
+    "Provide the latest DR test report, including issues identified and remediation actions.",
+    "If your entire primary infrastructure is unavailable, how can we access our data and how quickly?",
+    "What are your backup retention periods and geographic distribution of backups?",
+    "Provide runbooks for common failure scenarios and evidence they are regularly updated."
+  ]
+}

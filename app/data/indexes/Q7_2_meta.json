@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "specific_roadmap_with_timelines_and_scope",
+    "type": "good",
+    "weight": 1.0,
+    "text": "Roadmap lists specific features with defined scope and timelines (e.g., Q2/Q3 releases). Items are categorized (committed vs. exploratory). Customers can view a public/NDA roadmap with status updates."
+  },
+  {
+    "anchor_id": "transparent_delays_and_rebaselining",
+    "type": "good",
+    "weight": 0.95,
+    "text": "We explicitly disclose delayed features, reasons for slippage, and revised timelines. We avoid selling features not yet shipped and differentiate clearly between GA, beta, and planned items."
+  },
+  {
+    "anchor_id": "evidence_of_delivery_track_record",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We provide historical delivery metrics (e.g., on-time % over last 12 months) with release notes showing shipped vs. planned items, including any misses and corrective actions."
+  },
+  {
+    "anchor_id": "clear_prioritization_and_out_of_scope",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Roadmap prioritization incorporates customer feedback (voting/CSM inputs) and strategic goals. We explicitly state what we will not build and why, to avoid ambiguity."
+  },
+  {
+    "anchor_id": "high_level_roadmap_without_dates",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We share a high-level roadmap, but timelines are vague or not tied to specific releases."
+  },
+  {
+    "anchor_id": "limited_visibility_on_delays",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We acknowledge some delays, but do not consistently publish reasons, revised timelines, or status updates."
+  },
+  {
+    "anchor_id": "insufficient_delivery_metrics",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We provide release notes, but lack clear metrics on on-time delivery or planned vs. shipped comparisons."
+  },
+  {
+    "anchor_id": "unclear_prioritization_process",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "Customer input is considered, but the prioritization model and decision criteria are not transparent."
+  },
+  {
+    "anchor_id": "everything_on_roadmap_claim",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "Everything is on the roadmap."
+  },
+  {
+    "anchor_id": "perpetual_coming_soon_statements",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "Multiple features are described as 'coming soon' or 'in the next release' without firm timelines."
+  },
+  {
+    "anchor_id": "no_roadmap_or_timeline",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "We do not maintain or share a product roadmap or timelines."
+  },
+  {
+    "anchor_id": "sells_unshipped_features_as_available",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We present planned features as if they are already available or guaranteed imminently."
+  }
+]

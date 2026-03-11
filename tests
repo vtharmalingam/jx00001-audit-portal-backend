@@ -1,0 +1,18 @@
+
+# Run inside the container (/app) 
+
+
+# ETL
+
+# Question Index:
+python -m app.etl.anchor_indexer.faiss_index_builder
+
+# Test Functionalities
+python -m app.procs.semantic_search.q_search_engine
+python -m app.procs.question_evaluator
+
+# S3 pytests
+from /app, run `pytest`
+
+python -m app.etl.s3.services.ai_service
+

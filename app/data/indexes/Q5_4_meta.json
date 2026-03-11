@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "explicit_regions_and_residency_controls",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We specify all processing and storage locations (e.g., EU, US, APAC regions). Customers can select and restrict data residency. EU data remains in EU unless explicitly configured otherwise."
+  },
+  {
+    "anchor_id": "gdpr_transfer_mechanisms_with_tia",
+    "type": "good",
+    "weight": 0.95,
+    "text": "For GDPR compliance, we use Standard Contractual Clauses (SCCs) and have completed Transfer Impact Assessments (TIA). We document risks and mitigation measures for all international transfers."
+  },
+  {
+    "anchor_id": "supplementary_measures_post_schrems",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We implement supplementary measures post-Schrems II, including encryption, access controls, and minimization of transferred data. These are documented and auditable."
+  },
+  {
+    "anchor_id": "no_transfer_without_consent_and_controls",
+    "type": "good",
+    "weight": 0.9,
+    "text": "No cross-border transfers occur without explicit customer consent. We provide regional processing options and enforce controls to prevent unintended transfers."
+  },
+  {
+    "anchor_id": "mentions_regions_without_full_detail",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We operate in multiple regions, but detailed mapping of data flows and storage locations is not fully documented."
+  },
+  {
+    "anchor_id": "generic_gdpr_compliance_statement",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We comply with GDPR requirements, though specific transfer mechanisms such as SCCs or TIAs are not clearly explained."
+  },
+  {
+    "anchor_id": "limited_residency_control",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "Data may be stored in regional data centers, but customers have limited control over exact residency or transfer conditions."
+  },
+  {
+    "anchor_id": "unclear_supplementary_measures",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "We apply security controls for data protection, but do not explicitly describe supplementary measures for international transfers."
+  },
+  {
+    "anchor_id": "relies_on_invalid_privacy_shield",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "We rely on Privacy Shield certification for GDPR compliance."
+  },
+  {
+    "anchor_id": "vague_cloud_location_statement",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "Data is stored in the cloud without specifying regions or transfer mechanisms."
+  },
+  {
+    "anchor_id": "denies_gdpr_applicability",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "GDPR does not apply to us regardless of where data is processed."
+  },
+  {
+    "anchor_id": "cannot_specify_processing_locations",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "We cannot clearly state where data is processed or stored."
+  }
+]

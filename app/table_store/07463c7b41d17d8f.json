@@ -1,0 +1,19 @@
+{
+  "columns": [
+    "Reviewer Name",
+    "Cases Reviewed",
+    "Overrides Made",
+    "Override Rate"
+  ],
+  "rows": [
+    [
+      "%"
+    ],
+    [
+      "%"
+    ],
+    [
+      "%"
+    ]
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "category_id": "AFEM",
+  "question_id": "Q1_1",
+  "question": "Is your tool a preventive control (blocks violations before they occur), detective control (identifies violations after they occur), or observability tool (provides visibility only)? Can you prevent—not just detect—unauthorized actions?",
+  "title": "Control Type Classification and Enforcement Capability",
+  "bullets": [
+    "Clearly classify the control type (preventive, detective, observability) with technical justification",
+    "Explain where in the workflow the control is enforced (pre-action, in-line, post-action)",
+    "Describe the mechanism used for enforcement or detection (e.g., API interception, proxying, policy engine)",
+    "Clarify limitations and dependencies on external systems for full coverage"
+  ],
+  "suggested_inputs": [
+    "Architecture diagrams showing control points",
+    "Policy enforcement logs or alert samples",
+    "Demo or test case showing prevention vs detection",
+    "Integration documentation with enforcement layers (e.g., gateways, APIs)"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 AC-3",
+      "NIST SP 800-53 AU-6"
+    ],
+    "iso": [
+      "ISO 27001 A.9.4",
+      "ISO 27001 A.12.4"
+    ],
+    "soc2": [
+      "CC6.6",
+      "CC7.2"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "clear_control_classification_with_mechanism",
+        "type": "good",
+        "weight": 1.0,
+        "text": "We explicitly provide preventive controls via inline API interception and policy enforcement, blocking unauthorized actions before execution. We also generate logs for audit. For full coverage, integration with identity and endpoint controls is required."
+      },
+      {
+        "anchor_id": "honest_detective_positioning",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We are a detective control. We monitor and alert on violations using event logs and anomaly detection but do not block actions. Prevention requires integration with gateways or endpoint enforcement tools."
+      },
+      {
+        "anchor_id": "layered_control_explanation",
+        "type": "good",
+        "weight": 0.95,
+        "text": "Our platform provides both preventive and detective capabilities. Prevention is enforced through policy checks at request time via proxy, while detection is handled through continuous monitoring and alerting pipelines. Observability is also provided via dashboards."
+      },
+      {
+        "anchor_id": "explicit_limitations_and_dependencies",
+        "type": "good",
+        "weight": 0.85,
+        "text": "We provide observability and partial detection. We do not natively block actions. Customers typically combine our tool with CASB or API gateways to achieve prevention."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "unclear_control_scope",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We provide security controls across detection and prevention, but specifics depend on deployment and configuration."
+      },
+      {
+        "anchor_id": "limited_mechanism_explanation",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We can detect and sometimes prevent issues depending on the use case, but enforcement points are not clearly defined."
+      },
+      {
+        "anchor_id": "overlapping_terms_without_precision",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "Our tool supports prevention and detection, though these capabilities may overlap and are not strictly separated."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "overpromise_full_prevention",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We prevent all security violations across all scenarios."
+      },
+      {
+        "anchor_id": "misunderstanding_control_types",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "Detection and prevention are essentially the same thing in our system."
+      },
+      {
+        "anchor_id": "claims_all_without_explanation",
+        "type": "bad",
+        "weight": 0.2,
+        "text": "We are preventive, detective, and observability—all in one—without needing any additional controls."
+      },
+      {
+        "anchor_id": "vague_no_technical_detail",
+        "type": "bad",
+        "weight": 0.15,
+        "text": "We provide complete security coverage but cannot go into technical details."
+      }
+    ]
+  },
+  "signals": {
+    "denies_limitations": {
+      "keywords": [
+        "prevent all",
+        "complete coverage",
+        "no gaps",
+        "fully secure in all cases"
+      ]
+    },
+    "confuses_control_types": {
+      "keywords": [
+        "same thing",
+        "no difference between detection and prevention",
+        "equivalent controls"
+      ]
+    },
+    "mentions_enforcement_point": {
+      "keywords": [
+        "inline",
+        "proxy",
+        "intercept",
+        "pre-action",
+        "policy enforcement"
+      ]
+    },
+    "admits_dependency": {
+      "keywords": [
+        "requires integration",
+        "depends on",
+        "needs external control",
+        "combined with"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Walk me through a specific scenario: An employee attempts to send sensitive data to an unauthorized endpoint—where exactly does your control act, and how?",
+    "If a user bypasses your primary enforcement layer, what visibility or control do you retain?",
+    "Can you demonstrate a real-time prevention use case where an action is blocked before completion?",
+    "What are the known limitations of your control model, and how should customers mitigate them?"
+  ]
+}

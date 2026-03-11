@@ -1,0 +1,157 @@
+{
+  "category_id": "TRUST",
+  "question_id": "Q7_5",
+  "question": "Do you have a bug bounty program? Do you allow customer red teaming? What vulnerability disclosure process?",
+  "title": "Security Research Openness, Bug Bounty Programs, and Vulnerability Disclosure",
+  "bullets": [
+    "Describe bug bounty program (platform, scope, start date, participation, payout ranges)",
+    "Define customer red teaming/pen testing policy (allowed scope, approval process, guardrails)",
+    "Provide responsible vulnerability disclosure (VDP) process with timelines and communication",
+    "Share metrics (vulnerabilities reported, time-to-triage, time-to-fix by severity) and examples"
+  ],
+  "suggested_inputs": [
+    "Public vulnerability disclosure policy (VDP) and security.txt",
+    "Bug bounty program page (HackerOne/Bugcrowd) with scope and payouts",
+    "Penetration testing policy and approval workflow",
+    "Vulnerability management reports (SLA by severity, remediation timelines)"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 RA-5",
+      "NIST SP 800-53 IR-4"
+    ],
+    "iso": [
+      "ISO 27001 A.12.6",
+      "ISO 27001 A.16.1"
+    ],
+    "soc2": [
+      "CC7.1",
+      "CC7.2"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "active_bug_bounty_with_metrics",
+        "type": "good",
+        "weight": 1.0,
+        "text": "We run an active bug bounty program (e.g., HackerOne/Bugcrowd) since [date] with a defined scope and payouts. We publish metrics such as number of reports, median triage time, and time-to-fix by severity."
+      },
+      {
+        "anchor_id": "customer_red_teaming_allowed_with_controls",
+        "type": "good",
+        "weight": 0.95,
+        "text": "Customer penetration testing and red teaming are allowed with a clear approval process, scope definition, and safeguards. Third-party testers are permitted under agreed rules of engagement."
+      },
+      {
+        "anchor_id": "documented_vdp_with_slas",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We maintain a public vulnerability disclosure policy (VDP) outlining submission channels, triage SLAs, coordinated disclosure timelines, and communication practices. security.txt is published."
+      },
+      {
+        "anchor_id": "transparent_vulnerability_management_and_history",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We track and disclose remediation SLAs by severity (e.g., critical within X days). We can discuss past critical vulnerabilities, root causes, and fixes, demonstrating continuous improvement."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "limited_or_private_bounty_program",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We have a limited or invite-only bug bounty program with restricted scope and minimal public metrics."
+      },
+      {
+        "anchor_id": "conditional_red_teaming",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "Customer testing may be allowed in certain environments or windows, but the process and scope are not clearly documented."
+      },
+      {
+        "anchor_id": "basic_vdp_without_slas",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "We provide a vulnerability reporting channel (e.g., email), but lack defined SLAs or detailed disclosure procedures."
+      },
+      {
+        "anchor_id": "limited_metrics_visibility",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "We handle vulnerabilities internally, but do not share metrics such as time-to-fix or historical data."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "no_pen_testing_allowed",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "Customer penetration testing or red teaming is not allowed."
+      },
+      {
+        "anchor_id": "no_bug_bounty_program",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We do not run a bug bounty program or engage with external researchers."
+      },
+      {
+        "anchor_id": "hostile_to_security_research",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We may take legal action against unauthorized security research."
+      },
+      {
+        "anchor_id": "no_vdp_or_disclosure_process",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We do not have a formal vulnerability disclosure policy or process."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_bug_bounty_platforms": {
+      "keywords": [
+        "hackerone",
+        "bugcrowd",
+        "bug bounty",
+        "payout",
+        "scope"
+      ]
+    },
+    "mentions_red_teaming_and_pen_testing": {
+      "keywords": [
+        "red team",
+        "penetration testing",
+        "scope",
+        "approval",
+        "third party"
+      ]
+    },
+    "mentions_vdp_and_slas": {
+      "keywords": [
+        "vdp",
+        "vulnerability disclosure",
+        "security.txt",
+        "sla",
+        "triage"
+      ]
+    },
+    "restrictive_or_absent_security_practices": {
+      "keywords": [
+        "not allowed",
+        "no program",
+        "legal action",
+        "no policy",
+        "restricted"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Provide your vulnerability disclosure policy (VDP) and security.txt—what is the submission and triage process?",
+    "Can we conduct penetration testing or hire third-party testers? Outline the approval process and scope.",
+    "What are your average triage and remediation times by severity (critical/high/medium/low)?",
+    "Have you had any critical vulnerabilities? Provide examples of handling and remediation.",
+    "Share details of your bug bounty program (scope, payouts, number of reports, outcomes)."
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "category_id": "DATA_SECURITY",
+  "question_id": "Q3_4",
+  "question": "What data do you collect? What do you do with it? How do you ensure data is only used for stated purposes?",
+  "title": "Data Minimization, Purpose Limitation, and Usage Governance",
+  "bullets": [
+    "Enumerate all collected data elements (content, metadata, telemetry, identifiers) with clear definitions",
+    "Map each data element to a specific, justified purpose and legal basis where applicable",
+    "Describe controls enforcing purpose limitation (tagging, RBAC/ABAC, policy engines, audit trails)",
+    "Explain processes preventing function creep (reviews, approvals, monitoring, contractual restrictions)"
+  ],
+  "suggested_inputs": [
+    "Data inventory/register with fields, purposes, storage locations, and retention",
+    "Data Protection Impact Assessment (DPIA) or privacy impact documentation",
+    "Access control policies (RBAC/ABAC) and data classification/tagging schema",
+    "Audit logs demonstrating purpose-based access and usage monitoring"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 PL-8",
+      "NIST SP 800-53 AC-3"
+    ],
+    "iso": [
+      "ISO 27001 A.18.1",
+      "ISO 27001 A.8.2"
+    ],
+    "soc2": [
+      "CC6.1",
+      "CC8.1"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "comprehensive_data_inventory_with_purpose_mapping",
+        "type": "good",
+        "weight": 1.0,
+        "text": "We maintain a detailed data inventory listing all elements (user inputs, metadata, logs, identifiers). Each item is mapped to a specific purpose and retention period. We explicitly list data we do NOT collect and justify necessity for each collected element."
+      },
+      {
+        "anchor_id": "technical_and_contractual_purpose_controls",
+        "type": "good",
+        "weight": 0.95,
+        "text": "Purpose limitation is enforced via data tagging/classification, RBAC/ABAC policies, and policy engines that restrict access by purpose. Organizational controls (training, audits) and contractual terms (DPA) prohibit secondary use without consent."
+      },
+      {
+        "anchor_id": "ongoing_minimization_audits_and_reduction",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We conduct quarterly data minimization audits. We regularly remove unnecessary fields and reduce retention where possible. Changes are documented with impact assessments and approvals."
+      },
+      {
+        "anchor_id": "monitoring_and_prevention_of_function_creep",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We prevent function creep through change management controls, purpose-based access logs, anomaly detection for unusual data usage, and approval workflows for any new data use. All usage is auditable against declared purposes."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "lists_some_data_without_full_inventory",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We collect certain user data and logs necessary for service operation, but a complete, auditable inventory with purpose mapping is not consistently maintained."
+      },
+      {
+        "anchor_id": "general_purpose_limitation_statement",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "Data is used only for intended purposes, though enforcement relies primarily on internal policies rather than technical controls."
+      },
+      {
+        "anchor_id": "limited_minimization_practices",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "We review data collection periodically, but there is no formal cadence or documented minimization audit process."
+      },
+      {
+        "anchor_id": "unclear_third_party_and_secondary_use_controls",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "Data may be used to improve services, but controls around secondary use and third-party sharing are not clearly defined."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "vague_necessary_data_claim",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We collect only what is necessary without specifying data elements or purposes."
+      },
+      {
+        "anchor_id": "standard_practices_without_detail",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We follow standard data collection practices without detailing what is collected or why."
+      },
+      {
+        "anchor_id": "unspecified_secondary_use",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "We may use customer data to improve our services without clearly defining scope, consent, or controls."
+      },
+      {
+        "anchor_id": "cannot_enumerate_collected_data",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We are unable to provide a complete list of data elements we collect or how they are used."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_data_inventory": {
+      "keywords": [
+        "data inventory",
+        "data elements",
+        "fields",
+        "metadata",
+        "telemetry"
+      ]
+    },
+    "mentions_purpose_limitation_controls": {
+      "keywords": [
+        "purpose limitation",
+        "data tagging",
+        "rbac",
+        "abac",
+        "policy engine"
+      ]
+    },
+    "mentions_minimization_audits": {
+      "keywords": [
+        "minimization",
+        "audit",
+        "quarterly",
+        "review",
+        "remove data"
+      ]
+    },
+    "vague_or_secondary_use": {
+      "keywords": [
+        "necessary",
+        "standard practices",
+        "improve services",
+        "may use data",
+        "not specified"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Provide a complete data inventory listing each data element, purpose, storage location, and retention period.",
+    "How do you technically enforce purpose limitation and prevent use beyond consented purposes?",
+    "Do you share or sell data to third parties? If yes, list entities, purposes, and controls.",
+    "Show audit evidence that data access aligns with declared purposes.",
+    "What governance prevents function creep when introducing new features or analytics?"
+  ]
+}

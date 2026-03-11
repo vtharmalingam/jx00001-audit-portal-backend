@@ -1,0 +1,22 @@
+{
+  "columns": [
+    "Group",
+    "Total Applicants",
+    "Selected by AI",
+    "Selection Rate"
+  ],
+  "rows": [
+    [
+      "Person with disability",
+      "%"
+    ],
+    [
+      "Person without disability",
+      "%"
+    ],
+    [
+      "Unknown",
+      "%"
+    ]
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "category_id": "COMPLIANCE",
+  "question_id": "Q5_2",
+  "question": "Does your tool need to comply with [HIPAA/GDPR/CCPA/FedRAMP/etc.] for our use case? Can you sign a BAA/DPA?",
+  "title": "Regulatory Applicability, Contractual Commitments, and Liability Acceptance",
+  "bullets": [
+    "Determine applicability of regulations based on data types and use case (PHI, PII, regulated workloads)",
+    "State willingness and ability to sign required agreements (BAA, DPA) with specific provisions",
+    "Describe implemented controls aligned to each applicable regulation (technical, administrative, physical)",
+    "Disclose gaps, limitations, and compensating controls for non-compliant features or configurations"
+  ],
+  "suggested_inputs": [
+    "Template BAA and DPA documents with clauses highlighted",
+    "HIPAA Security Rule assessment or GDPR DPIA documentation",
+    "FedRAMP status documentation (authorization package or roadmap)",
+    "Evidence of compliance controls (policies, audit reports, certifications)"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 PL-2",
+      "NIST SP 800-53 RA-3"
+    ],
+    "iso": [
+      "ISO 27001 A.18.1",
+      "ISO 27001 A.6.1"
+    ],
+    "soc2": [
+      "CC2.1",
+      "CC9.2"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "clear_regulatory_applicability_and_agreement",
+        "type": "good",
+        "weight": 1.0,
+        "text": "For your use case involving PHI/PII, applicable regulations (e.g., HIPAA/GDPR) apply. We will sign a BAA/DPA. Our controls include encryption, access controls, audit logging, and breach notification processes aligned to regulatory requirements."
+      },
+      {
+        "anchor_id": "detailed_compliance_controls_and_attestation",
+        "type": "good",
+        "weight": 0.95,
+        "text": "We have implemented regulatory controls (e.g., HIPAA safeguards, GDPR data subject rights processes). Third-party assessments and audit reports are available. Sub-processors are bound by equivalent contractual protections."
+      },
+      {
+        "anchor_id": "transparent_limitations_and_workarounds",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We are HIPAA-ready and will sign a BAA; however, certain features (e.g., specific analytics modules) are not compliant. We clearly document these and recommend disabling them or using alternative workflows."
+      },
+      {
+        "anchor_id": "explicit_gdpr_and_fedramp_positioning",
+        "type": "good",
+        "weight": 0.9,
+        "text": "For GDPR, we define lawful basis for processing and provide DPIA documentation. For FedRAMP, we disclose current status (e.g., In Process) with timeline and scope. All commitments are documented and auditable."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "general_compliance_statement_without_mapping",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We support compliance with major regulations, but applicability and control mapping to your specific use case are not clearly defined."
+      },
+      {
+        "anchor_id": "unclear_agreement_commitment",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We may sign a DPA or similar agreements, though terms and scope are subject to negotiation and not standardized."
+      },
+      {
+        "anchor_id": "limited_evidence_of_controls",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "We have security controls in place, but detailed evidence such as assessments, DPIAs, or audit reports is not readily available."
+      },
+      {
+        "anchor_id": "incomplete_gap_disclosure",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "We believe our platform is compliant, but do not explicitly disclose limitations or non-compliant features."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "dismisses_compliance_importance",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We are secure, so compliance with regulations is not an issue."
+      },
+      {
+        "anchor_id": "relies_on_generic_terms_only",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "Our standard terms and conditions cover all compliance requirements."
+      },
+      {
+        "anchor_id": "incorrect_regulatory_understanding",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "Regulations like HIPAA do not apply to AI tools regardless of data processed."
+      },
+      {
+        "anchor_id": "refuses_to_sign_agreements",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We are unwilling to sign BAA or DPA agreements."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_specific_regulations": {
+      "keywords": [
+        "hipaa",
+        "gdpr",
+        "ccpa",
+        "fedramp",
+        "phi",
+        "pii"
+      ]
+    },
+    "mentions_agreements": {
+      "keywords": [
+        "baa",
+        "dpa",
+        "agreement",
+        "contract",
+        "terms"
+      ]
+    },
+    "provides_evidence": {
+      "keywords": [
+        "assessment",
+        "dpia",
+        "audit report",
+        "attestation",
+        "evidence"
+      ]
+    },
+    "misunderstands_or_dismisses": {
+      "keywords": [
+        "not applicable",
+        "covered by terms",
+        "not required",
+        "not an issue"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Provide your standard BAA/DPA templates and confirm inclusion of all required regulatory provisions.",
+    "Have you completed a HIPAA Security Rule assessment or GDPR DPIA? Provide documentation.",
+    "For GDPR, what is your lawful basis for processing and how are data subject rights handled?",
+    "For FedRAMP, what is your authorization status and timeline for achieving required level?",
+    "Provide evidence of compliance such as audit reports, certifications, or third-party assessments."
+  ]
+}

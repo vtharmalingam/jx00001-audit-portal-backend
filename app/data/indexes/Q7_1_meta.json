@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "specific_limitations_with_customer_impact",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We openly document 3\u20135 specific limitations (e.g., incomplete coverage for mobile endpoints, higher latency for large payloads, limited offline support). For each, we describe affected use cases and customer segments, and where the product is not a fit."
+  },
+  {
+    "anchor_id": "clear_workarounds_and_tradeoffs",
+    "type": "good",
+    "weight": 0.95,
+    "text": "For each limitation, we provide current workarounds (e.g., complementary controls, configuration changes) and explicitly state trade-offs (e.g., performance vs. coverage, cost vs. control)."
+  },
+  {
+    "anchor_id": "transparent_roadmap_with_timelines",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We maintain a transparent roadmap with timelines and priorities for addressing limitations. We explain why some gaps exist (architectural trade-offs) and what is actively being improved versus deferred."
+  },
+  {
+    "anchor_id": "evidence_of_feedback_loops_and_learning",
+    "type": "good",
+    "weight": 0.9,
+    "text": "We incorporate customer feedback into prioritization, share examples of surprising feedback and declined requests (with rationale), and document learnings in release notes and ADRs."
+  },
+  {
+    "anchor_id": "general_acknowledgment_without_depth",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We acknowledge there are limitations, but descriptions are high-level without clear technical specifics or affected use cases."
+  },
+  {
+    "anchor_id": "focus_on_minor_issues",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "We primarily mention minor UI/UX issues or edge cases, without addressing core architectural or functional gaps."
+  },
+  {
+    "anchor_id": "workarounds_or_roadmap_unclear",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We reference improvements in progress, but provide limited detail on workarounds, timelines, or prioritization."
+  },
+  {
+    "anchor_id": "limited_customer_impact_analysis",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "We list some weaknesses, but do not clearly explain which customers or scenarios are impacted."
+  },
+  {
+    "anchor_id": "claims_no_limitations",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "We do not have any significant limitations."
+  },
+  {
+    "anchor_id": "deflects_with_no_complaints",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We have no customer complaints."
+  },
+  {
+    "anchor_id": "defensive_or_evasive_response",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "We avoid discussing weaknesses or become defensive when asked."
+  },
+  {
+    "anchor_id": "no_specifics_or_examples",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "We cannot provide specific examples of limitations or areas for improvement."
+  }
+]

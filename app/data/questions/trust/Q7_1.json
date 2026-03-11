@@ -1,0 +1,157 @@
+{
+  "category_id": "TRUST",
+  "question_id": "Q7_1",
+  "question": "What are the top 3-5 limitations or weaknesses of your product that you're working to address?",
+  "title": "Product Limitations, Transparency, and Maturity of Self-Assessment",
+  "bullets": [
+    "Identify 3–5 concrete limitations (technical, architectural, coverage, scalability, UX) with specifics",
+    "Explain customer impact and which use cases are affected or out of scope",
+    "Provide current workarounds or mitigations and their trade-offs",
+    "Share roadmap timelines and prioritization rationale for addressing limitations"
+  ],
+  "suggested_inputs": [
+    "Product roadmap (public or NDA) with timelines and priorities",
+    "Known issues/limitations documentation and release notes",
+    "Customer feedback summaries and feature request backlogs",
+    "Architecture decision records (ADRs) explaining trade-offs"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 RA-3",
+      "NIST SP 800-53 CA-7"
+    ],
+    "iso": [
+      "ISO 27001 A.12.1",
+      "ISO 27001 A.14.2"
+    ],
+    "soc2": [
+      "CC3.2",
+      "CC7.2"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "specific_limitations_with_customer_impact",
+        "type": "good",
+        "weight": 1.0,
+        "text": "We openly document 3–5 specific limitations (e.g., incomplete coverage for mobile endpoints, higher latency for large payloads, limited offline support). For each, we describe affected use cases and customer segments, and where the product is not a fit."
+      },
+      {
+        "anchor_id": "clear_workarounds_and_tradeoffs",
+        "type": "good",
+        "weight": 0.95,
+        "text": "For each limitation, we provide current workarounds (e.g., complementary controls, configuration changes) and explicitly state trade-offs (e.g., performance vs. coverage, cost vs. control)."
+      },
+      {
+        "anchor_id": "transparent_roadmap_with_timelines",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We maintain a transparent roadmap with timelines and priorities for addressing limitations. We explain why some gaps exist (architectural trade-offs) and what is actively being improved versus deferred."
+      },
+      {
+        "anchor_id": "evidence_of_feedback_loops_and_learning",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We incorporate customer feedback into prioritization, share examples of surprising feedback and declined requests (with rationale), and document learnings in release notes and ADRs."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "general_acknowledgment_without_depth",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We acknowledge there are limitations, but descriptions are high-level without clear technical specifics or affected use cases."
+      },
+      {
+        "anchor_id": "focus_on_minor_issues",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "We primarily mention minor UI/UX issues or edge cases, without addressing core architectural or functional gaps."
+      },
+      {
+        "anchor_id": "workarounds_or_roadmap_unclear",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "We reference improvements in progress, but provide limited detail on workarounds, timelines, or prioritization."
+      },
+      {
+        "anchor_id": "limited_customer_impact_analysis",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "We list some weaknesses, but do not clearly explain which customers or scenarios are impacted."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "claims_no_limitations",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We do not have any significant limitations."
+      },
+      {
+        "anchor_id": "deflects_with_no_complaints",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "We have no customer complaints."
+      },
+      {
+        "anchor_id": "defensive_or_evasive_response",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "We avoid discussing weaknesses or become defensive when asked."
+      },
+      {
+        "anchor_id": "no_specifics_or_examples",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "We cannot provide specific examples of limitations or areas for improvement."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_specific_limitations": {
+      "keywords": [
+        "limitations",
+        "gaps",
+        "trade-offs",
+        "not supported",
+        "out of scope"
+      ]
+    },
+    "mentions_workarounds_and_tradeoffs": {
+      "keywords": [
+        "workaround",
+        "mitigation",
+        "tradeoff",
+        "compensating control",
+        "configuration"
+      ]
+    },
+    "mentions_roadmap_and_timelines": {
+      "keywords": [
+        "roadmap",
+        "timeline",
+        "planned",
+        "release",
+        "priority"
+      ]
+    },
+    "denial_or_defensive": {
+      "keywords": [
+        "no limitations",
+        "no complaints",
+        "perfect",
+        "not applicable",
+        "cannot share"
+      ]
+    }
+  },
+  "follow_ups": [
+    "What customer feedback surprised you most, and how did it change your roadmap?",
+    "Which feature requests do you consistently decline and why?",
+    "If you redesigned the product from scratch, what would you change?",
+    "What use cases are explicitly not a good fit for your product?",
+    "Provide examples of limitations that were recently addressed and how they impacted customers."
+  ]
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "anchor_id": "detailed_end_to_end_data_flow_with_controls",
+    "type": "good",
+    "weight": 1.0,
+    "text": "We provide a full data flow: ingestion via secure endpoints (TLS 1.3), processing in-memory with ephemeral handling, storage encrypted at rest (AES-256-GCM) in specified regions, and deletion via automated lifecycle policies. Each stage is documented with architecture diagrams and control points."
+  },
+  {
+    "anchor_id": "explicit_storage_locations_and_residency",
+    "type": "good",
+    "weight": 0.95,
+    "text": "Data is stored only in customer-selected regions (e.g., EU, US). Storage locations are explicitly defined per stage (temporary buffers, persistent storage, backups). Data residency guarantees ensure it never leaves the configured jurisdiction."
+  },
+  {
+    "anchor_id": "granular_access_control_and_auditability",
+    "type": "good",
+    "weight": 0.9,
+    "text": "Access is strictly role-based with least-privilege principles. Only authorized personnel (with defined roles and justification) can access data, and all access is logged in immutable audit trails available for customer review."
+  },
+  {
+    "anchor_id": "customer_controlled_encryption_and_keys",
+    "type": "good",
+    "weight": 0.9,
+    "text": "All data is encrypted in transit and at rest, with support for customer-managed keys (CMK). Key rotation, access policies, and cryptographic controls are fully documented and auditable."
+  },
+  {
+    "anchor_id": "high_level_data_flow_description",
+    "type": "partial",
+    "weight": 0.6,
+    "text": "We describe general data flow stages such as ingestion, processing, and storage, but lack detailed diagrams or stage-specific controls."
+  },
+  {
+    "anchor_id": "mentions_encryption_without_detail",
+    "type": "partial",
+    "weight": 0.55,
+    "text": "Data is encrypted in transit and at rest, but encryption standards, key management, and implementation details are not clearly specified."
+  },
+  {
+    "anchor_id": "limited_access_control_visibility",
+    "type": "partial",
+    "weight": 0.5,
+    "text": "We restrict access to authorized personnel, but roles, justification, and audit logging are not fully transparent."
+  },
+  {
+    "anchor_id": "unclear_data_residency",
+    "type": "partial",
+    "weight": 0.45,
+    "text": "Data is stored securely in cloud infrastructure, but geographic locations and residency guarantees are not explicitly defined."
+  },
+  {
+    "anchor_id": "vague_secure_storage_claim",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "Data is securely stored using industry-standard practices."
+  },
+  {
+    "anchor_id": "generic_cloud_security_statement",
+    "type": "bad",
+    "weight": 0.1,
+    "text": "We rely on standard cloud security measures without detailing specific controls or locations."
+  },
+  {
+    "anchor_id": "claims_no_data_storage_without_explanation",
+    "type": "bad",
+    "weight": 0.05,
+    "text": "We do not store any customer data, without explaining how processing or logging occurs."
+  },
+  {
+    "anchor_id": "cannot_explain_data_flow",
+    "type": "bad",
+    "weight": 0.0,
+    "text": "We are unable to provide a step-by-step explanation of how data flows through our system."
+  }
+]

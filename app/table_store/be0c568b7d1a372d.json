@@ -1,0 +1,30 @@
+{
+  "columns": [
+    "Evidence Item",
+    "Points",
+    "Have It?",
+    "Score"
+  ],
+  "rows": [
+    [
+      "⚠ Board AI Governance Charter",
+      "15",
+      "☐ Yes ☐ No"
+    ],
+    [
+      "AI Governance Committee established",
+      "10",
+      "☐ Yes ☐ No"
+    ],
+    [
+      "Quarterly Committee meetings documented",
+      "8",
+      "☐ Yes ☐ No"
+    ],
+    [
+      "AI strategy document",
+      "7",
+      "☐ Yes ☐ No"
+    ]
+  ]
+}

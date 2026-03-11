@@ -1,0 +1,38 @@
+{
+  "columns": [
+    "Group",
+    "Total Applicants",
+    "Selected by AI",
+    "Selection Rate"
+  ],
+  "rows": [
+    [
+      "White",
+      "%"
+    ],
+    [
+      "Black or African American",
+      "%"
+    ],
+    [
+      "Hispanic or Latino",
+      "%"
+    ],
+    [
+      "Asian",
+      "%"
+    ],
+    [
+      "Native American or Alaska Native",
+      "%"
+    ],
+    [
+      "Two or More Races",
+      "%"
+    ],
+    [
+      "Other/Unknown",
+      "%"
+    ]
+  ]
+}

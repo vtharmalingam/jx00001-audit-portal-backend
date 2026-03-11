@@ -1,0 +1,158 @@
+{
+  "category_id": "TRUST",
+  "question_id": "Q7_3",
+  "question": "What's included in base pricing? What costs extra? Can pricing increase during contract?",
+  "title": "Pricing Transparency, Total Cost of Ownership, and Price Protection",
+  "bullets": [
+    "Enumerate all items included in base pricing (features, usage quotas, support tiers, environments, data retention)",
+    "List all add-ons and overage models with clear units and formulas (e.g., per user, per request, per GB, per region)",
+    "Disclose all potential extra fees (implementation, migration, support tiers, API calls, storage, egress, premium features)",
+    "Define price protection terms (caps, notice periods, renewal terms) and provide example invoices/estimates"
+  ],
+  "suggested_inputs": [
+    "Pricing sheet with line items, units, and formulas",
+    "Sample invoice/bill for a representative customer scenario",
+    "Total cost calculator or estimator with assumptions",
+    "Contract terms covering price changes, caps, and notice periods"
+  ],
+  "control_mapping": {
+    "nist": [
+      "NIST SP 800-53 SA-4",
+      "NIST SP 800-53 PL-2"
+    ],
+    "iso": [
+      "ISO 27001 A.15.1",
+      "ISO 27001 A.5.1"
+    ],
+    "soc2": [
+      "CC3.2",
+      "CC1.2"
+    ]
+  },
+  "anchors": {
+    "good": [
+      {
+        "anchor_id": "comprehensive_base_and_addon_breakdown",
+        "type": "good",
+        "weight": 1.0,
+        "text": "Base pricing includes a clearly enumerated set of features (core functionality, defined usage quotas, standard support). Add-ons are explicitly listed with unit pricing (e.g., per user/API call/GB) and no hidden fees."
+      },
+      {
+        "anchor_id": "transparent_overage_and_cost_formula",
+        "type": "good",
+        "weight": 0.95,
+        "text": "Overages are defined with precise formulas and thresholds (e.g., $X per 1k requests beyond quota). A total cost calculator and sample invoices are provided for common scenarios."
+      },
+      {
+        "anchor_id": "price_protection_with_caps_and_notice",
+        "type": "good",
+        "weight": 0.9,
+        "text": "Pricing increases are contractually capped (e.g., ≤X% annually) with Y months advance notice. Mid-term price changes are not allowed; adjustments apply only at renewal with agreed limits."
+      },
+      {
+        "anchor_id": "full_tco_disclosure_and_examples",
+        "type": "good",
+        "weight": 0.9,
+        "text": "We disclose total cost of ownership, including implementation, migration, support tiers, data egress, and premium features. We provide a detailed example bill for a representative workload."
+      }
+    ],
+    "partial": [
+      {
+        "anchor_id": "high_level_pricing_without_line_items",
+        "type": "partial",
+        "weight": 0.6,
+        "text": "We provide general pricing tiers, but detailed inclusions, add-ons, and unit pricing are not fully itemized."
+      },
+      {
+        "anchor_id": "usage_based_without_clear_metrics",
+        "type": "partial",
+        "weight": 0.55,
+        "text": "Pricing depends on usage, but the exact metrics, thresholds, and formulas for overages are not clearly defined."
+      },
+      {
+        "anchor_id": "limited_visibility_on_extra_fees",
+        "type": "partial",
+        "weight": 0.5,
+        "text": "Additional fees may apply (e.g., support, storage), but a complete list and costs are not transparently documented."
+      },
+      {
+        "anchor_id": "unclear_price_increase_terms",
+        "type": "partial",
+        "weight": 0.45,
+        "text": "Price changes are possible at renewal, but caps, notice periods, and mid-contract protections are not clearly specified."
+      }
+    ],
+    "bad": [
+      {
+        "anchor_id": "no_transparent_pricing_contact_sales",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "Pricing is not disclosed; customers must contact sales for details."
+      },
+      {
+        "anchor_id": "vague_usage_based_pricing",
+        "type": "bad",
+        "weight": 0.1,
+        "text": "Pricing depends on usage without defining units, thresholds, or formulas."
+      },
+      {
+        "anchor_id": "unspecified_additional_fees",
+        "type": "bad",
+        "weight": 0.05,
+        "text": "Additional fees may apply, but they are not listed or quantified."
+      },
+      {
+        "anchor_id": "unbounded_price_changes",
+        "type": "bad",
+        "weight": 0.0,
+        "text": "Prices are subject to change without caps or notice periods."
+      }
+    ]
+  },
+  "signals": {
+    "mentions_line_items_and_units": {
+      "keywords": [
+        "per user",
+        "per request",
+        "per gb",
+        "quota",
+        "line item",
+        "unit pricing"
+      ]
+    },
+    "mentions_overage_and_formulas": {
+      "keywords": [
+        "overage",
+        "threshold",
+        "formula",
+        "calculator",
+        "estimate"
+      ]
+    },
+    "mentions_price_protection": {
+      "keywords": [
+        "cap",
+        "annual increase",
+        "notice",
+        "renewal",
+        "no mid-term change"
+      ]
+    },
+    "vague_or_hidden_pricing": {
+      "keywords": [
+        "contact sales",
+        "depends",
+        "additional fees",
+        "subject to change",
+        "not disclosed"
+      ]
+    }
+  },
+  "follow_ups": [
+    "Provide an all-in cost for a specific scenario (users, requests, storage, regions) with a sample invoice.",
+    "Detail overage charges and exact formulas—what thresholds and rates apply?",
+    "List all fees not included in base price (implementation, support tiers, egress, premium features).",
+    "What contractual protections exist against mid-contract price increases and what caps apply at renewal?",
+    "Share a recent customer bill showing all charges and how they map to usage."
+  ]
+}
