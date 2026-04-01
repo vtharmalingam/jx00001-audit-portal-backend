@@ -31,7 +31,7 @@ class QuestionFaissIndex:
         self.registry = registry
         self.question_spec_path = registry.get_question_path(question_id)
 
-        with open(self.question_spec_path, "r") as f:
+        with open(self.question_spec_path, "r", encoding="utf-8") as f:
             self.spec = json.load(f)
 
         # Read frmo config
@@ -91,7 +91,7 @@ class QuestionFaissIndex:
 
         self.index = faiss.read_index(self.index_path)
 
-        with open(self.meta_path, "r") as f:
+        with open(self.meta_path, "r", encoding="utf-8") as f:
             self.metadata = json.load(f)
 
     # ------------------------------------------------------------------
@@ -138,8 +138,8 @@ class QuestionFaissIndex:
     # ------------------------------------------------------------------
     def _persist(self):
         faiss.write_index(self.index, self.index_path)
-        with open(self.meta_path, "w") as f:
-            json.dump(self.metadata, f, indent=2)
+        with open(self.meta_path, "w", encoding="utf-8") as f:
+            json.dump(self.metadata, f, indent=2, ensure_ascii=False)
 
     # ------------------------------------------------------------------
     # UTIL

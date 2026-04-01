@@ -55,7 +55,7 @@ class CategoryQuestionLoader:
 
             # print(f"----------------category_json: {category_json}")
 
-            with open(category_json, "r") as f:
+            with open(category_json, "r", encoding="utf-8") as f:
                 meta = json.load(f)
 
             
@@ -86,7 +86,7 @@ class CategoryQuestionLoader:
             if not os.path.exists(category_json):
                 continue
 
-            with open(category_json, "r") as f:
+            with open(category_json, "r", encoding="utf-8") as f:
                 meta = json.load(f)
 
             if meta.get("category_id") == category_id:
@@ -96,7 +96,7 @@ class CategoryQuestionLoader:
 
     def _load_category_meta(self, category_folder: str) -> Dict:
         path = os.path.join(category_folder, "category.json")
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
 
     def _load_questions(
@@ -116,7 +116,7 @@ class CategoryQuestionLoader:
 
             path = os.path.join(category_folder, file)
 
-            with open(path, "r") as f:
+            with open(path, "r", encoding="utf-8") as f:
                 spec = json.load(f)
 
             # Enforce category consistency

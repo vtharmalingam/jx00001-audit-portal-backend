@@ -1,7 +1,7 @@
 ai_assessment:
   # 
-  data_dir: "/app/app/data/questions"
-  indexes_dir: "/app/app/data/indexes"
+  data_dir: "./app/data/questions"
+  indexes_dir: "./app/data/indexes"
   llm: qwen2.5:latest
   embedding:
     collection_name: "docling_rag_9779f7ae79ed15ae"

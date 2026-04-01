@@ -1,0 +1,3 @@
+# With --extra-index-url in requirements.txt (PyTorch CPU), allow resolving
+# transitive packages (e.g. urllib3) from PyPI instead of only the first index.
+index-strategy = "unsafe-best-match"

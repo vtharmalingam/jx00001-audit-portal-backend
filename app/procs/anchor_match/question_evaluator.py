@@ -34,7 +34,7 @@ class QuestionEvaluator:
         # Load question spec (ONLY for signals & metadata)
         # --------------------------------------------------
         question_path = registry.get_question_path(question_id)
-        with open(question_path, "r") as f:
+        with open(question_path, "r", encoding="utf-8") as f:
             self.spec = json.load(f)
 
         self.signals_spec = self.spec.get("signals", {})

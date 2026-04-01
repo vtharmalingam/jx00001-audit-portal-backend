@@ -41,7 +41,7 @@ class QuestionRegistry:
                     continue
 
                 path = os.path.join(folder_path, file)
-                with open(path, "r") as f:
+                with open(path, "r", encoding="utf-8") as f:
                     spec = json.load(f)
 
                 qid = spec.get("question_id")
