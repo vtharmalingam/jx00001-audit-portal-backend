@@ -11,8 +11,6 @@ import pytest
 from app.etl.s3.services.answer_service import AnswerService
 
 def test_get_all_answers(real_s3):
-    from services.answer_service import AnswerService
-
     service = AnswerService(real_s3)
 
     org_id = "org_unit_test"

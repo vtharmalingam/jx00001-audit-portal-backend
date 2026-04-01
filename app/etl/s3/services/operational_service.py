@@ -9,7 +9,14 @@ from app.etl.s3.services.org_normalize import (
     org_matches_filters,
     paginate,
 )
-from app.etl.s3.utils.s3_paths import auditor_master_key, domain_lookup_key
+from app.etl.s3.services.lookup_service import LookupService
+from app.etl.s3.utils.s3_paths import (
+    auditor_master_key,
+    domain_lookup_key,
+    project_json_key,
+    projects_prefix,
+    system_json_key,
+)
 
 
 class OperationalService:
@@ -27,7 +34,7 @@ class OperationalService:
 
     # 🔹 A. Get org_id from domain
     def get_org_by_domain(self, domain: str) -> Optional[str]:
-        data = self.s3.read_json(domain_lookup_key(domain))
+        data = self.s3.read_json(domain_lookup_key(str(domain).strip().lower()))
         if not data:
             return None
         return data.get("org_id")
@@ -87,6 +94,9 @@ class OperationalService:
         merged["updated_at"] = datetime.utcnow().isoformat()
 
         self.s3.write_json(key, merged)
+        lk = LookupService(self.s3)
+        lk.sync_organization_index_from_profile(merged)
+        lk.sync_domains_from_profile(merged)
         return normalize_org(merged)
 
     def upsert_org_profile(
@@ -216,6 +226,45 @@ class OperationalService:
 
         return self.merge_org_profile(org_id, patch)
 
+    def create_project(self, org_id: str, project_id: str, project_name: str) -> Dict[str, Any]:
+        now = datetime.utcnow().isoformat()
+        doc = {
+            "project_id": project_id,
+            "project_name": project_name,
+            "created_at": now,
+            "org_id": org_id,
+        }
+        self.s3.write_json(project_json_key(org_id, project_id), doc)
+        return doc
+
+    def get_project(self, org_id: str, project_id: str) -> Optional[Dict[str, Any]]:
+        return self.s3.read_json(project_json_key(org_id, project_id))
+
+    def list_project_ids(self, org_id: str) -> List[str]:
+        prefix = projects_prefix(org_id)
+        out: List[str] = []
+        token = None
+        while True:
+            params: Dict[str, Any] = {
+                "Bucket": self.s3.bucket,
+                "Prefix": prefix,
+                "Delimiter": "/",
+            }
+            if token:
+                params["ContinuationToken"] = token
+            resp = self.s3.client.list_objects_v2(**params)
+            for cp in resp.get("CommonPrefixes", []):
+                p = cp.get("Prefix", "").rstrip("/")
+                parts = p.split("/")
+                if len(parts) >= 4 and parts[-2] == "projects":
+                    out.append(parts[-1])
+            if resp.get("IsTruncated"):
+                token = resp.get("NextContinuationToken")
+            else:
+                break
+        out.sort()
+        return out
+
     def list_ai_systems(self, org_id: str) -> List[Dict[str, Any]]:
         raw = self.s3.read_json(self.ai_systems_store_key(org_id))
         if not raw:
@@ -227,12 +276,14 @@ class OperationalService:
         systems = self.list_ai_systems(org_id)
         system = {**body}
         system["org_id"] = org_id
+        project_id = str(system.pop("project_id", None) or "default")
         if not system.get("system_id"):
             system["system_id"] = str(uuid.uuid4())
+        sid = system["system_id"]
         if not system.get("added_at"):
             system["added_at"] = datetime.utcnow().isoformat()
 
-        systems.append(system)
+        systems.append({**system, "project_id": project_id})
         self.s3.write_json(
             self.ai_systems_store_key(org_id),
             {
@@ -240,7 +291,25 @@ class OperationalService:
                 "updated_at": datetime.utcnow().isoformat(),
             },
         )
-        return system
+
+        sys_doc = {
+            "ai_system_id": sid,
+            "name": system.get("name"),
+            "description": system.get("description") or "",
+            "version": system.get("version") or "v1",
+            "created_at": system.get("added_at"),
+            "org_id": org_id,
+            "project_id": project_id,
+        }
+        self.s3.write_json(system_json_key(org_id, project_id, sid), sys_doc)
+        LookupService(self.s3).write_ai_system_index(
+            sid,
+            org_id=org_id,
+            project_id=project_id,
+            audit_id=None,
+            status=system.get("status"),
+        )
+        return {**system, "project_id": project_id}
 
     def filter_ai_systems(
         self,

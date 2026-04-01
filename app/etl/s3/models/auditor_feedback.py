@@ -1,7 +1,8 @@
 # models/auditor_feedback.py
 
-from pydantic import BaseModel
 from typing import List, Literal, Optional
+
+from pydantic import BaseModel, Field
 
 
 class FeedbackItem(BaseModel):
@@ -22,10 +23,13 @@ class AuditorFeedbackModel(BaseModel):
         "not_reviewed",
         "in_review",
         "needs_revision",
+        "compliant",
+        "non_compliant",
         "approved",
-        "rejected"
+        "rejected",
     ]
 
     summary: Optional[str]
 
     feedback: List[FeedbackItem]
+    recommendations: List[str] = Field(default_factory=list)

@@ -1,19 +1,26 @@
 # services/report_service.py
 
-from typing import List, Dict
-from app.etl.s3.utils.s3_paths import ai_key  # optional if needed later
-from app.etl.s3.utils.s3_paths import answer_key, ai_key, auditor_key
+from typing import Dict, List
+
+from app.etl.s3.utils.s3_paths import ai_key, auditor_key
+
 
 class ReportService:
 
     def __init__(self, s3):
         self.s3 = s3
 
+    def get_full_audit_view(
+        self,
+        org_id: str,
+        audit_id: str,
+        project_id: str = "0",
+        ai_system_id: str = "0",
+    ) -> Dict:
 
+        from app.etl.s3.utils.s3_paths import answers_prefix
 
-    def get_full_audit_view(self, org_id: str, audit_id: str) -> Dict:
-
-        prefix = f"organizations/{org_id}/audits/{audit_id}/current/answers/"
+        prefix = answers_prefix(org_id, audit_id, project_id, ai_system_id)
 
         result = {}
         continuation_token = None
@@ -21,7 +28,7 @@ class ReportService:
         while True:
             params = {
                 "Bucket": self.s3.bucket,
-                "Prefix": prefix
+                "Prefix": prefix,
             }
 
             if continuation_token:
@@ -39,26 +46,29 @@ class ReportService:
                 if not qid:
                     continue
 
-                # 🔹 Base structure
                 item = {
                     "question_id": qid,
                     "answer": answer.get("answer"),
+                    "attachments": answer.get("attachments") or [],
                 }
 
-                # 🔹 AI Layer
-                ai = self.s3.read_json(ai_key(org_id, audit_id, qid))
+                ai = self.s3.read_json(
+                    ai_key(org_id, audit_id, qid, project_id, ai_system_id)
+                )
                 if ai:
                     item["gap_report"] = ai.get("gap_report", {})
                     item["risk_level"] = ai.get("risk_level")
 
-                # 🔹 Auditor Layer
-                auditor = self.s3.read_json(auditor_key(org_id, audit_id, qid))
+                auditor = self.s3.read_json(
+                    auditor_key(org_id, audit_id, qid, project_id, ai_system_id)
+                )
                 if auditor:
                     item["review"] = {
                         "review_state": auditor.get("review_state"),
                         "reviewer_comment": auditor.get("summary"),
                         "reviewed_at": auditor.get("reviewed_at"),
                         "reviewer_id": auditor.get("auditor_id"),
+                        "recommendations": auditor.get("recommendations") or [],
                     }
 
                 result[qid] = item
@@ -71,14 +81,21 @@ class ReportService:
         return {
             "org_id": org_id,
             "audit_id": audit_id,
-            "data": result
+            "project_id": project_id,
+            "ai_system_id": ai_system_id,
+            "data": result,
         }
 
+    def get_gap_report(
+        self,
+        org_id: str,
+        audit_id: str,
+        project_id: str = "0",
+        ai_system_id: str = "0",
+    ) -> List[Dict]:
+        from app.etl.s3.utils.s3_paths import ai_prefix
 
-    # OBSOLETED
-    # This method can be obsoleted inview of the above - that inclues additional details too.
-    def get_gap_report(self, org_id: str, audit_id: str) -> List[Dict]:
-        prefix = f"organizations/{org_id}/audits/{audit_id}/current/ai_analysis/"
+        prefix = ai_prefix(org_id, audit_id, project_id, ai_system_id)
 
         results = []
 
@@ -87,7 +104,7 @@ class ReportService:
         while True:
             params = {
                 "Bucket": self.s3.bucket,
-                "Prefix": prefix
+                "Prefix": prefix,
             }
 
             if continuation_token:
@@ -102,15 +119,11 @@ class ReportService:
                 if data:
                     results.append(data)
 
-            # Handle pagination
             if response.get("IsTruncated"):
                 continuation_token = response.get("NextContinuationToken")
             else:
                 break
 
-        # Optional: sort by question_id (useful for UI consistency)
         results.sort(key=lambda x: x.get("question_id", ""))
 
         return results
-
-

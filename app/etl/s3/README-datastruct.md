@@ -1,291 +1,86 @@
+# S3 data layout (v2)
 
-## S3 Structure
+Bucket root (example: `audit-system-data/`). Code uses optional `BASE_PREFIX` in `app/etl/s3/utils/s3_paths.py` for tests.
 
-```json
+## Top level
+
+```text
 audit-system-data/
-│
 ├── organizations/
-│   └── {org_id}/
-│       ├── org_profile.json
-│       │
-│       └── audits/
-│           └── {audit_id}/
-│               ├── metadata.json
-│               │
-│               ├── current/                      ← ACTIVE WORKING STATE
-│               │   ├── answers/
-│               │   │   └── {question_id}.json
-│               │   │
-│               │   ├── ai_analysis/
-│               │   │   └── {question_id}.json
-│               │   │
-│               │   ├── auditor_feedback/
-│               │   │   └── {question_id}.json
-│               │   │
-│               │   └── progress.json            ← derived cache (optional)
-│               │
-│               ├── rounds/                      ← SNAPSHOTS (IMMUTABLE)
-│               │   └── round_{n}/
-│               │       ├── answers.json
-│               │       ├── ai_analysis.json
-│               │       ├── auditor_feedback.json
-│               │       └── round_summary.json
-│               │
-│               └── timeline.json                ← full audit trace
-│
 ├── lookups/
-│   ├── domains/
-│   │   └── {domain}.json                        ← maps → org_id
-│   │
-│   └── orgs/
-│       └── {org_id}.json                        ← lightweight index (optional)
-│
 └── exports/
-    └── blockchain/
-        └── {audit_id}.json                      ← final exported payload
-
 ```
 
-Question:
-  A. Is this a good change?
-    - org_id => domain?
-  b. What's the purpose of `audit > metadata.json`?
+## Organization
 
-
-### org_profile:
-
-```json
-{
-  "org_id": "org_123",
-  "name": "Acme Corp",
-  "domains": ["acme.com"],
-  "created_at": "..."
-}
+```text
+organizations/{org_id}/
+├── org_profile.json
+├── ai_systems.json              ← org-level systems registry (plus per-system system.json)
+└── projects/
+    └── {project_id}/
+        ├── project.json
+        └── ai_systems/
+            └── {ai_system_id}/
+                ├── system.json
+                └── audits/
+                    └── {audit_id}/
+                        ├── metadata.json
+                        ├── audit_summary.json
+                        ├── timeline.json
+                        ├── current/
+                        │   ├── answers/{question_id}.json
+                        │   ├── ai_analysis/{question_id}.json
+                        │   ├── auditor_feedback/{question_id}.json
+                        │   ├── evidence/{question_id}/…
+                        │   ├── evidence_index.json
+                        │   └── progress.json            (optional derived cache)
+                        └── rounds/
+                            └── round_{n}/
+                                ├── answers.json
+                                ├── ai_analysis.json
+                                ├── auditor_feedback.json
+                                ├── evidence/…
+                                └── round_summary.json
 ```
 
-### metadata.json (Audit Control Plane)
+## org_profile.json
 
-```json
-{
-{
-  "audit_id": "audit_001",
-  "org_id": "org_123",
+- `org_id` (immutable), `name`, optional `domains[]`, `org_type`, `created_at`, `updated_at`, plus portal-specific fields merged by `OperationalService.merge_org_profile`.
+- On write, **`lookups/organizations/{org_id}.json`** and **`lookups/domains/{domain}.json`** are updated when `domains` is present.
 
-  "auditor_id": "aud_001",
+## metadata.json (audit control plane)
 
-  "status": "in_progress",
-  "current_round": 2,
+- `audit_id`, `org_id`, `project_id`, `ai_system_id`, `auditor_id`, `status`, `current_round`, `started_at`, `last_updated_at`, `completed_at`.
 
-  "started_at": "...",
-  "last_updated_at": "...",
-  "completed_at": null
-}
-```
+## audit_summary.json
 
-### timeline.json
-Full trace of:
+Dashboard counters (`total_questions`, `answered`, `ai_processed`, `reviewed`, `compliant`, `non_compliant`, `needs_revision`, …). Recomputed on answer / AI / review / evidence mutations and via `GET .../summary?recompute=true`.
 
-  - User actions
-  - AI runs
-  - Auditor actions
+## current answers
 
-```json
-{
-  "events": [
-    {
-      "timestamp": "...",
-      "actor": "user",
-      "action": "updated_answer",
-      "question_id": "Q4_4",
-      "version": 3
-    }
-  ]
-}
+- `attachments[]`: `{ file_name, s3_key, uploaded_at }` aligned with evidence index.
 
-```
+## Lookups
 
+- `lookups/domains/{domain}.json` → `{ "org_id" }`
+- `lookups/organizations/{org_id}.json` — lightweight org index
+- `lookups/ai_systems/{ai_system_id}.json` — `{ org_id, project_id, audit_id?, status?, … }`
+- `lookups/auditor_master.json` — existing auditor roster
 
+## Exports
 
+- `exports/blockchain/{audit_id}.json` — payload from `BlockchainExportService` (metadata + timeline + optional org profile).
 
+## Services (reference)
 
-### answers > {question_id}.json 
-
-```json
-{
-  "question_id": "Q4_4",
-  "answer": "...",
-
-  "state": "draft",  
-  "version": 3,       -> This is required for "AI processing-trigger"
-
-  "last_updated_at": "...",
-  "last_updated_by": "..."
-}
-
-```
-suggestion: 
-  - status should be a static list
-
-
-## ai_analysis/{question_id}.json
-
-```json
-{
-  "question_id": "Q4_4",
-
-  "last_analyzed_version": 3,
-  "analyzed_at": "2026-02-21T02:00:00Z",
-
-  "risk_level": "medium",
-
-  "gap_report": {
-    "synthesized_summary": "The organization claims 18 months runway but lacks supporting documentation.",
-
-    "key_themes": [
-      "financial stability",
-      "documentation gap"
-    ],
-
-    "user_gap": [
-      "No audited financial statements provided",
-      "Runway not validated"
-    ],
-
-    "insights": [
-      "Statement appears optimistic but unsupported",
-      "Potential risk if funding assumptions fail"
-    ],
-
-    "match_score": 0.62
-  }
-}
-
-```
-
-Note:
-- risk_level: low | medium | high | critical
-
-Critical Note:
-- Every AI run overwrites entire file (No partial updates)
-
-#### TODO Suggestion:
-
-Add `evaluation_basis` useful for: `transparency` and `enterprise audits`:
-
-```json
-"evaluation_basis": [
-  "expected financial documentation",
-  "risk disclosure standards"
-]
-```
-
-
-
-
-## auditor_feedback/{question_id}.json
-
-```json
-{
-  "question_id": "Q4_4",
-
-  "reviewed_version": 3,
-  "reviewed_at": "2026-02-21T12:00:00Z",
-  "auditor_id": "aud_001",
-
-  "review_state": "needs_revision",
-
-  "summary": "Financial claims lack supporting documentation",
-
-  "feedback": [
-    {
-      "type": "gap",
-      "message": "Provide audited financial statements",
-      "severity": "high"
-    },
-    {
-      "type": "clarification",
-      "message": "Explain assumptions behind runway calculation",
-      "severity": "medium"
-    }
-  ]
-}
-
-```
-
-suggestion: 
-  - `review_state` : not_reviewed | in_review | needs_revision | compliant | non_compliant
-
-
-## progress.json
-
-```json
-{
-  "last_updated_at": "2026-02-21T12:05:00Z",
-
-  "answers": {
-    "draft": 20,
-    "submitted": 25,
-    "locked": 0
-  },
-
-  "ai": {
-    "processed": 30,
-    "pending": 15
-  },
-
-  "auditor": {
-    "not_reviewed": 70,
-    "in_review": 5,
-    "needs_revision": 10,
-    "approved": 10,
-    "rejected": 5
-  },
-
-  "round_status": "in_progress"
-}
-
-```
-
-Observations:
-    
-    Option A : instead of having a json, dynamically these can be calculated for better data integrity:
-      a. Answered vs Draft
-      b. Completed vs AI Processed
-      c. AI Processed Vs Auditor reviewed
-      d. Count by auditor::status
-    
-    Option B : Periodic recompute (fallback)
-
-
-### org_lookup.json
-
-`lookups/domains/acme.com.json`:
-
-```json
-{
-  "org_id": "org_123"
-}
-
-```
-
-## exports/blockchain/
-Final immutable payload:
-
-`exports/blockchain/audit_001.json`:
-
-```json
-{
-  "by_domain": {
-    "acme.com": "org_123",
-    "acme.ai": "org_123"
-  },
-
-  "by_org_id": {
-    "org_123": {
-      "name": "Acme Corp",
-      "domains": ["acme.com", "acme.ai"],
-      "created_at": "2026-02-01T10:00:00Z"
-    }
-  }
-}
-```
+| Area | Module |
+|------|--------|
+| Paths | `app/etl/s3/utils/s3_paths.py` |
+| Org / projects / AI registry | `operational_service.py` |
+| Audit create / metadata / timeline / summary | `audit_lifecycle_service.py` |
+| Answers / AI / auditor / report | `answer_service.py`, `ai_service.py`, `auditor_service.py`, `report_service.py` |
+| Evidence + index | `evidence_service.py` |
+| Round snapshots | `round_service.py` |
+| Blockchain file | `export_service.py` |
+| Lookup writes | `lookup_service.py` |

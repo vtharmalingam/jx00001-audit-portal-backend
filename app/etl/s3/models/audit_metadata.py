@@ -7,6 +7,8 @@ from typing import Optional, Literal
 class AuditMetadataModel(BaseModel):
     audit_id: str
     org_id: str
+    project_id: str
+    ai_system_id: str
 
     auditor_id: str
 

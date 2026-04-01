@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -16,9 +16,36 @@ class PersonRef(BaseModel):
     role: Optional[str] = None
 
 
+class ProjectCreateBody(BaseModel):
+    project_id: str
+    project_name: str
+
+
+class AuditCreateBody(BaseModel):
+    project_id: str
+    ai_system_id: str
+    auditor_id: Optional[str] = None
+    audit_id: Optional[str] = None
+
+
+class RoundSnapshotBody(BaseModel):
+    project_id: str = "0"
+    ai_system_id: str = "0"
+    round_n: int
+    trigger: str = "manual"
+    triggered_by: str = "system"
+    notes: str = ""
+
+
+class BlockchainExportBody(BaseModel):
+    project_id: str = "0"
+    ai_system_id: str = "0"
+
+
 class AiSystemCreateBody(BaseModel):
     model_config = ConfigDict(extra="allow")
 
+    project_id: Optional[str] = None
     system_id: Optional[str] = None
     name: Optional[str] = None
     description: str = ""
@@ -42,6 +69,8 @@ class OrgUpsertBody(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
+    domains: Optional[List[str]] = None
+    org_type: Optional[str] = None
     name: Optional[str] = None
     email: Optional[str] = None
     status: Optional[str] = None

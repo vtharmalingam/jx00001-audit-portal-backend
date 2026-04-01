@@ -1,11 +1,14 @@
 """Assessment API: categories, questions, answers, evaluation, audit views, reviews."""
 
+import base64
 import logging
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.etl.s3.services.answer_service import AnswerService
 from app.etl.s3.services.auditor_service import AuditorService
+from app.etl.s3.services.evidence_service import EvidenceService
 from app.etl.s3.services.report_service import ReportService
 from app.procs.anchor_match.question_evaluator import QuestionEvaluator
 from app.procs.anchor_match.question_faiss_index import QuestionFaissIndex
@@ -15,6 +18,7 @@ from app.procs.embeddings import EmbeddingModel
 from app.rest.deps import data_dir, s3_client
 from app.rest.v1.assessment_schemas import (
     EvaluateAnswerBody,
+    EvidenceRegisterBody,
     SaveAnswerBody,
     SaveReviewBody,
 )
@@ -76,14 +80,15 @@ async def save_answer(body: SaveAnswerBody):
             status.HTTP_400_BAD_REQUEST,
             detail={"code": "VALIDATION", "message": "question_id, user_answer, org_id, state required"},
         )
-    registry = QuestionRegistry(data_dir)
     try:
         AnswerService(s3_client).upsert_answer(
             org_id=body.org_id,
-            audit_id=0,
+            audit_id=str(body.audit_id),
             question_id=body.question_id,
             answer=body.user_answer,
             state=body.state,
+            project_id=str(body.project_id),
+            ai_system_id=str(body.ai_system_id),
         )
     except Exception as e:
         raise HTTPException(
@@ -93,17 +98,28 @@ async def save_answer(body: SaveAnswerBody):
     return {
         "status": True,
         "saved_to": "s3",
-        "question_path": registry.get_question_path(body.question_id),
+        "question_path": (
+            QuestionRegistry(data_dir).get_question_path(body.question_id)
+            if data_dir
+            else None
+        ),
     }
 
 
-@router.get("/answers", summary="Fetch all answers for an org (fixed audit_id=0 server-side)")
+@router.get("/answers", summary="Fetch all answers for an org / audit scope")
 async def fetch_answers(
     org_id: str = Query(...),
-    audit_id: str = Query("0", description="Echoed for clients; storage may still use 0"),
+    audit_id: str = Query("0"),
+    project_id: str = Query("0"),
+    ai_system_id: str = Query("0"),
 ):
     try:
-        answers = AnswerService(s3_client).get_all_answers(org_id=org_id, audit_id=0)
+        answers = AnswerService(s3_client).get_all_answers(
+            org_id=org_id,
+            audit_id=audit_id,
+            project_id=project_id,
+            ai_system_id=ai_system_id,
+        )
     except Exception as e:
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -113,6 +129,8 @@ async def fetch_answers(
     return {
         "org_id": org_id,
         "audit_id": audit_id,
+        "project_id": project_id,
+        "ai_system_id": ai_system_id,
         "total": len(answers_map),
         "answers": answers_map,
     }
@@ -120,17 +138,34 @@ async def fetch_answers(
 
 @router.get(
     "/orgs/{org_id}/audit-view",
-    summary="Full audit / gap snapshot (same backing as legacy FETCH-FULL-AUDIT)",
+    summary="Full audit / gap snapshot",
 )
-async def get_audit_view(org_id: str, audit_id: str = Query("0")):
+async def get_audit_view(
+    org_id: str,
+    audit_id: str = Query("0"),
+    project_id: str = Query("0"),
+    ai_system_id: str = Query("0"),
+):
     try:
-        result = ReportService(s3_client).get_full_audit_view(org_id, audit_id)
+        result = ReportService(s3_client).get_full_audit_view(
+            org_id,
+            audit_id,
+            project_id=project_id,
+            ai_system_id=ai_system_id,
+        )
     except Exception as e:
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"code": "AUDIT_VIEW_FAILED", "message": str(e)},
         ) from e
-    return {"org_id": org_id, "audit_id": audit_id, "status": True, **result}
+    return {
+        "org_id": org_id,
+        "audit_id": audit_id,
+        "project_id": project_id,
+        "ai_system_id": ai_system_id,
+        "status": True,
+        **result,
+    }
 
 
 @router.post("/reviews", summary="Save auditor feedback for a question answer")
@@ -142,7 +177,13 @@ async def save_review(body: SaveReviewBody):
         )
     answer_service = AnswerService(s3_client)
     auditor_service = AuditorService(s3_client)
-    answer = answer_service.get_answer(body.org_id, body.audit_id, body.question_id)
+    answer = answer_service.get_answer(
+        body.org_id,
+        body.audit_id,
+        body.question_id,
+        project_id=body.project_id,
+        ai_system_id=body.ai_system_id,
+    )
     if not answer:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
@@ -153,9 +194,11 @@ async def save_review(body: SaveReviewBody):
     feedback_payload = {
         "version": version,
         "auditor_id": auditor_ref,
+        "auditor_name": body.auditor_name,
         "review_state": body.review_state,
         "summary": body.reviewer_comment,
         "feedback": [],
+        "recommendations": body.recommendations or [],
     }
     try:
         result = auditor_service.update_feedback(
@@ -163,6 +206,8 @@ async def save_review(body: SaveReviewBody):
             audit_id=body.audit_id,
             question_id=body.question_id,
             feedback=feedback_payload,
+            project_id=body.project_id,
+            ai_system_id=body.ai_system_id,
         )
     except Exception as e:
         raise HTTPException(
@@ -176,4 +221,87 @@ async def save_review(body: SaveReviewBody):
         "question_id": body.question_id,
         "review_state": result.get("review_state"),
         "reviewed_version": result.get("reviewed_version"),
+    }
+
+
+@router.post("/evidence", summary="Register evidence file (upload bytes or reference key)")
+async def register_evidence(body: EvidenceRegisterBody):
+    if not body.content_base64 and not body.s3_key_override:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "VALIDATION",
+                "message": "Provide content_base64 or s3_key_override",
+            },
+        )
+    raw: Optional[bytes] = None
+    if body.content_base64:
+        try:
+            raw = base64.b64decode(body.content_base64)
+        except Exception as e:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_BASE64", "message": str(e)},
+            ) from e
+    try:
+        entry = EvidenceService(s3_client).register_evidence(
+            body.org_id,
+            body.audit_id,
+            body.question_id,
+            file_name=body.file_name,
+            s3_key=body.s3_key_override,
+            uploaded_by=body.uploaded_by,
+            project_id=body.project_id,
+            ai_system_id=body.ai_system_id,
+            body=raw,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "EVIDENCE_FAILED", "message": str(e)},
+        ) from e
+    return {"status": True, "evidence": entry}
+
+
+@router.get("/evidence", summary="Fetch evidence entries for an audit scope")
+async def fetch_evidence(
+    org_id: str = Query(...),
+    audit_id: str = Query(...),
+    question_id: Optional[str] = Query(None),
+    project_id: str = Query("0"),
+    ai_system_id: str = Query("0"),
+):
+    try:
+        index = EvidenceService(s3_client).list_index(
+            org_id,
+            audit_id,
+            project_id=project_id,
+            ai_system_id=ai_system_id,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "EVIDENCE_FETCH_FAILED", "message": str(e)},
+        ) from e
+
+    if question_id:
+        items = index.get(question_id, [])
+        return {
+            "org_id": org_id,
+            "audit_id": audit_id,
+            "project_id": project_id,
+            "ai_system_id": ai_system_id,
+            "question_id": question_id,
+            "total": len(items),
+            "evidences": items,
+        }
+
+    total = sum(len(v) for v in index.values())
+    return {
+        "org_id": org_id,
+        "audit_id": audit_id,
+        "project_id": project_id,
+        "ai_system_id": ai_system_id,
+        "total": total,
+        "evidence_index": index,
     }

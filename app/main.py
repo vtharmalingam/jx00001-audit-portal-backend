@@ -7,7 +7,13 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.rest.v1 import assessment_router, knowledge_router, organizations_router
+from app.rest.v1 import (
+    admin_s3_router,
+    admin_tests_router,
+    assessment_router,
+    knowledge_router,
+    organizations_router,
+)
 
 
 @asynccontextmanager
@@ -25,6 +31,7 @@ app = FastAPI(
         {"name": "organizations", "description": "Org profiles, onboarding, AI systems."},
         {"name": "assessment", "description": "Categories, questions, answers, evaluation, audit views."},
         {"name": "knowledge", "description": "Semantic search and gap analysis."},
+        {"name": "admin", "description": "Admin-only operational endpoints."},
     ],
 )
 
@@ -56,7 +63,9 @@ app.add_middleware(
 API_PREFIX = "/api/v1"
 app.include_router(organizations_router, prefix=API_PREFIX)
 app.include_router(assessment_router, prefix=API_PREFIX)
-app.include_router(knowledge_router, prefix=API_PREFIX)
+app.include_router(knowledge_router, prefix=API_PREFIX, include_in_schema=False)
+app.include_router(admin_tests_router, prefix=API_PREFIX, include_in_schema=False)
+app.include_router(admin_s3_router, prefix=API_PREFIX, include_in_schema=False)
 
 
 @app.get("/health", tags=["meta"])
