@@ -1,92 +1,30 @@
+"""Knowledge base search and gap analysis (LLM)."""
+
 from typing import Any, Dict, List
 
+from fastapi import APIRouter, HTTPException, status
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts.chat import ChatPromptTemplate
-from pydantic import BaseModel, Field, confloat
 
-from app.engine.emitter import EventEmitter
-from app.engine.message_router import route
-from app.handlers.common import engine, llm_client
+from app.rest.deps import llm_client, semantic_engine
+from app.rest.v1.knowledge_schemas import GapAnalysisBody, SemanticSearchBody, SynthesisGapOutput
 
-
-class SynthesisGapOutput(BaseModel):
-    synthesized_summary: str = Field(
-        description=(
-            "Authoritative, concise answer synthesized strictly from the retrieved "
-            "context. This represents the reference answer used for gap evaluation."
-        )
-    )
-
-    key_themes: List[str] = Field(
-        description=(
-            "Distinct, high-level concepts explicitly present in the retrieved "
-            "context and reflected in the synthesized_summary."
-        ),
-        min_items=1,
-    )
-
-    user_gap: List[str] = Field(
-        description=(
-            "Concrete, factual gaps, omissions, or inaccuracies in the user answer "
-            "when compared strictly against the synthesized_summary. "
-            "Each item must describe a single, specific gap."
-        )
-    )
-
-    insights: List[str] = Field(
-        description=(
-            "Actionable, improvement-oriented guidance that helps the user close "
-            "the identified gaps. Each insight should directly correspond to one "
-            "or more items in user_gap."
-        )
-    )
-
-    match_score: confloat(ge=0.0, le=1.0) = Field(
-        description=(
-            "Numerical alignment score between the user answer and the synthesized_summary. "
-            "0.0 indicates no meaningful alignment. "
-            "1.0 indicates full alignment with no substantive gaps. "
-            "Score must be derived solely from content coverage and correctness."
-        )
-    )
+router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
 
-@route("SUPPORTWIZ_USER_REQS", "USER-ANSWER-GAP-ANALYSIS")
-async def answer_gap_analysis(ws, client_id, request, manager):
-    emitter = EventEmitter(websocket=ws)
+@router.post("/semantic-search", summary="Semantic search over the configured collection")
+async def semantic_search(body: SemanticSearchBody):
+    raw = semantic_engine.semantic_summary(body.context, body.count)
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, list):
+        return {"data": raw}
+    return {"data": raw}
 
-    reqData = request.reqData
 
-    if not reqData:
-        await emitter.error("🚩 Missing 'reqData' field")
-        return
-
-    customer_id = reqData.get("customer_id", "")
-    index_name = reqData.get("index_name", "")
-    question = reqData.get("question", "")
-    question_id = reqData.get("question_id", "")
-    user_answer = reqData.get("user_answer", "")
-
-    if not all([index_name, question, user_answer]):
-        await emitter.error(
-            "🚩 The payload 'reqData must contain these: question, index_name, user_answer"
-        )
-        return
-
-    supportwiz_response = engine.semantic_summary(question, 10)
-
-    payload: Dict[str, Any] = {}
-
-    if isinstance(supportwiz_response, dict):
-        payload.update(supportwiz_response)
-    elif isinstance(supportwiz_response, list):
-        payload["data"] = supportwiz_response
-    else:
-        payload["data"] = supportwiz_response
-
-    def summaries_to_text(summaries: List[Dict[str, Any]]) -> str:
-        return "\n\n".join(
-            f"""Document: {s.get('doc_id', 'N/A')}
+def _summaries_to_text(summaries: List[Dict[str, Any]]) -> str:
+    return "\n\n".join(
+        f"""Document: {s.get('doc_id', 'N/A')}
           Type: {s.get('chunk_type', 'N/A')}
           Score: {round(s.get('score', 0), 3)}
           Section: {' > '.join(s.get('section_path', []))}
@@ -94,11 +32,36 @@ async def answer_gap_analysis(ws, client_id, request, manager):
           Text:
           {s.get('text', '')}
           """.strip()
-            for s in summaries
-            if s.get("text")
+        for s in summaries
+        if s.get("text")
+    )
+
+
+@router.post("/gap-analysis", summary="Gap analysis vs retrieved KB context (LLM)")
+async def gap_analysis(body: GapAnalysisBody):
+    if not all([body.index_name, body.question, body.user_answer]):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"code": "VALIDATION", "message": "index_name, question, user_answer required"},
         )
 
-    summaries_text = summaries_to_text(payload["results"])
+    supportwiz_response = semantic_engine.semantic_summary(body.question, 10)
+    payload: Dict[str, Any] = {}
+    if isinstance(supportwiz_response, dict):
+        payload.update(supportwiz_response)
+    elif isinstance(supportwiz_response, list):
+        payload["data"] = supportwiz_response
+    else:
+        payload["data"] = supportwiz_response
+
+    results = payload.get("results")
+    if not isinstance(results, list) or not results:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"code": "NO_RESULTS", "message": "Semantic search returned no results for gap analysis"},
+        )
+
+    summaries_text = _summaries_to_text(results)
 
     prompt = ChatPromptTemplate.from_template(
         """
@@ -156,31 +119,33 @@ async def answer_gap_analysis(ws, client_id, request, manager):
     )
 
     parser = JsonOutputParser(pydantic_object=SynthesisGapOutput)
-
     chain = (
         prompt.partial(format_instructions=parser.get_format_instructions())
         | llm_client
         | parser
     )
 
-    ai_summary = chain.invoke(
-        {
-            "content": summaries_text,
-            "question": question,
-            "user_answer": user_answer,
-            "question_intent": (
-                "Evaluate implementation gaps between the user's answer and the "
-                "authoritative synthesized answer derived from the knowledge base"
-            ),
-        }
-    )
+    try:
+        ai_summary = chain.invoke(
+            {
+                "content": summaries_text,
+                "question": body.question,
+                "user_answer": body.user_answer,
+                "question_intent": (
+                    "Evaluate implementation gaps between the user's answer and the "
+                    "authoritative synthesized answer derived from the knowledge base"
+                ),
+            }
+        )
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "GAP_ANALYSIS_FAILED", "message": str(e)},
+        ) from e
 
-    out_payload = {
-        "reqType": request.reqType,
-        "reqSubType": request.reqSubType,
-        "customer_id": customer_id,
-        "question_id": question_id,
+    return {
+        "customer_id": body.customer_id,
+        "question_id": body.question_id,
+        "index_name": body.index_name,
         "data": ai_summary,
     }
-
-    await emitter.info("🧱 Gap Analysis:", payload=out_payload)

@@ -1,15 +1,29 @@
 # services/operational_service.py
 
-from typing import List, Dict, Optional
-from app.etl.s3.utils.s3_paths import domain_lookup_key, auditor_master_key
+import uuid
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from app.etl.s3.services.org_normalize import (
+    normalize_org,
+    org_matches_filters,
+    paginate,
+)
+from app.etl.s3.utils.s3_paths import auditor_master_key, domain_lookup_key
 
 
 class OperationalService:
 
     def __init__(self, s3):
         self.s3 = s3
+
+    @staticmethod
+    def org_profile_key(org_id: str) -> str:
+        return f"organizations/{org_id}/org_profile.json"
+
+    @staticmethod
+    def ai_systems_store_key(org_id: str) -> str:
+        return f"organizations/{org_id}/ai_systems.json"
 
     # 🔹 A. Get org_id from domain
     def get_org_by_domain(self, domain: str) -> Optional[str]:
@@ -35,11 +49,9 @@ class OperationalService:
         for auditor in auditors:
             if auditor.get("auditor_id") == auditor_id:
 
-                # Ensure organizations field exists
                 if "organizations" not in auditor:
                     auditor["organizations"] = []
 
-                # Avoid duplicates
                 if org_id not in auditor["organizations"]:
                     auditor["organizations"].append(org_id)
 
@@ -54,105 +66,195 @@ class OperationalService:
         return {
             "status": "success",
             "auditor_id": auditor_id,
-            "org_id": org_id
+            "org_id": org_id,
         }
 
+    def get_org_profile_raw(self, org_id: str) -> Optional[Dict]:
+        return self.s3.read_json(self.org_profile_key(org_id))
 
+    def merge_org_profile(self, org_id: str, patch: Dict[str, Any]) -> Dict[str, Any]:
+        """Shallow merge into org_profile.json; returns normalized ``Org``."""
+        if not org_id:
+            raise ValueError("org_id is required")
 
-    # While organization onboarded, 'org_profile' will get updated.
+        key = self.org_profile_key(org_id)
+        existing = self.s3.read_json(key) or {}
+        merged = {**existing, **patch}
+        merged["org_id"] = org_id
+
+        if not merged.get("created_at"):
+            merged["created_at"] = datetime.utcnow().isoformat()
+        merged["updated_at"] = datetime.utcnow().isoformat()
+
+        self.s3.write_json(key, merged)
+        return normalize_org(merged)
+
     def upsert_org_profile(
         self,
         org_id: str,
         name: str,
         email: str,
-        status: str = "pending"
+        status: str = "pending",
     ) -> Dict:
+        return self.merge_org_profile(
+            org_id,
+            {"name": name, "email": email, "status": status},
+        )
 
-        if not org_id:
-            raise ValueError("org_id is required")
-
-        key = f"organizations/{org_id}/org_profile.json"
-
-        existing = self.s3.read_json(key) or {}
-
-        data = {
-            "org_id": org_id,
-            "name": name,
-            "email": email,
-            "status": status,
-            "updated_at": datetime.utcnow().isoformat()
-        }
-
-        # 🔹 preserve created_at if exists
-        if existing.get("created_at"):
-            data["created_at"] = existing["created_at"]
-        else:
-            data["created_at"] = datetime.utcnow().isoformat()
-
-        self.s3.write_json(key, data)
-
-        return data
-
-
-
-    # This method is used by Auditor desk (to list organization given auditor)
-    # TODO: For a given org_id instead?
-    def get_all_organizations(self) -> List[Dict]:
-
+    def iter_org_ids(self) -> List[str]:
         prefix = "organizations/"
-
-        results = []
+        seen: set[str] = set()
+        out: List[str] = []
         continuation_token = None
-        seen_orgs = set()
 
         while True:
-            params = {
+            params: Dict[str, Any] = {
                 "Bucket": self.s3.bucket,
                 "Prefix": prefix,
-                "Delimiter": "/"
+                "Delimiter": "/",
             }
-
             if continuation_token:
                 params["ContinuationToken"] = continuation_token
 
             response = self.s3.client.list_objects_v2(**params)
 
-            # 🔹 Extract org folders
             for cp in response.get("CommonPrefixes", []):
-                org_prefix = cp.get("Prefix")  # e.g., organizations/D01/
-                org_id = org_prefix.split("/")[1]
-
-                if org_id in seen_orgs:
-                    continue
-
-                seen_orgs.add(org_id)
-
-                # 🔹 Read org profile
-                key = f"{org_prefix}org_profile.json"
-                profile = self.s3.read_json(key)
-
-                if profile:
-                    results.append({
-                        "name": profile.get("name"),
-                        "email": profile.get("email"),
-                        "org_id": profile.get("org_id"),
-                        "status": profile.get("status", "pending")
-                    })
-                else:
-                    # fallback if profile missing
-                    results.append({
-                        "name": org_id,
-                        "email": None,
-                        "org_id": org_id,
-                        "status": "pending"
-                    })
+                org_prefix = cp.get("Prefix", "")
+                parts = org_prefix.strip("/").split("/")
+                if len(parts) >= 2:
+                    oid = parts[1]
+                    if oid and oid not in seen:
+                        seen.add(oid)
+                        out.append(oid)
 
             if response.get("IsTruncated"):
                 continuation_token = response.get("NextContinuationToken")
             else:
                 break
 
-        # Optional: sort by name
-        results.sort(key=lambda x: x.get("name") or "")
+        out.sort()
+        return out
 
-        return results        
+    def get_all_organizations(self) -> List[Dict]:
+        """List all orgs with normalized ``Org`` shape (full profile when present)."""
+        results: List[Dict] = []
+        for org_id in self.iter_org_ids():
+            profile = self.get_org_profile_raw(org_id)
+            if profile:
+                results.append(normalize_org(profile))
+            else:
+                results.append(
+                    normalize_org(
+                        {
+                            "org_id": org_id,
+                            "name": org_id,
+                            "email": None,
+                            "status": "pending",
+                        }
+                    )
+                )
+        results.sort(key=lambda x: (x.get("name") or x.get("org_id") or ""))
+        return results
+
+    def list_organizations_filtered(
+        self,
+        *,
+        onboarded_by: Optional[str] = None,
+        org_type: Optional[str] = None,
+        aict_approved: Optional[bool] = None,
+        stage: Optional[str] = None,
+        status: Optional[str] = None,
+        archived: Optional[bool] = None,
+        q: Optional[str] = None,
+        page: int = 1,
+        page_size: int = 50,
+    ) -> tuple[List[Dict], int]:
+        all_rows = self.get_all_organizations()
+        filtered = [
+            o
+            for o in all_rows
+            if org_matches_filters(
+                o,
+                onboarded_by=onboarded_by,
+                org_type=org_type,
+                aict_approved=aict_approved,
+                stage=stage,
+                status=status,
+                archived=archived,
+                q=q,
+            )
+        ]
+        page_rows, total = paginate(filtered, page, page_size)
+        return page_rows, total
+
+    def onboarding_decision(
+        self,
+        org_id: str,
+        decision: str,
+        email: Optional[str] = None,
+        reason: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        decision = decision.lower().strip()
+        patch: Dict[str, Any] = {}
+        if decision == "approve":
+            patch["status"] = "active"
+            patch["aict_approved"] = True
+        elif decision == "reject":
+            patch["status"] = "rejected"
+            patch["aict_approved"] = False
+        else:
+            raise ValueError("decision must be 'approve' or 'reject'")
+
+        if email is not None:
+            patch["onboarding_decision_email"] = email
+        if reason is not None:
+            patch["onboarding_reject_reason"] = reason
+
+        existing = self.get_org_profile_raw(org_id)
+        if not existing:
+            raise ValueError(f"Unknown organization: {org_id}")
+
+        return self.merge_org_profile(org_id, patch)
+
+    def list_ai_systems(self, org_id: str) -> List[Dict[str, Any]]:
+        raw = self.s3.read_json(self.ai_systems_store_key(org_id))
+        if not raw:
+            return []
+        systems = raw.get("systems")
+        return list(systems) if isinstance(systems, list) else []
+
+    def add_ai_system(self, org_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        systems = self.list_ai_systems(org_id)
+        system = {**body}
+        system["org_id"] = org_id
+        if not system.get("system_id"):
+            system["system_id"] = str(uuid.uuid4())
+        if not system.get("added_at"):
+            system["added_at"] = datetime.utcnow().isoformat()
+
+        systems.append(system)
+        self.s3.write_json(
+            self.ai_systems_store_key(org_id),
+            {
+                "systems": systems,
+                "updated_at": datetime.utcnow().isoformat(),
+            },
+        )
+        return system
+
+    def filter_ai_systems(
+        self,
+        org_id: str,
+        *,
+        status: Optional[str] = None,
+        stage: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        rows = self.list_ai_systems(org_id)
+        out = []
+        for s in rows:
+            if status and (s.get("status") or "") != status:
+                continue
+            if stage and (s.get("stage") or "") != stage:
+                continue
+            out.append(s)
+        return out
