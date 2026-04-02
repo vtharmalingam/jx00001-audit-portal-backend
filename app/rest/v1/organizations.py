@@ -4,7 +4,7 @@ REST §3 Organizations — base path ``/api/v1/organizations``.
 Auth scoping is TODO (contract: scope by auth).
 """
 
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Query, status
 
@@ -32,10 +32,23 @@ def _svc() -> OperationalService:
     return OperationalService(s3_client)
 
 
+def _parse_org_types(raw: Optional[str]) -> Optional[List[str]]:
+    if raw is None or not str(raw).strip():
+        return None
+    parts = [p.strip() for p in str(raw).split(",")]
+    out = [p for p in parts if p]
+    return out or None
+
+
 @router.get(
     "",
     summary="List organizations",
-    description="Filters match §3.3; `org_type` aliases `onboarded_by_type` (aict-client → aict).",
+    description=(
+        "Filters match §3.3; `org_type` aliases `onboarded_by_type` (aict-client → aict). "
+        "Use `org_types=firm,firm_client` to match any of those channels in one request "
+        "(OR). When `org_types` is non-empty, it overrides `org_type` / `onboarded_by` for "
+        "channel filtering."
+    ),
 )
 async def list_organizations(
     onboarded_by: Optional[str] = Query(None),
@@ -43,6 +56,10 @@ async def list_organizations(
     org_type: Optional[str] = Query(
         None,
         description="Same as onboarded_by_type for external docs (aict-client ↔ aict).",
+    ),
+    org_types: Optional[str] = Query(
+        None,
+        description="Comma-separated onboarded_by_type values (OR), e.g. firm,firm_client.",
     ),
     aict_approved: Optional[bool] = Query(None),
     stage: Optional[str] = Query(None),
@@ -53,10 +70,12 @@ async def list_organizations(
     page_size: int = Query(50, ge=1, le=500),
 ):
     svc = _svc()
+    parsed_types = _parse_org_types(org_types)
     rows, total = svc.list_organizations_filtered(
         onboarded_by=onboarded_by,
         onboarded_by_id=onboarded_by_id,
         org_type=org_type,
+        org_types=parsed_types,
         aict_approved=aict_approved,
         stage=stage,
         status=status,

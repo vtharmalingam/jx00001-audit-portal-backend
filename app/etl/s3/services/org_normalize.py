@@ -7,7 +7,17 @@ Nested ``manager`` / ``practitioner`` / ``auditor`` are ``PersonRef`` shapes whe
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
+
+
+def _normalize_onboarded_channel(value: str) -> str:
+    """Lowercase and map aict-client → aict (same as single-value org_type filter)."""
+    return str(value).strip().lower().replace("aict-client", "aict")
+
+
+def _org_channel_key(org: Dict[str, Any]) -> str:
+    ch = org.get("onboarded_by_type") or ""
+    return _normalize_onboarded_channel(ch) if ch else ""
 
 
 def _person(role: str, src: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -99,18 +109,28 @@ def org_matches_filters(
     onboarded_by: Optional[str] = None,
     onboarded_by_id: Optional[str] = None,
     org_type: Optional[str] = None,
+    org_types: Optional[Sequence[str]] = None,
     aict_approved: Optional[bool] = None,
     stage: Optional[str] = None,
     status: Optional[str] = None,
     archived: Optional[bool] = None,
     q: Optional[str] = None,
 ) -> bool:
-    channel_filter = onboarded_by or org_type
-    if channel_filter:
-        ch = (org.get("onboarded_by_type") or "").lower()
-        want = channel_filter.lower().replace("aict-client", "aict")
-        if ch != want:
+    wants: Optional[set[str]] = None
+    if org_types is not None:
+        wants = {
+            _normalize_onboarded_channel(x)
+            for x in org_types
+            if x is not None and str(x).strip()
+        }
+    if wants:
+        if _org_channel_key(org) not in wants:
             return False
+    else:
+        channel_filter = onboarded_by or org_type
+        if channel_filter:
+            if _org_channel_key(org) != _normalize_onboarded_channel(channel_filter):
+                return False
 
     if onboarded_by_id and (org.get("onboarded_by_id") or "") != onboarded_by_id:
         return False

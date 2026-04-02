@@ -23,10 +23,10 @@ from app.rest.v1 import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("🚀 Starting audit portal API...")
+    print("Starting audit portal API...")
     app.state.start_time = datetime.utcnow()
     yield
-    print("🛑 Shutting down audit portal API...")
+    print("Shutting down audit portal API...")
 
 
 app = FastAPI(
