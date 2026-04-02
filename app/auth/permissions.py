@@ -1,9 +1,9 @@
 """
-Permission-based access control — derived from role strings at runtime.
+Fully dynamic permission system — permissions are loaded from S3 roles.json.
 
-No config file, no database, no hardcoded role lists.
-Permissions are derived from the role's LEVEL (admin/manager/practitioner)
-with optional TIER overrides (aict/firm/individual).
+Only `aict_admin` has a hardcoded fallback (all permissions) so the platform
+is always bootstrappable.  Every other role's permissions come from the role
+catalog managed via the /roles CRUD API.
 
 Usage:
     from app.auth.permissions import has_permission, get_permissions, require_permission
@@ -21,7 +21,7 @@ Usage:
         ...
 """
 
-from typing import Dict, FrozenSet, Optional, Set
+from typing import Dict, FrozenSet, List, Optional
 
 from fastapi import Cookie, HTTPException, status
 
@@ -46,50 +46,14 @@ ARCHIVED_VIEW = "archived.view"
 DASHBOARD_VIEW = "dashboard.view"
 DESK_ASSIGNED = "desk.assigned"
 
+# ── All permissions (aict_admin bootstrap fallback) ───────────────────────
 
-# ── Level permissions (apply to ALL tiers) ─────────────────────────────────
-
-_LEVEL_PERMISSIONS: Dict[str, FrozenSet[str]] = {
-    "admin": frozenset({
-        USERS_MANAGE,
-        ORG_MANAGE,
-        ONBOARD_CREATE,
-        REPORTS_VIEW,
-        REPORTS_EXPORT,
-        ARCHIVED_VIEW,
-        DASHBOARD_VIEW,
-        LIBRARY_READ,
-    }),
-    "manager": frozenset({
-        ASSESSMENT_REVIEW,
-        REPORTS_VIEW,
-        REPORTS_EXPORT,
-        REPORTS_ANNOTATE,
-        ONBOARD_CREATE,
-        ARCHIVED_VIEW,
-        DASHBOARD_VIEW,
-        LIBRARY_READ,
-    }),
-    "practitioner": frozenset({
-        ASSESSMENT_FILL,
-        DASHBOARD_VIEW,
-        LIBRARY_READ,
-        DESK_ASSIGNED,
-    }),
-}
-
-
-# ── Tier-specific overrides (additive — merged on top of level perms) ──────
-
-_TIER_OVERRIDES: Dict[str, Dict[str, FrozenSet[str]]] = {
-    "aict": {
-        "admin": frozenset({
-            SETTINGS_MANAGE,
-            LIBRARY_MANAGE,
-            ASSESSMENT_FILL,
-        }),
-    },
-}
+ALL_PERMISSIONS = frozenset({
+    USERS_MANAGE, ORG_MANAGE, SETTINGS_MANAGE, LIBRARY_MANAGE, LIBRARY_READ,
+    ASSESSMENT_FILL, ASSESSMENT_REVIEW, REPORTS_VIEW, REPORTS_EXPORT,
+    REPORTS_ANNOTATE, ONBOARD_CREATE, ARCHIVED_VIEW, DASHBOARD_VIEW,
+    DESK_ASSIGNED,
+})
 
 
 # ── Core API ───────────────────────────────────────────────────────────────
@@ -99,7 +63,6 @@ def _parse_role(role: str) -> tuple:
     Split role string into (tier, level).
     'firm_manager'       → ('firm', 'manager')
     'individual_admin'   → ('individual', 'admin')
-    'aict_practitioner'  → ('aict', 'practitioner')
     """
     parts = role.rsplit("_", 1)
     if len(parts) != 2:
@@ -107,30 +70,61 @@ def _parse_role(role: str) -> tuple:
     return parts[0], parts[1]
 
 
+def _load_role_permissions(role_id: str) -> Optional[FrozenSet[str]]:
+    """Load permissions for a role from S3 via RoleService. Returns None if not found."""
+    from app.auth.role_service import RoleService
+    from app.rest.deps import s3_client
+
+    svc = RoleService(s3_client)
+    role = svc.get_role(role_id)
+    if role and role.get("permissions"):
+        return frozenset(role["permissions"])
+    return None
+
+
+# Simple dict cache — cleared when roles are updated.
+_CACHE: Dict[str, FrozenSet[str]] = {}
+
+
 def get_permissions(role: str) -> FrozenSet[str]:
     """
     Return the full set of permissions for a given role string.
-    Merges level-based defaults with tier-specific overrides.
-    Result is cached per unique role string.
+
+    Resolution order:
+    1. aict_admin → hardcoded ALL_PERMISSIONS (bootstrap/god role)
+    2. Any other role → load from S3 roles.json via RoleService
+    3. If role not found in S3 → empty set (no permissions)
     """
+    if not role:
+        return frozenset()
+
     cached = _CACHE.get(role)
     if cached is not None:
         return cached
 
-    tier, level = _parse_role(role)
+    # aict_admin is the bootstrap role — always has all permissions
+    if role == "aict_admin":
+        _CACHE[role] = ALL_PERMISSIONS
+        return ALL_PERMISSIONS
 
-    perms: Set[str] = set(_LEVEL_PERMISSIONS.get(level, frozenset()))
+    # Dynamic: load from S3 role catalog
+    perms = _load_role_permissions(role)
+    if perms is None:
+        perms = frozenset()
 
-    tier_overrides = _TIER_OVERRIDES.get(tier, {}).get(level, frozenset())
-    perms |= tier_overrides
-
-    result = frozenset(perms)
-    _CACHE[role] = result
-    return result
+    _CACHE[role] = perms
+    return perms
 
 
-# Simple dict cache — roles are a small finite set, no eviction needed.
-_CACHE: Dict[str, FrozenSet[str]] = {}
+def invalidate_cache(role_id: Optional[str] = None) -> None:
+    """
+    Clear the permission cache. Call after role CRUD operations.
+    If role_id is given, only that role is evicted; otherwise the entire cache is cleared.
+    """
+    if role_id:
+        _CACHE.pop(role_id, None)
+    else:
+        _CACHE.clear()
 
 
 def has_permission(role: str, permission: str) -> bool:

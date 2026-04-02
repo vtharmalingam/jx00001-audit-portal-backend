@@ -5,6 +5,7 @@ from app.auth.role_router import router as role_router
 from app.auth.permissions import (
     get_permissions,
     has_permission,
+    invalidate_cache,
     require_permission,
 )
 
@@ -13,5 +14,6 @@ __all__ = [
     "role_router",
     "get_permissions",
     "has_permission",
+    "invalidate_cache",
     "require_permission",
 ]

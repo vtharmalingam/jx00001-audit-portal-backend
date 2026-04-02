@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.auth.dependencies import get_optional_user
+from app.auth.permissions import invalidate_cache
 from app.auth.role_service import RoleService
 from app.rest.deps import s3_client
 
@@ -66,6 +67,7 @@ async def create_role(
         role = _svc().create_role(body.model_dump())
     except ValueError as e:
         raise HTTPException(status.HTTP_409_CONFLICT, detail={"code": "DUPLICATE", "message": str(e)}) from e
+    invalidate_cache(role["id"])
     return role
 
 
@@ -82,6 +84,7 @@ async def update_role(
     role = _svc().update_role(role_id, patch)
     if not role:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": f"Role '{role_id}' not found"})
+    invalidate_cache(role_id)
     return role
 
 
@@ -92,6 +95,7 @@ async def delete_role(
 ):
     if not _svc().delete_role(role_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": f"Role '{role_id}' not found"})
+    invalidate_cache(role_id)
 
 
 @router.get("/permissions/catalog", summary="List all available permission strings")
