@@ -97,6 +97,7 @@ def org_matches_filters(
     org: Dict[str, Any],
     *,
     onboarded_by: Optional[str] = None,
+    onboarded_by_id: Optional[str] = None,
     org_type: Optional[str] = None,
     aict_approved: Optional[bool] = None,
     stage: Optional[str] = None,
@@ -110,6 +111,9 @@ def org_matches_filters(
         want = channel_filter.lower().replace("aict-client", "aict")
         if ch != want:
             return False
+
+    if onboarded_by_id and (org.get("onboarded_by_id") or "") != onboarded_by_id:
+        return False
 
     if aict_approved is not None:
         if bool(org.get("aict_approved")) != aict_approved:

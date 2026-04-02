@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 from typing import Dict, List
 
 
@@ -68,6 +69,98 @@ class CategoryQuestionLoader:
 
         categories.sort(key=lambda c: c["category_id"])
         return categories
+
+    # ---------------------------------------------------------
+    # CATEGORY CRUD
+    # ---------------------------------------------------------
+    def create_category(self, category_id: str, display_name: str, description: str = "") -> Dict:
+        folder_name = category_id.lower().replace(" ", "_")
+        folder_path = os.path.join(self.categories_root, folder_name)
+        os.makedirs(folder_path, exist_ok=True)
+
+        meta = {
+            "category_id": category_id,
+            "display_name": display_name,
+            "description": description,
+        }
+        with open(os.path.join(folder_path, "category.json"), "w", encoding="utf-8") as f:
+            json.dump(meta, f, indent=2, ensure_ascii=False)
+
+        return meta
+
+    def update_category(self, category_id: str, updates: Dict) -> Dict:
+        folder_path = self._find_category_folder(category_id)
+        meta_path = os.path.join(folder_path, "category.json")
+
+        with open(meta_path, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+
+        for key in ("display_name", "description", "status"):
+            if key in updates:
+                meta[key] = updates[key]
+
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(meta, f, indent=2, ensure_ascii=False)
+
+        return meta
+
+    def delete_category(self, category_id: str) -> bool:
+        folder_path = self._find_category_folder(category_id)
+        shutil.rmtree(folder_path)
+        return True
+
+    # ---------------------------------------------------------
+    # QUESTION CRUD
+    # ---------------------------------------------------------
+    def create_question(self, question_data: Dict) -> Dict:
+        category_id = question_data.get("category_id")
+        question_id = question_data.get("question_id")
+        if not category_id or not question_id:
+            raise ValueError("category_id and question_id are required")
+
+        folder_path = self._find_category_folder(category_id)
+        file_path = os.path.join(folder_path, f"{question_id}.json")
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(question_data, f, indent=2, ensure_ascii=False)
+
+        return question_data
+
+    def update_question(self, question_id: str, updates: Dict) -> Dict:
+        folder_path, file_name = self._find_question_file(question_id)
+        file_path = os.path.join(folder_path, file_name)
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        data.update(updates)
+        data["question_id"] = question_id  # prevent overwrite
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+
+        return data
+
+    def delete_question(self, question_id: str) -> bool:
+        folder_path, file_name = self._find_question_file(question_id)
+        os.remove(os.path.join(folder_path, file_name))
+        return True
+
+    def _find_question_file(self, question_id: str):
+        """Find the category folder and filename for a given question_id."""
+        for folder in os.listdir(self.categories_root):
+            folder_path = os.path.join(self.categories_root, folder)
+            if not os.path.isdir(folder_path):
+                continue
+            for file in os.listdir(folder_path):
+                if not file.endswith(".json") or file in ("category.json", "consistency.json"):
+                    continue
+                path = os.path.join(folder_path, file)
+                with open(path, "r", encoding="utf-8") as f:
+                    spec = json.load(f)
+                if spec.get("question_id") == question_id:
+                    return folder_path, file
+        raise ValueError(f"Question not found: {question_id}")
 
     # ---------------------------------------------------------
     # INTERNAL HELPERS

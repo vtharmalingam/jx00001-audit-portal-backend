@@ -4,7 +4,9 @@ import base64
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from app.auth.permissions import require_permission
 
 from app.etl.s3.services.answer_service import AnswerService
 from app.etl.s3.services.auditor_service import AuditorService
@@ -17,10 +19,14 @@ from app.procs.category_question_loader import CategoryQuestionLoader
 from app.procs.embeddings import EmbeddingModel
 from app.rest.deps import data_dir, s3_client
 from app.rest.v1.assessment_schemas import (
+    CreateCategoryBody,
+    CreateQuestionBody,
     EvaluateAnswerBody,
     EvidenceRegisterBody,
     SaveAnswerBody,
     SaveReviewBody,
+    UpdateCategoryBody,
+    UpdateQuestionBody,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,9 +53,10 @@ async def list_questions(category: str = Query(..., description="Category id")):
             detail={"code": "CONFIG", "message": "data_dir is not configured"},
         )
     loader = CategoryQuestionLoader(data_dir)
+    result = loader.load_category(category)
     return {
         "category_id": category,
-        "questions": loader.load_category(category),
+        "questions": result.get("questions", []) if isinstance(result, dict) else result,
     }
 
 
@@ -168,7 +175,11 @@ async def get_audit_view(
     }
 
 
-@router.post("/reviews", summary="Save auditor feedback for a question answer")
+@router.post(
+    "/reviews",
+    summary="Save auditor feedback for a question answer",
+    dependencies=[Depends(require_permission("assessment.review"))],
+)
 async def save_review(body: SaveReviewBody):
     if not all([body.org_id, body.audit_id, body.question_id, body.review_state]):
         raise HTTPException(
@@ -305,3 +316,155 @@ async def fetch_evidence(
         "total": total,
         "evidence_index": index,
     }
+
+
+# ── Category CRUD ──────────────────────────────────────────────────────────
+
+
+@router.post(
+    "/categories",
+    summary="Create a new assessment category",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("library.manage"))],
+)
+async def create_category(body: CreateCategoryBody):
+    if not data_dir:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "CONFIG", "message": "data_dir is not configured"},
+        )
+    loader = CategoryQuestionLoader(data_dir)
+    try:
+        cat = loader.create_category(body.category_id, body.display_name, body.description)
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "CREATE_CATEGORY_FAILED", "message": str(e)},
+        ) from e
+    return cat
+
+
+@router.put(
+    "/categories/{category_id}",
+    summary="Update an assessment category",
+    dependencies=[Depends(require_permission("library.manage"))],
+)
+async def update_category(category_id: str, body: UpdateCategoryBody):
+    if not data_dir:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "CONFIG", "message": "data_dir is not configured"},
+        )
+    loader = CategoryQuestionLoader(data_dir)
+    try:
+        updates = body.model_dump(exclude_none=True)
+        cat = loader.update_category(category_id, updates)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": str(e)}) from e
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "UPDATE_CATEGORY_FAILED", "message": str(e)},
+        ) from e
+    return cat
+
+
+@router.delete(
+    "/categories/{category_id}",
+    summary="Delete an assessment category",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("library.manage"))],
+)
+async def delete_category(category_id: str):
+    if not data_dir:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "CONFIG", "message": "data_dir is not configured"},
+        )
+    loader = CategoryQuestionLoader(data_dir)
+    try:
+        loader.delete_category(category_id)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": str(e)}) from e
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "DELETE_CATEGORY_FAILED", "message": str(e)},
+        ) from e
+
+
+# ── Question CRUD ──────────────────────────────────────────────────────────
+
+
+@router.post(
+    "/questions",
+    summary="Create a new assessment question",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("library.manage"))],
+)
+async def create_question(body: CreateQuestionBody):
+    if not data_dir:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "CONFIG", "message": "data_dir is not configured"},
+        )
+    loader = CategoryQuestionLoader(data_dir)
+    try:
+        q = loader.create_question(body.model_dump())
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": str(e)}) from e
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "CREATE_QUESTION_FAILED", "message": str(e)},
+        ) from e
+    return q
+
+
+@router.put(
+    "/questions/{question_id}",
+    summary="Update an assessment question",
+    dependencies=[Depends(require_permission("library.manage"))],
+)
+async def update_question(question_id: str, body: UpdateQuestionBody):
+    if not data_dir:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "CONFIG", "message": "data_dir is not configured"},
+        )
+    loader = CategoryQuestionLoader(data_dir)
+    try:
+        updates = body.model_dump(exclude_none=True)
+        q = loader.update_question(question_id, updates)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": str(e)}) from e
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "UPDATE_QUESTION_FAILED", "message": str(e)},
+        ) from e
+    return q
+
+
+@router.delete(
+    "/questions/{question_id}",
+    summary="Delete an assessment question",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("library.manage"))],
+)
+async def delete_question(question_id: str):
+    if not data_dir:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "CONFIG", "message": "data_dir is not configured"},
+        )
+    loader = CategoryQuestionLoader(data_dir)
+    try:
+        loader.delete_question(question_id)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": str(e)}) from e
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "DELETE_QUESTION_FAILED", "message": str(e)},
+        ) from e

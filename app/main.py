@@ -1,18 +1,23 @@
 from datetime import datetime
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.auth import auth_router, role_router
 from app.rest.v1 import (
     admin_s3_router,
     admin_tests_router,
     assessment_router,
     knowledge_router,
     organizations_router,
+    aict_users_router,
 )
 
 
@@ -61,7 +66,10 @@ app.add_middleware(
 )
 
 API_PREFIX = "/api/v1"
+app.include_router(auth_router, prefix=API_PREFIX)
+app.include_router(role_router, prefix=API_PREFIX)
 app.include_router(organizations_router, prefix=API_PREFIX)
+app.include_router(aict_users_router, prefix=API_PREFIX)
 app.include_router(assessment_router, prefix=API_PREFIX)
 app.include_router(knowledge_router, prefix=API_PREFIX, include_in_schema=False)
 app.include_router(admin_tests_router, prefix=API_PREFIX, include_in_schema=False)

@@ -171,3 +171,7 @@ def blockchain_export_key(audit_id: str) -> str:
 
 def auditor_master_key() -> str:
     return _prefix("lookups/auditor_master.json")
+
+
+def aict_users_key() -> str:
+    return _prefix("platform/aict_users.json")

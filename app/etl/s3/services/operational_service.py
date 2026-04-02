@@ -149,20 +149,20 @@ class OperationalService:
         """List all orgs with normalized ``Org`` shape (full profile when present)."""
         results: List[Dict] = []
         for org_id in self.iter_org_ids():
-            profile = self.get_org_profile_raw(org_id)
-            if profile:
-                results.append(normalize_org(profile))
-            else:
-                results.append(
-                    normalize_org(
-                        {
-                            "org_id": org_id,
-                            "name": org_id,
-                            "email": None,
-                            "status": "pending",
-                        }
-                    )
-                )
+            profile = self.get_org_profile_raw(org_id) or {
+                "org_id": org_id,
+                "name": org_id,
+                "email": None,
+                "status": "pending",
+            }
+            systems = self.list_ai_systems(org_id)
+            profile["ai_system_wip_count"] = sum(
+                1 for s in systems if (s.get("status") or "wip") != "completed"
+            )
+            profile["ai_system_completed_count"] = sum(
+                1 for s in systems if s.get("status") == "completed"
+            )
+            results.append(normalize_org(profile))
         results.sort(key=lambda x: (x.get("name") or x.get("org_id") or ""))
         return results
 
@@ -170,6 +170,7 @@ class OperationalService:
         self,
         *,
         onboarded_by: Optional[str] = None,
+        onboarded_by_id: Optional[str] = None,
         org_type: Optional[str] = None,
         aict_approved: Optional[bool] = None,
         stage: Optional[str] = None,
@@ -186,6 +187,7 @@ class OperationalService:
             if org_matches_filters(
                 o,
                 onboarded_by=onboarded_by,
+                onboarded_by_id=onboarded_by_id,
                 org_type=org_type,
                 aict_approved=aict_approved,
                 stage=stage,

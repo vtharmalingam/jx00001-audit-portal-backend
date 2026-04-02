@@ -37,6 +37,36 @@ class SaveReviewBody(BaseModel):
     recommendations: Optional[List[str]] = None
 
 
+class CreateCategoryBody(BaseModel):
+    category_id: str
+    display_name: str
+    description: str = ""
+    status: Optional[str] = "draft"
+
+
+class UpdateCategoryBody(BaseModel):
+    display_name: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    category_id: Optional[str] = None
+
+
+class CreateQuestionBody(BaseModel):
+    question_id: str
+    question: str
+    category_id: str
+    placeholder: Optional[str] = ""
+    coverage_dimensions: Optional[List[str]] = Field(default_factory=list)
+
+
+class UpdateQuestionBody(BaseModel):
+    question: Optional[str] = None
+    category_id: Optional[str] = None
+    placeholder: Optional[str] = None
+    coverage_dimensions: Optional[List[str]] = None
+    question_id: Optional[str] = None
+
+
 class EvidenceRegisterBody(BaseModel):
     org_id: str
     audit_id: str

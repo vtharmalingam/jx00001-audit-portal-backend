@@ -1,3 +1,14 @@
+auth:
+  jwt_secret_key: "CHANGE-ME-dev-only-not-for-production"
+  access_token_expire_minutes: 30
+  refresh_token_expire_days: 7
+  algorithm: "HS256"
+  cookie_secure: false    # true in production (HTTPS)
+  cookie_samesite: "lax"
+  cookie_domain: ""
+  invite_token_expire_hours: 72
+  frontend_base_url: "http://localhost:3000"
+
 ai_assessment:
   # 
   data_dir: "./app/data/questions"

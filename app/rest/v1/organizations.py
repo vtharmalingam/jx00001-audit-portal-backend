@@ -39,6 +39,7 @@ def _svc() -> OperationalService:
 )
 async def list_organizations(
     onboarded_by: Optional[str] = Query(None),
+    onboarded_by_id: Optional[str] = Query(None, description="Filter by parent org (e.g. firm ID)"),
     org_type: Optional[str] = Query(
         None,
         description="Same as onboarded_by_type for external docs (aict-client ↔ aict).",
@@ -54,6 +55,7 @@ async def list_organizations(
     svc = _svc()
     rows, total = svc.list_organizations_filtered(
         onboarded_by=onboarded_by,
+        onboarded_by_id=onboarded_by_id,
         org_type=org_type,
         aict_approved=aict_approved,
         stage=stage,
@@ -82,6 +84,22 @@ async def upsert_organization(org_id: str, body: OrgUpsertBody):
 
     merged = svc.merge_org_profile(org_id, patch)
     return {"organization": merged}
+
+
+@router.delete(
+    "/{org_id}",
+    summary="Permanently delete an organisation record from S3",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_organization(org_id: str):
+    svc = _svc()
+    try:
+        svc.s3.delete_object(svc.org_profile_key(org_id))
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "DELETE_FAILED", "message": str(e)},
+        ) from e
 
 
 @router.post(

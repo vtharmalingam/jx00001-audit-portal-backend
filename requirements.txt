@@ -30,6 +30,11 @@ ollama==0.6.1
 
 faiss-cpu==1.13.2
 
+# Auth
+python-jose[cryptography]==3.3.0
+bcrypt
+pydantic[email]
+
 # S3
 boto3
 
