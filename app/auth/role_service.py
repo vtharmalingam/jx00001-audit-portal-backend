@@ -48,6 +48,17 @@ _DEFAULT_ROLES = [
         ],
     },
     {
+        "id": "aict_csap",
+        "display_name": "AICT CSAP",
+        "tier": "aict",
+        "level": "csap",
+        "description": "Cybersecurity Assessment Professional — reviews practitioner assessments across all tiers, issues per-question opinions (clean/qualified/adverse/disclaimer), marks category pass/fail verdicts, and issues final project attestations.",
+        "permissions": [
+            "review.opinion", "review.verdict", "review.attestation",
+            "assessment.review", "reports.view", "library.read", "dashboard.view",
+        ],
+    },
+    {
         "id": "firm_admin",
         "display_name": "Firm Admin",
         "tier": "firm",

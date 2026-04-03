@@ -35,6 +35,37 @@ class AuthUserService:
             {"users": users, "updated_at": datetime.utcnow().isoformat()},
         )
 
+    # ── Bootstrap ──────────────────────────────────────────────────────────
+
+    _DEMO_USERS = [
+        {"email": "admin@aict.com", "name": "AICT Admin", "role": "aict_admin"},
+        {"email": "manager@aict.com", "name": "AICT Manager", "role": "aict_manager"},
+        {"email": "csap@aict.com", "name": "AICT CSAP", "role": "aict_csap"},
+        {"email": "practitioner@aict.com", "name": "AICT Practitioner", "role": "aict_practitioner"},
+        {"email": "firm.admin@riskfirm.com", "name": "Firm Admin", "role": "firm_admin"},
+        {"email": "firm.manager@riskfirm.com", "name": "Firm Manager", "role": "firm_manager"},
+        {"email": "firm.practitioner@riskfirm.com", "name": "Firm Practitioner", "role": "firm_practitioner"},
+        {"email": "compliance@hooli.com", "name": "Hooli Technologies", "role": "individual_admin", "id": "ORG005"},
+        {"email": "contact@globex.com", "name": "Globex Industries", "role": "individual_manager", "id": "ORG002"},
+        {"email": "info@initech.com", "name": "Initech Solutions", "role": "individual_practitioner", "id": "ORG003"},
+    ]
+
+    def ensure_demo_users(self, default_password: str = "Admin@123") -> int:
+        """Seed any missing demo users. Returns count of users created."""
+        created = 0
+        for demo in self._DEMO_USERS:
+            if not self.find_by_email(demo["email"]):
+                self.create_user(
+                    name=demo["name"],
+                    email=demo["email"],
+                    password=default_password,
+                    role=demo["role"],
+                    user_id=demo.get("id"),
+                    status="active",
+                )
+                created += 1
+        return created
+
     # ── Queries ────────────────────────────────────────────────────────────
 
     def find_by_email(self, email: str) -> Optional[Dict]:
@@ -132,6 +163,18 @@ class AuthUserService:
                 user["password_hash"] = hash_password(password)
                 user["status"] = "active"
                 user["invite_token_hash"] = None
+                user["updated_at"] = datetime.utcnow().isoformat()
+                self._save(users)
+                return self._safe_user(user)
+        return None
+
+    def reset_password(self, user_id: str, new_password: str) -> Optional[Dict]:
+        """Admin-only: reset a user's password and ensure they are active."""
+        users = self._load()
+        for user in users:
+            if user["id"] == user_id:
+                user["password_hash"] = hash_password(new_password)
+                user["status"] = "active"
                 user["updated_at"] = datetime.utcnow().isoformat()
                 self._save(users)
                 return self._safe_user(user)

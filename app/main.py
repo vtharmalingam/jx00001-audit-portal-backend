@@ -18,6 +18,7 @@ from app.rest.v1 import (
     knowledge_router,
     organizations_router,
     aict_users_router,
+    review_router,
 )
 
 
@@ -25,6 +26,18 @@ from app.rest.v1 import (
 async def lifespan(app: FastAPI):
     print("Starting audit portal API...")
     app.state.start_time = datetime.utcnow()
+
+    # Seed missing demo users (idempotent — skips existing)
+    try:
+        from app.auth.service import AuthUserService
+        from app.rest.deps import s3_client as _s3
+        svc = AuthUserService(_s3)
+        n = svc.ensure_demo_users()
+        if n:
+            print(f"  Seeded {n} demo user(s)")
+    except Exception as e:
+        print(f"  Warning: demo user seed failed: {e}")
+
     yield
     print("Shutting down audit portal API...")
 
@@ -73,6 +86,7 @@ app.include_router(aict_users_router, prefix=API_PREFIX)
 app.include_router(assessment_router, prefix=API_PREFIX)
 app.include_router(knowledge_router, prefix=API_PREFIX, include_in_schema=False)
 app.include_router(admin_tests_router, prefix=API_PREFIX, include_in_schema=False)
+app.include_router(review_router, prefix=API_PREFIX)
 app.include_router(admin_s3_router, prefix=API_PREFIX, include_in_schema=False)
 
 

@@ -117,5 +117,8 @@ async def permission_catalog():
             {"key": "archived.view", "label": "View Archived", "description": "View archived organisations and assessments"},
             {"key": "dashboard.view", "label": "View Dashboard", "description": "Access overview and desk dashboards"},
             {"key": "desk.assigned", "label": "Assigned Desk", "description": "Desk filtered to personally assigned items"},
+            {"key": "review.opinion", "label": "Issue Opinions", "description": "Issue per-question opinions (clean/qualified/adverse/disclaimer)"},
+            {"key": "review.verdict", "label": "Issue Verdicts", "description": "Mark assessment categories as pass or fail"},
+            {"key": "review.attestation", "label": "Issue Attestation", "description": "Issue the final project attestation opinion"},
         ]
     }

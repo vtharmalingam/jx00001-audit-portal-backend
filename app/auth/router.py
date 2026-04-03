@@ -739,6 +739,23 @@ async def change_role(
     return _user_response(updated)
 
 
+@router.post("/users/{user_id}/reset-password", summary="Admin reset password for a user")
+async def reset_password(
+    user_id: str,
+    current_user: Optional[Dict] = Depends(get_optional_user),
+):
+    svc = _get_auth_service()
+    target = svc.find_by_id(user_id)
+    if not target:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": "User not found"})
+
+    updated = svc.reset_password(user_id, "Admin@123")
+    if not updated:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail={"code": "RESET_FAILED", "message": "Failed to reset password"})
+
+    return {"message": "Password reset to default", "user": _user_response(updated)}
+
+
 @router.delete("/users/{user_id}", summary="Delete a user (admin only)", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: str,

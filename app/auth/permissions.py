@@ -45,6 +45,9 @@ ONBOARD_CREATE = "onboard.create"
 ARCHIVED_VIEW = "archived.view"
 DASHBOARD_VIEW = "dashboard.view"
 DESK_ASSIGNED = "desk.assigned"
+REVIEW_OPINION = "review.opinion"
+REVIEW_VERDICT = "review.verdict"
+REVIEW_ATTESTATION = "review.attestation"
 
 # ── All permissions (aict_admin bootstrap fallback) ───────────────────────
 
@@ -52,7 +55,7 @@ ALL_PERMISSIONS = frozenset({
     USERS_MANAGE, ORG_MANAGE, SETTINGS_MANAGE, LIBRARY_MANAGE, LIBRARY_READ,
     ASSESSMENT_FILL, ASSESSMENT_REVIEW, REPORTS_VIEW, REPORTS_EXPORT,
     REPORTS_ANNOTATE, ONBOARD_CREATE, ARCHIVED_VIEW, DASHBOARD_VIEW,
-    DESK_ASSIGNED,
+    DESK_ASSIGNED, REVIEW_OPINION, REVIEW_VERDICT, REVIEW_ATTESTATION,
 })
 
 
