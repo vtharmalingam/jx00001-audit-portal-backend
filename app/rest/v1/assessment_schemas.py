@@ -42,6 +42,7 @@ class CreateCategoryBody(BaseModel):
     display_name: str
     description: str = ""
     status: Optional[str] = "draft"
+    control_id: Optional[str] = None
 
 
 class UpdateCategoryBody(BaseModel):
@@ -49,6 +50,7 @@ class UpdateCategoryBody(BaseModel):
     description: Optional[str] = None
     status: Optional[str] = None
     category_id: Optional[str] = None
+    control_id: Optional[str] = None
 
 
 class CreateQuestionBody(BaseModel):

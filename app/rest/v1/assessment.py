@@ -335,7 +335,7 @@ async def create_category(body: CreateCategoryBody):
         )
     loader = CategoryQuestionLoader(data_dir)
     try:
-        cat = loader.create_category(body.category_id, body.display_name, body.description)
+        cat = loader.create_category(body.category_id, body.display_name, body.description, control_id=body.control_id)
     except Exception as e:
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,

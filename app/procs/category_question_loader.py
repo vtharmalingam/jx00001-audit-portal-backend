@@ -30,6 +30,7 @@ class CategoryQuestionLoader:
             "category_id": category_meta["category_id"],
             "display_name": category_meta.get("display_name"),
             "description": category_meta.get("description"),
+            "control_id": category_meta.get("control_id"),
             "questions": questions
         }
 
@@ -64,7 +65,8 @@ class CategoryQuestionLoader:
             categories.append({
                 "category_id": meta["category_id"],
                 "display_name": meta.get("display_name"),
-                "description": meta.get("description")
+                "description": meta.get("description"),
+                "control_id": meta.get("control_id"),
             })
 
         categories.sort(key=lambda c: c["category_id"])
@@ -73,7 +75,7 @@ class CategoryQuestionLoader:
     # ---------------------------------------------------------
     # CATEGORY CRUD
     # ---------------------------------------------------------
-    def create_category(self, category_id: str, display_name: str, description: str = "") -> Dict:
+    def create_category(self, category_id: str, display_name: str, description: str = "", control_id: str = None) -> Dict:
         folder_name = category_id.lower().replace(" ", "_")
         folder_path = os.path.join(self.categories_root, folder_name)
         os.makedirs(folder_path, exist_ok=True)
@@ -82,6 +84,7 @@ class CategoryQuestionLoader:
             "category_id": category_id,
             "display_name": display_name,
             "description": description,
+            **({"control_id": control_id} if control_id else {}),
         }
         with open(os.path.join(folder_path, "category.json"), "w", encoding="utf-8") as f:
             json.dump(meta, f, indent=2, ensure_ascii=False)
@@ -95,7 +98,7 @@ class CategoryQuestionLoader:
         with open(meta_path, "r", encoding="utf-8") as f:
             meta = json.load(f)
 
-        for key in ("display_name", "description", "status"):
+        for key in ("display_name", "description", "status", "control_id"):
             if key in updates:
                 meta[key] = updates[key]
 
