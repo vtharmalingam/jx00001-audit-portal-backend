@@ -1,7 +1,8 @@
 # services/answer_service.py
 
-from datetime import datetime
 from typing import Dict, List, Optional
+
+from app.etl.s3.utils.helpers import utc_now
 
 from app.etl.s3.services.audit_lifecycle_service import AuditLifecycleService
 from app.etl.s3.utils.s3_paths import answer_key, answers_prefix
@@ -81,7 +82,7 @@ class AnswerService:
             "state": state,
             "version": version,
             "attachments": attachments,
-            "last_updated_at": datetime.utcnow().isoformat(),
+            "last_updated_at": utc_now(),
             "last_updated_by": user,
         }
 

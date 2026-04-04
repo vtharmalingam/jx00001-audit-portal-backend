@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional
+
+from app.etl.s3.utils.helpers import utc_now
 
 from app.etl.s3.utils.s3_paths import evidence_index_key, evidence_object_key
 from app.etl.s3.services.audit_lifecycle_service import AuditLifecycleService
@@ -63,7 +64,7 @@ class EvidenceService:
         if body is not None:
             self.s3.put_bytes(key, body, content_type=content_type)
 
-        now = datetime.utcnow().isoformat()
+        now = utc_now()
         entry = {
             "file_name": file_name,
             "s3_key": key,

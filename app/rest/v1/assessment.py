@@ -12,11 +12,7 @@ from app.etl.s3.services.answer_service import AnswerService
 from app.etl.s3.services.auditor_service import AuditorService
 from app.etl.s3.services.evidence_service import EvidenceService
 from app.etl.s3.services.report_service import ReportService
-from app.procs.anchor_match.question_evaluator import QuestionEvaluator
-from app.procs.anchor_match.question_faiss_index import QuestionFaissIndex
-from app.procs.anchor_match.question_registry import QuestionRegistry
 from app.procs.category_question_loader import CategoryQuestionLoader
-from app.procs.embeddings import EmbeddingModel
 from app.rest.deps import data_dir, s3_client
 from app.rest.v1.assessment_schemas import (
     CreateCategoryBody,
@@ -60,13 +56,23 @@ async def list_questions(category: str = Query(..., description="Category id")):
     }
 
 
-@router.post("/evaluate-answer", summary="Evaluate a user answer (FAISS + rubric)")
+@router.post("/evaluate-answer", summary="Evaluate a user answer (FAISS + rubric) [legacy]")
 async def evaluate_answer(body: EvaluateAnswerBody):
     if not data_dir:
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={"code": "CONFIG", "message": "data_dir is not configured"},
         )
+    try:
+        from app.procs.embeddings import EmbeddingModel
+        from app.procs.anchor_match.question_evaluator import QuestionEvaluator
+        from app.procs.anchor_match.question_faiss_index import QuestionFaissIndex
+        from app.procs.anchor_match.question_registry import QuestionRegistry
+    except ImportError as e:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "LEGACY_DEPS", "message": f"Legacy dependencies not installed: {e}"},
+        ) from e
     embedder = EmbeddingModel()
     registry = QuestionRegistry(data_dir)
     index = QuestionFaissIndex(body.q_id, embedder, registry)
@@ -102,14 +108,33 @@ async def save_answer(body: SaveAnswerBody):
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"code": "SAVE_ANSWER_FAILED", "message": str(e)},
         ) from e
+
+    # Auto-transition pipeline: Not Started → In Progress on first answer
+    try:
+        from app.pipeline.service import PipelineService
+        from app.pipeline.models import PipelineStage
+        from app.etl.s3.services.operational_service import OperationalService
+
+        pipe_svc = PipelineService(s3_client)
+        rec = pipe_svc.get_record(body.org_id, str(body.project_id), str(body.ai_system_id))
+        current_stage = (rec or {}).get("stage", "not_started")
+
+        if current_stage == PipelineStage.NOT_STARTED.value:
+            pipe_svc.ensure_record(
+                org_id=body.org_id,
+                project_id=str(body.project_id),
+                ai_system_id=str(body.ai_system_id),
+                stage=PipelineStage.IN_PROGRESS.value,
+            )
+            OperationalService(s3_client).merge_org_profile(
+                body.org_id, {"stage": PipelineStage.IN_PROGRESS.value}
+            )
+    except Exception as e:
+        logger.warning("Pipeline auto-transition failed: %s", e)
+
     return {
         "status": True,
         "saved_to": "s3",
-        "question_path": (
-            QuestionRegistry(data_dir).get_question_path(body.question_id)
-            if data_dir
-            else None
-        ),
     }
 
 

@@ -23,7 +23,7 @@ _DEFAULT_ROLES = [
         "permissions": [
             "users.manage", "org.manage", "settings.manage", "library.manage",
             "library.read", "assessment.fill", "reports.view", "reports.export",
-            "onboard.create", "archived.view", "dashboard.view",
+            "onboard.create", "archived.view", "dashboard.view", "pipeline.view",
         ],
     },
     {
@@ -34,7 +34,7 @@ _DEFAULT_ROLES = [
         "description": "Oversees assessments, reviews reports, and monitors organisation progress.",
         "permissions": [
             "assessment.review", "reports.view", "reports.export", "reports.annotate",
-            "onboard.create", "archived.view", "dashboard.view", "library.read",
+            "onboard.create", "archived.view", "dashboard.view", "library.read", "pipeline.view",
         ],
     },
     {
@@ -66,7 +66,7 @@ _DEFAULT_ROLES = [
         "description": "Firm owner — manages firm users, organisations, and onboarding.",
         "permissions": [
             "users.manage", "org.manage", "onboard.create", "reports.view",
-            "reports.export", "archived.view", "dashboard.view", "library.read",
+            "reports.export", "archived.view", "dashboard.view", "library.read", "pipeline.view",
         ],
     },
     {
@@ -77,7 +77,7 @@ _DEFAULT_ROLES = [
         "description": "Reviews assessments, manages client relationships, and performs audits.",
         "permissions": [
             "assessment.review", "reports.view", "reports.export", "reports.annotate",
-            "onboard.create", "archived.view", "dashboard.view", "library.read",
+            "onboard.create", "archived.view", "dashboard.view", "library.read", "pipeline.view",
         ],
     },
     {
@@ -98,7 +98,7 @@ _DEFAULT_ROLES = [
         "description": "Organisation owner — manages team and audit setup.",
         "permissions": [
             "users.manage", "org.manage", "onboard.create", "reports.view",
-            "reports.export", "archived.view", "dashboard.view", "library.read",
+            "reports.export", "archived.view", "dashboard.view", "library.read", "pipeline.view",
         ],
     },
     {
@@ -109,7 +109,7 @@ _DEFAULT_ROLES = [
         "description": "Manages assessments and reviews gap analysis reports.",
         "permissions": [
             "assessment.review", "reports.view", "reports.export", "reports.annotate",
-            "onboard.create", "archived.view", "dashboard.view", "library.read",
+            "onboard.create", "archived.view", "dashboard.view", "library.read", "pipeline.view",
         ],
     },
     {
