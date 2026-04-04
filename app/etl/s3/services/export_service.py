@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Dict, Optional
+
+from app.etl.s3.utils.helpers import utc_now
 
 from app.etl.s3.utils.s3_paths import (
     audit_metadata_key,
@@ -34,7 +35,7 @@ class BlockchainExportService:
         )
         root = audit_root(org_id, audit_id, project_id, ai_system_id)
         return {
-            "exported_at": datetime.utcnow().isoformat(),
+            "exported_at": utc_now(),
             "audit_root": root,
             "metadata": meta,
             "timeline": timeline,

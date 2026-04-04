@@ -1,6 +1,7 @@
 import uuid
-from datetime import datetime
 from typing import Any, Dict, List, Optional
+
+from app.etl.s3.utils.helpers import utc_now
 
 from app.etl.s3.utils.s3_paths import aict_users_key
 
@@ -17,7 +18,7 @@ class AictUsersService:
     def _save(self, users: List[Dict]) -> None:
         self.s3.write_json(
             aict_users_key(),
-            {"users": users, "updated_at": datetime.utcnow().isoformat()},
+            {"users": users, "updated_at": utc_now()},
         )
 
     def list_users(self) -> List[Dict]:
@@ -25,7 +26,7 @@ class AictUsersService:
 
     def create_user(self, name: str, email: str, role: str, user_id: Optional[str] = None) -> Dict[str, Any]:
         users = self._load()
-        now = datetime.utcnow().isoformat()
+        now = utc_now()
         user = {
             "id": user_id or str(uuid.uuid4()),
             "name": name,
@@ -45,7 +46,7 @@ class AictUsersService:
                 for key in ("name", "email", "role"):
                     if key in patch and patch[key] is not None:
                         user[key] = patch[key]
-                user["updated_at"] = datetime.utcnow().isoformat()
+                user["updated_at"] = utc_now()
                 self._save(users)
                 return user
         return None

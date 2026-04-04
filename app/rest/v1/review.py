@@ -109,9 +109,48 @@ async def save_attestation(
             csap_user_id=user["id"],
             justification=body.justification,
         )
-        return {"review": review}
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": str(e)})
+
+    # Transition pipeline → Review Complete and sync org stage
+    # project_id in the review URL is the org_id
+    try:
+        from app.pipeline.service import PipelineService
+        from app.pipeline.models import PipelineStage
+        from app.etl.s3.services.operational_service import OperationalService
+        from app.etl.s3.utils.helpers import utc_now
+
+        pipe_svc = PipelineService(s3_client)
+        org_svc = OperationalService(s3_client)
+        org_id = project_id  # review uses org_id as project_id
+
+        # Find all AI systems for this org and transition each
+        systems = org_svc.list_ai_systems(org_id)
+        transitioned = False
+        for sys in (systems or []):
+            sid = sys.get("system_id") or sys.get("ai_system_id") or "0"
+            pid = sys.get("project_id", "0")
+            audit_id = sys.get("audit_id")
+            # Skip legacy/invalid systems without proper audit_id
+            if not audit_id or sid == "0":
+                continue
+            pipe_svc.transition_stage(
+                org_id, PipelineStage.REVIEW_COMPLETE,
+                project_id=pid, ai_system_id=sid,
+                review_completed_at=utc_now(),
+            )
+            transitioned = True
+        if not transitioned:
+            # Fallback: transition default record
+            pipe_svc.transition_stage(
+                org_id, PipelineStage.REVIEW_COMPLETE,
+                review_completed_at=utc_now(),
+            )
+        org_svc.merge_org_profile(org_id, {"stage": PipelineStage.REVIEW_COMPLETE.value})
+    except Exception as e:
+        logger.warning("Pipeline transition to review_complete failed: %s", e)
+
+    return {"review": review}
 
 
 @router.get("/{project_id}/trust-score", summary="Get trust score and suggested attestation")

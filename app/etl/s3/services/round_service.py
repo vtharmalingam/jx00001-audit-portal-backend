@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Dict, List
+
+from app.etl.s3.utils.helpers import utc_now
 
 from app.etl.s3.utils.s3_paths import (
     ai_prefix,
@@ -107,7 +108,7 @@ class RoundService:
             "trigger": trigger,
             "triggered_by": triggered_by,
             "notes": notes,
-            "snapshot_at": datetime.utcnow().isoformat(),
+            "snapshot_at": utc_now(),
         }
         self.s3.write_json(f"{dest}round_summary.json", summary)
 
@@ -116,7 +117,7 @@ class RoundService:
         if meta:
             meta = dict(meta)
             meta["current_round"] = max(int(meta.get("current_round") or 1), int(round_n))
-            meta["last_updated_at"] = datetime.utcnow().isoformat()
+            meta["last_updated_at"] = utc_now()
             self.s3.write_json(meta_key, meta)
 
         return {"round": round_n, "destination_prefix": dest, "round_summary": summary}

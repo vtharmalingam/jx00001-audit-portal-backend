@@ -1,46 +1,48 @@
-# Step 1
-# install through Dockerfile (docling)
-
-# Step 2 (force CPU torch)
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.2.2
-torchvision==0.17.2
-
-numpy==1.26.4
-opencv-python==4.8.1.78
-
-# Step 3
-sentence-transformers==2.7.0
-transformers==4.57.6
-
-# Step 4
-qdrant-client==1.16.2
+# Core API
 fastapi==0.129.0
 uvicorn[standard]==0.41.0
-pypdf==6.7.1
-
-# Step 5
-langchain-core==1.2.13
-langchain-ollama==1.0.1
-langgraph==1.0.8
-
-# Step 6
-ollama==0.6.1
-
-
-faiss-cpu==1.13.2
+pydantic[email]
+PyYAML>=6.0.1
+python-dotenv>=1.0.0
 
 # Auth
 python-jose[cryptography]==3.3.0
 bcrypt
-pydantic[email]
 email-validator>=2.3.0
-PyYAML>=6.0.1
-python-dotenv>=1.0.0
 
 # S3
 boto3
 
+# Qdrant (vector search — cloud hosted)
+qdrant-client==1.16.2
+
+# PDF extraction
+pypdf==6.7.1
+
+# Pipeline / Gap Analysis
+celery[redis]>=5.3.0
+redis>=5.0.0
+openai>=1.30.0
+
+# ID Generation
+python-ulid>=2.0.0
+
+# Legacy (only needed if using /knowledge/gap-analysis or /assessment/evaluate-answer)
+# Uncomment these if you need the old Ollama + FAISS pipeline:
+# --extra-index-url https://download.pytorch.org/whl/cpu
+# torch==2.2.2
+# torchvision==0.17.2
+# numpy==1.26.4
+# opencv-python==4.8.1.78
+# sentence-transformers==2.7.0
+# transformers==4.57.6
+# langchain-core==1.2.13
+# langchain-ollama==1.0.1
+# langgraph==1.0.8
+# ollama==0.6.1
+# faiss-cpu==1.13.2
+# docling
+
 # Unit Tests
-pytest 
+pytest
 pytest-mock

@@ -1,7 +1,8 @@
 # services/ai_service.py
 
-from datetime import datetime
 from typing import Dict, Optional
+
+from app.etl.s3.utils.helpers import utc_now
 
 from app.etl.s3.services.audit_lifecycle_service import AuditLifecycleService
 from app.etl.s3.utils.s3_paths import ai_key, answer_key, answers_prefix
@@ -77,7 +78,7 @@ class AIService:
                     ai_data = {
                         "question_id": qid,
                         "last_analyzed_version": version,
-                        "analyzed_at": datetime.utcnow().isoformat(),
+                        "analyzed_at": utc_now(),
                         **result,
                     }
 
@@ -151,7 +152,7 @@ class AIService:
         ai_data = {
             "question_id": question_id,
             "last_analyzed_version": version,
-            "analyzed_at": datetime.utcnow().isoformat(),
+            "analyzed_at": utc_now(),
             **ai_payload,
         }
 

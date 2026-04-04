@@ -20,6 +20,7 @@ from app.rest.v1 import (
     aict_users_router,
     review_router,
 )
+from app.pipeline import pipeline_router
 
 
 @asynccontextmanager
@@ -50,6 +51,7 @@ app = FastAPI(
         {"name": "assessment", "description": "Categories, questions, answers, evaluation, audit views."},
         {"name": "knowledge", "description": "Semantic search and gap analysis."},
         {"name": "admin", "description": "Admin-only operational endpoints."},
+        {"name": "pipeline", "description": "Pipeline stages, submission, gap analysis."},
     ],
 )
 
@@ -88,6 +90,7 @@ app.include_router(knowledge_router, prefix=API_PREFIX, include_in_schema=False)
 app.include_router(admin_tests_router, prefix=API_PREFIX, include_in_schema=False)
 app.include_router(review_router, prefix=API_PREFIX)
 app.include_router(admin_s3_router, prefix=API_PREFIX, include_in_schema=False)
+app.include_router(pipeline_router, prefix=API_PREFIX)
 
 
 @app.get("/health", tags=["meta"])

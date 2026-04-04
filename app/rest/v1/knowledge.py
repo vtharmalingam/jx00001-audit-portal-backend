@@ -1,20 +1,25 @@
-"""Knowledge base search and gap analysis (LLM)."""
+"""Knowledge base search and gap analysis (LLM) — legacy Ollama-based endpoints."""
 
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, HTTPException, status
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.prompts.chat import ChatPromptTemplate
 
-from app.rest.deps import llm_client, semantic_engine
-from app.rest.v1.knowledge_schemas import GapAnalysisBody, SemanticSearchBody, SynthesisGapOutput
+from app.rest.deps import _get_llm_client, _get_semantic_engine
+from app.rest.v1.knowledge_schemas import GapAnalysisBody, SemanticSearchBody
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
 
-@router.post("/semantic-search", summary="Semantic search over the configured collection")
+@router.post("/semantic-search", summary="Semantic search over the configured collection [legacy]")
 async def semantic_search(body: SemanticSearchBody):
-    raw = semantic_engine.semantic_summary(body.context, body.count)
+    try:
+        engine = _get_semantic_engine()
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "LEGACY_DEPS", "message": f"Legacy dependencies not installed: {e}"},
+        ) from e
+    raw = engine.semantic_summary(body.context, body.count)
     if isinstance(raw, dict):
         return raw
     if isinstance(raw, list):
@@ -37,7 +42,7 @@ def _summaries_to_text(summaries: List[Dict[str, Any]]) -> str:
     )
 
 
-@router.post("/gap-analysis", summary="Gap analysis vs retrieved KB context (LLM)")
+@router.post("/gap-analysis", summary="Gap analysis vs retrieved KB context (LLM) [legacy]")
 async def gap_analysis(body: GapAnalysisBody):
     if not all([body.index_name, body.question, body.user_answer]):
         raise HTTPException(
@@ -45,7 +50,17 @@ async def gap_analysis(body: GapAnalysisBody):
             detail={"code": "VALIDATION", "message": "index_name, question, user_answer required"},
         )
 
-    supportwiz_response = semantic_engine.semantic_summary(body.question, 10)
+    try:
+        from langchain_core.output_parsers import JsonOutputParser
+        from langchain_core.prompts.chat import ChatPromptTemplate
+        from app.rest.v1.knowledge_schemas import SynthesisGapOutput
+    except ImportError as e:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "LEGACY_DEPS", "message": f"Legacy dependencies not installed: {e}"},
+        ) from e
+
+    supportwiz_response = _get_semantic_engine().semantic_summary(body.question, 10)
     payload: Dict[str, Any] = {}
     if isinstance(supportwiz_response, dict):
         payload.update(supportwiz_response)
@@ -121,7 +136,7 @@ async def gap_analysis(body: GapAnalysisBody):
     parser = JsonOutputParser(pydantic_object=SynthesisGapOutput)
     chain = (
         prompt.partial(format_instructions=parser.get_format_instructions())
-        | llm_client
+        | _get_llm_client()
         | parser
     )
 

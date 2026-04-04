@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Dict, Optional
+
+from app.etl.s3.utils.helpers import utc_now
 
 from app.etl.s3.utils.s3_paths import (
     ai_system_lookup_key,
@@ -35,7 +36,7 @@ class LookupService:
         payload = {
             **summary,
             "org_id": org_id,
-            "indexed_at": datetime.utcnow().isoformat(),
+            "indexed_at": utc_now(),
         }
         self.s3.write_json(org_lookup_key(org_id), payload)
 
@@ -69,7 +70,7 @@ class LookupService:
             "project_id": project_id,
             "audit_id": audit_id,
             "status": status,
-            "updated_at": datetime.utcnow().isoformat(),
+            "updated_at": utc_now(),
         }
         if extra:
             data.update(extra)
@@ -90,6 +91,6 @@ class LookupService:
         cur["audit_id"] = audit_id
         if status is not None:
             cur["status"] = status
-        cur["updated_at"] = datetime.utcnow().isoformat()
+        cur["updated_at"] = utc_now()
         self.s3.write_json(ai_system_lookup_key(ai_system_id), cur)
         return cur

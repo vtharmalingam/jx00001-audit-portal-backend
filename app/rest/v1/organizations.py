@@ -87,6 +87,18 @@ async def list_organizations(
     return {"organizations": rows, "total": total}
 
 
+@router.post("", summary="Create a new organization (auto-generates ULID)")
+async def create_organization(body: OrgUpsertBody):
+    svc = _svc()
+    patch = org_upsert_to_patch(body)
+    org = svc.create_org(
+        name=patch.get("name", ""),
+        email=patch.get("email", ""),
+        **{k: v for k, v in patch.items() if k not in ("name", "email")},
+    )
+    return {"organization": org}
+
+
 @router.put("/{org_id}", summary="Upsert / replace org profile fields")
 @router.patch("/{org_id}", summary="Merge org profile fields")
 async def upsert_organization(org_id: str, body: OrgUpsertBody):
@@ -113,7 +125,9 @@ async def upsert_organization(org_id: str, body: OrgUpsertBody):
 async def delete_organization(org_id: str):
     svc = _svc()
     try:
-        svc.s3.delete_object(svc.org_profile_key(org_id))
+        from app.etl.s3.utils.s3_paths import org_profile_key
+        svc.s3.delete_object(org_profile_key(org_id))
+        svc._delete_from_org_index(org_id)
     except Exception as e:
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -176,12 +190,12 @@ async def create_project(org_id: str, body: ProjectCreateBody):
             status.HTTP_404_NOT_FOUND,
             detail={"code": "NOT_FOUND", "message": f"Unknown org_id: {org_id}"},
         )
-    if svc.get_project(org_id, body.project_id):
+    if body.project_id and svc.get_project(org_id, body.project_id):
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             detail={"code": "CONFLICT", "message": "project_id already exists"},
         )
-    doc = svc.create_project(org_id, body.project_id, body.project_name)
+    doc = svc.create_project(org_id, body.project_name, project_id=body.project_id or None)
     return {"project": doc}
 
 

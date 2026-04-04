@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 from typing import Any, Dict, List, Optional
+
+from app.etl.s3.utils.helpers import utc_now
 
 from app.etl.s3.utils.s3_paths import (
     ai_key,
@@ -43,7 +44,7 @@ class AuditLifecycleService:
         audit_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         aid = audit_id or str(uuid.uuid4())
-        now = datetime.utcnow().isoformat()
+        now = utc_now()
         meta = {
             "audit_id": aid,
             "org_id": org_id,
@@ -110,7 +111,7 @@ class AuditLifecycleService:
         merged = {**cur, **patch}
         merged["audit_id"] = audit_id
         merged["org_id"] = org_id
-        merged["last_updated_at"] = datetime.utcnow().isoformat()
+        merged["last_updated_at"] = utc_now()
         self.s3.write_json(key, merged)
         return merged
 
@@ -125,7 +126,7 @@ class AuditLifecycleService:
         key = timeline_key(org_id, audit_id, project_id, ai_system_id)
         doc = self.s3.read_json(key) or {"events": []}
         events: List[Dict[str, Any]] = list(doc.get("events") or [])
-        ev = {**event, "timestamp": event.get("timestamp") or datetime.utcnow().isoformat()}
+        ev = {**event, "timestamp": event.get("timestamp") or utc_now()}
         events.append(ev)
         doc["events"] = events
         self.s3.write_json(key, doc)
@@ -198,7 +199,7 @@ class AuditLifecycleService:
             "compliant": compliant,
             "non_compliant": non_compliant,
             "needs_revision": needs_revision,
-            "recomputed_at": datetime.utcnow().isoformat(),
+            "recomputed_at": utc_now(),
         }
         self.s3.write_json(
             audit_summary_key(org_id, audit_id, project_id, ai_system_id),
@@ -224,7 +225,7 @@ class AuditLifecycleService:
         cur = self.s3.read_json(meta_key)
         if cur:
             cur = dict(cur)
-            cur["last_updated_at"] = datetime.utcnow().isoformat()
+            cur["last_updated_at"] = utc_now()
             self.s3.write_json(meta_key, cur)
         if append_timeline:
             ev: Dict[str, Any] = {"actor": actor, "action": action}

@@ -1,12 +1,12 @@
 # utils/helpers.py
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 VALID_ANSWER_STATES = {"draft", "submitted", "locked"}
 
 
 def utc_now():
-    return datetime.utcnow().isoformat()
+    return datetime.now(timezone.utc).isoformat()
 
 
 def validate_answer_state(state: str):
