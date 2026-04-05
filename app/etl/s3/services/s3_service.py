@@ -1,4 +1,7 @@
-# app/services/s3_service.py
+"""
+Purpose: Alternate / legacy-style S3 helper (put/get bytes, object versions). Less central
+than S3Client; use when versioned raw-object access is needed without the JSON-focused API.
+"""
 
 import boto3
 from typing import Optional

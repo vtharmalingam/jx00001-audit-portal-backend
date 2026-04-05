@@ -1,4 +1,7 @@
-# services/evidence_service.py
+"""
+Purpose: Evidence attachments — evidence index per audit scope, register evidence objects
+(metadata and optional file payload keys).
+"""
 
 from __future__ import annotations
 

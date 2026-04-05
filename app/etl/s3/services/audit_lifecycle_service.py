@@ -1,4 +1,7 @@
-# services/audit_lifecycle_service.py
+"""
+Purpose: Audit control plane — create audit, metadata.json, timeline events, audit_summary
+recompute, wiring to answers/AI/auditor keys; core audit folder lifecycle.
+"""
 
 from __future__ import annotations
 

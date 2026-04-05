@@ -1,4 +1,7 @@
-# services/lookup_service.py
+"""
+Purpose: Small lookup documents in S3 — per-org summary index, domain→org_id, AI-system
+index entries; kept in sync when profiles and systems change.
+"""
 
 from __future__ import annotations
 

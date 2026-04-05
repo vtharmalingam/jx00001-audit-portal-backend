@@ -1,4 +1,8 @@
 """
+Purpose: Pure shaping / rules — map stored org_profile to the REST Org contract, list
+filter matching (org_type / org_types, archived, search, etc.), and pagination helpers
+(no S3 I/O).
+
 Normalize stored org_profile JSON toward the audit-portal ``Org`` contract.
 
 Nested ``manager`` / ``practitioner`` / ``auditor`` are ``PersonRef`` shapes when flat

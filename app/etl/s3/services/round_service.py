@@ -1,4 +1,7 @@
-# services/round_service.py
+"""
+Purpose: Immutable round snapshots — copy current answers / AI / auditor / summary into
+rounds/{n}/… and update audit metadata/timeline for round history.
+"""
 
 from __future__ import annotations
 

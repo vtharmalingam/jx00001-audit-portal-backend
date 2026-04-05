@@ -1,4 +1,7 @@
-# services/ai_service.py
+"""
+Purpose: Batch AI processing — walk submitted answers, call injected LLM, write AI analysis
+(ai_key) when versions warrant it; uses AuditLifecycleService for lifecycle hooks.
+"""
 
 from typing import Dict, Optional
 
@@ -22,9 +25,11 @@ class AIService:
         project_id: str = "0",
         ai_system_id: str = "0",
     ) -> Dict:
-
+        
+        # Step 1 — Point at the S3 folder where this audit’s answer JSON files live.
         prefix = answers_prefix(org_id, audit_id, project_id, ai_system_id)
 
+        # Step 2 — Counters for the run; lifecycle helper updates timeline/summary hooks.
         processed = 0
         skipped = 0
         failed = 0
@@ -32,6 +37,7 @@ class AIService:
 
         continuation_token = None
 
+        # Step 3 — Walk every answer object under the prefix (paginated list_objects_v2).
         while True:
             params = {
                 "Bucket": self.s3.bucket,
@@ -44,6 +50,7 @@ class AIService:
             response = self.s3.client.list_objects_v2(**params)
 
             for obj in response.get("Contents", []):
+                # Step 4 — Load one answer document from S3.
                 answer = self.s3.read_json(obj["Key"])
 
                 if not answer:
@@ -52,15 +59,18 @@ class AIService:
 
                 qid = answer.get("question_id")
 
+                # Step 5 — Optional: only process a single question when question_id is set.
                 if question_id and qid != question_id:
                     continue
 
+                # Step 6 — AI only runs on submitted answers; drafts are skipped.
                 if answer.get("state") != "submitted":
                     skipped += 1
                     continue
 
                 version = answer.get("version", 0)
 
+                # Step 7 — Skip if we already analyzed this answer version (idempotent).
                 ai = self.s3.read_json(
                     ai_key(org_id, audit_id, qid, project_id, ai_system_id)
                 )
@@ -70,11 +80,13 @@ class AIService:
                     continue
 
                 try:
+                    # Step 8 — Call the injected LLM on the answer text; expect a dict result.
                     result = self.llm.analyze(answer.get("answer", ""))
 
                     if not isinstance(result, dict):
                         raise ValueError("Invalid AI response format")
 
+                    # Step 9 — Persist analysis under the standard ai_key for this question.
                     ai_data = {
                         "question_id": qid,
                         "last_analyzed_version": version,
@@ -87,6 +99,7 @@ class AIService:
                         ai_data,
                     )
 
+                    # Step 10 — Record the event on the audit (summary recomputed once at end).
                     lifecycle.touch_after_mutation(
                         org_id,
                         audit_id,
@@ -105,11 +118,13 @@ class AIService:
                     failed += 1
                     print(f"[AI ERROR] {qid}: {str(e)}")
 
+            # Step 11 — Continue listing if S3 returned a truncated page.
             if response.get("IsTruncated"):
                 continuation_token = response.get("NextContinuationToken")
             else:
                 break
 
+        # Step 12 — Refresh audit_summary.json once if at least one question was analyzed.
         if processed:
             try:
                 lifecycle.recompute_audit_summary(
@@ -118,6 +133,7 @@ class AIService:
             except Exception:
                 pass
 
+        # Step 13 — Return how many answers were analyzed vs skipped vs failed.
         return {
             "processed": processed,
             "skipped": skipped,
@@ -133,13 +149,14 @@ class AIService:
         project_id: str = "0",
         ai_system_id: str = "0",
     ) -> Dict:
-
+        # Step 1 — Ensure we have a target question and a dict payload (no LLM call here).
         if not question_id:
             raise ValueError("question_id is required")
 
         if not isinstance(ai_payload, dict):
             raise ValueError("ai_payload must be a dictionary")
 
+        # Step 2 — Read the answer file so last_analyzed_version aligns with answer.version.
         answer_key_path = answer_key(
             org_id, audit_id, question_id, project_id, ai_system_id
         )
@@ -149,6 +166,7 @@ class AIService:
         if answer:
             version = answer.get("version", 0)
 
+        # Step 3 — Build the stored AI document (caller-supplied fields merged in).
         ai_data = {
             "question_id": question_id,
             "last_analyzed_version": version,
@@ -156,6 +174,7 @@ class AIService:
             **ai_payload,
         }
 
+        # Step 4 — Write to S3 and append an ai_analyzed event on the audit timeline.
         self.s3.write_json(
             ai_key(org_id, audit_id, question_id, project_id, ai_system_id),
             ai_data,
@@ -171,10 +190,12 @@ class AIService:
             actor="ai",
         )
 
+        # Step 5 — Return the same structure that was written (for API responses / scripts).
         return ai_data
 
 
 if __name__ == "__main__":
+    # Dev-only: wire S3 and call upsert_ai_analysis with a sample payload (no LLM).
 
     from app.etl.s3.services.s3_client import S3Client
 

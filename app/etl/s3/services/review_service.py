@@ -1,5 +1,8 @@
 """CSAP review service — S3-backed storage for opinions, verdicts, and attestations.
 
+Purpose: CSAP-style review — review.json under audit current/, global reviews/index.json,
+opinions/verdicts/attestations and trust-score helpers.
+
 Review data is stored at:
   organizations/{org}/projects/{proj}/ai_systems/{sys}/audits/{audit_id}/current/review.json
 

@@ -1,4 +1,7 @@
-# services/report_service.py
+"""
+Purpose: Read-side reporting — full audit view assembly, gap / AI analysis listing from
+stored AI blobs, aggregates for dashboards.
+"""
 
 from typing import Dict, List
 

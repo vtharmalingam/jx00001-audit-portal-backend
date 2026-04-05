@@ -1,4 +1,8 @@
-# services/operational_service.py
+"""
+Purpose: Organization operations — org_profile.json, list/filter orgs, projects, ai_systems.json
+registry, domain→org lookup, auditor master assignment, denormalized AI-system counts on
+profiles, org index maintenance.
+"""
 
 from typing import Any, Dict, List, Optional
 

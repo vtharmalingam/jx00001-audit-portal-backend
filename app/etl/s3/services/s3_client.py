@@ -1,3 +1,8 @@
+"""
+Purpose: Thin boto3 S3 wrapper used across the app — JSON get/put, bytes, copy, delete,
+and list_objects_v2 (bucket and region from environment).
+"""
+
 import json
 import os
 

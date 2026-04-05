@@ -1,4 +1,7 @@
-# services/export_service.py
+"""
+Purpose: BlockchainExportService — build a single export payload (metadata, timeline,
+audit root, optional org profile) and write blockchain_export.json for an audit scope.
+"""
 
 from __future__ import annotations
 

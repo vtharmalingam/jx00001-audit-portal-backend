@@ -1,4 +1,7 @@
-# services/auditor_service.py
+"""
+Purpose: Auditor workflow — load submitted answers for an audit scope, read/write auditor
+feedback JSON per question.
+"""
 
 from typing import Dict, List, Optional
 
