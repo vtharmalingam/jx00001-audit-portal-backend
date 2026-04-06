@@ -37,3 +37,20 @@ class PlatformSettingsBody(BaseModel):
 
 class SmtpTestBody(BaseModel):
     smtp: PlatformSmtpSettings
+
+
+class EmailTemplateBody(BaseModel):
+    scenario: str = Field(..., min_length=1, max_length=100)
+    subject: str = Field(..., min_length=1, max_length=300)
+    text: str = ""
+    html: str = ""
+
+
+class SendEmailBody(BaseModel):
+    to: str = Field(..., min_length=3, max_length=320)
+    subject: Optional[str] = None
+    text: Optional[str] = None
+    html: Optional[str] = None
+    scenario: Optional[str] = None
+    template_vars: dict = Field(default_factory=dict)
+    reply_to: Optional[str] = None

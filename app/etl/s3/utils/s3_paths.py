@@ -205,5 +205,13 @@ def platform_settings_key() -> str:
     return _prefix("platform/platform_settings.json")
 
 
+def email_templates_prefix() -> str:
+    return _prefix("platforms/email-templates/")
+
+
+def email_template_key(scenario: str) -> str:
+    return _prefix(f"platforms/email-templates/{scenario}.json")
+
+
 def reviews_index_key() -> str:
     return _prefix("reviews/index.json")
