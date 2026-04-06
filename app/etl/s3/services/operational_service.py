@@ -13,17 +13,17 @@ from app.etl.s3.services.org_normalize import (
     org_matches_filters,
     paginate,
 )
+from app.etl.s3.services.audit_lifecycle_service import AuditLifecycleService
 from app.etl.s3.services.lookup_service import LookupService
+from app.etl.s3.utils.ids import new_audit_ulid
 from app.etl.s3.utils.s3_paths import (
-    ai_systems_prefix,
-    audit_metadata_key,
     auditor_master_key,
     domain_lookup_key,
-    make_audit_id,
     org_profile_key,
     project_json_key,
     projects_prefix,
     system_json_key,
+    systems_prefix,
 )
 
 ORG_INDEX_KEY = "indexes/organizations_index.json"
@@ -283,15 +283,15 @@ class OperationalService:
     # ── AI Systems (nested folder structure) ─────────────────────────────────
 
     def list_ai_systems(self, org_id: str) -> List[Dict[str, Any]]:
-        """List AI systems by scanning nested project/ai_systems folders.
+        """List AI systems by scanning nested project/systems folders.
 
-        Falls back to legacy ai_systems.json if no nested structure found.
+        Falls back to legacy org-level ai_systems.json if no nested structure found.
         """
         systems: List[Dict[str, Any]] = []
         project_ids = self.list_project_ids(org_id)
 
         for pid in project_ids:
-            prefix = ai_systems_prefix(org_id, pid)
+            prefix = systems_prefix(org_id, pid)
             token = None
             while True:
                 params: Dict[str, Any] = {"Bucket": self.s3.bucket, "Prefix": prefix, "Delimiter": "/"}
@@ -353,7 +353,7 @@ class OperationalService:
             system_id = next_system_seq(self.s3, org_id, project_id)
 
         now = utc_now()
-        audit_id = make_audit_id(org_id, project_id, system_id)
+        audit_id = body.get("audit_id") or new_audit_ulid()
 
         # Write system.json
         sys_doc = {
@@ -375,23 +375,12 @@ class OperationalService:
         }
         self.s3.write_json(system_json_key(org_id, project_id, system_id), sys_doc)
 
-        # Create initial audit metadata
-        meta = {
-            "audit_id": audit_id,
-            "org_id": org_id,
-            "project_id": project_id,
-            "ai_system_id": system_id,
-            "status": "not_started",
-            "current_round": 1,
-            "started_at": now,
-            "last_updated_at": now,
-        }
-        self.s3.write_json(audit_metadata_key(org_id, audit_id, project_id, system_id), meta)
-
-        # Update lookup index
-        LookupService(self.s3).write_ai_system_index(
-            system_id, org_id=org_id, project_id=project_id,
-            audit_id=audit_id, status=sys_doc.get("status"),
+        AuditLifecycleService(self.s3).create_audit(
+            org_id,
+            project_id,
+            system_id,
+            auditor_id=body.get("auditor_id") or "system",
+            audit_id=audit_id,
         )
 
         # Update system count in org profile (avoids scanning on list)

@@ -11,8 +11,8 @@ from fastapi import APIRouter, HTTPException, Query, status
 from app.etl.s3.services.audit_lifecycle_service import AuditLifecycleService
 from app.etl.s3.services.export_service import BlockchainExportService
 from app.etl.s3.services.operational_service import OperationalService
-from app.etl.s3.services.round_service import RoundService
 from app.rest.deps import s3_client
+from app.rest.strict_audit_ids import enforce_strict_audit_scope
 from app.rest.v1.organizations_schemas import (
     AiSystemCreateBody,
     AuditCreateBody,
@@ -20,7 +20,6 @@ from app.rest.v1.organizations_schemas import (
     OnboardingDecisionBody,
     OrgUpsertBody,
     ProjectCreateBody,
-    RoundSnapshotBody,
     ai_system_create_to_dict,
     org_upsert_to_patch,
 )
@@ -255,6 +254,14 @@ async def create_audit(org_id: str, body: AuditCreateBody):
             },
         )
 
+    enforce_strict_audit_scope(
+        org_id,
+        body.audit_id,
+        project_id=body.project_id,
+        ai_system_id=body.ai_system_id,
+        require_audit_id=False,
+    )
+
     meta = AuditLifecycleService(s3_client).create_audit(
         org_id,
         body.project_id,
@@ -269,9 +276,15 @@ async def create_audit(org_id: str, body: AuditCreateBody):
 async def get_audit_metadata(
     org_id: str,
     audit_id: str,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
 ):
+    enforce_strict_audit_scope(
+        org_id,
+        audit_id,
+        project_id=project_id,
+        ai_system_id=ai_system_id,
+    )
     meta = AuditLifecycleService(s3_client).get_metadata(
         org_id, audit_id, project_id, ai_system_id
     )
@@ -287,10 +300,16 @@ async def get_audit_metadata(
 async def get_audit_summary(
     org_id: str,
     audit_id: str,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     recompute: bool = Query(False, description="If true, scan S3 and refresh summary"),
 ):
+    enforce_strict_audit_scope(
+        org_id,
+        audit_id,
+        project_id=project_id,
+        ai_system_id=ai_system_id,
+    )
     alc = AuditLifecycleService(s3_client)
     from app.etl.s3.utils.s3_paths import audit_summary_key
 
@@ -307,32 +326,17 @@ async def get_audit_summary(
     return {"audit_summary": summary}
 
 
-@router.post("/{org_id}/audits/{audit_id}/rounds", summary="Immutable round snapshot")
-async def snapshot_round(org_id: str, audit_id: str, body: RoundSnapshotBody):
-    try:
-        result = RoundService(s3_client).create_round_snapshot(
-            org_id,
-            audit_id,
-            body.round_n,
-            project_id=body.project_id,
-            ai_system_id=body.ai_system_id,
-            trigger=body.trigger,
-            triggered_by=body.triggered_by,
-            notes=body.notes,
-        )
-    except Exception as e:
-        raise HTTPException(
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"code": "ROUND_SNAPSHOT_FAILED", "message": str(e)},
-        ) from e
-    return result
-
-
 @router.post(
     "/{org_id}/audits/{audit_id}/blockchain-export",
     summary="Write exports/blockchain/{audit_id}.json",
 )
 async def blockchain_export(org_id: str, audit_id: str, body: BlockchainExportBody):
+    enforce_strict_audit_scope(
+        org_id,
+        audit_id,
+        project_id=body.project_id,
+        ai_system_id=body.ai_system_id,
+    )
     raw = OperationalService(s3_client).get_org_profile_raw(org_id)
     try:
         payload = BlockchainExportService(s3_client).write_blockchain_export(

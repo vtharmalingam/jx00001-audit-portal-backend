@@ -27,6 +27,7 @@ openai>=1.30.0
 # ID Generation
 python-ulid>=2.0.0
 
+
 # Legacy (only needed if using /knowledge/gap-analysis or /assessment/evaluate-answer)
 # Uncomment these if you need the old Ollama + FAISS pipeline:
 # --extra-index-url https://download.pytorch.org/whl/cpu

@@ -8,7 +8,8 @@ from typing import Dict, List, Optional
 from app.etl.s3.utils.helpers import utc_now
 
 from app.etl.s3.services.audit_lifecycle_service import AuditLifecycleService
-from app.etl.s3.utils.s3_paths import answer_key, answers_prefix
+from app.etl.s3.services.current_index import sync_answers_index
+from app.etl.s3.utils.s3_paths import answer_key, answers_index_key, answers_prefix
 
 
 class AnswerService:
@@ -20,16 +21,35 @@ class AnswerService:
         self,
         org_id: str,
         audit_id: str,
-        project_id: str = "0",
-        ai_system_id: str = "0",
+        project_id: str,
+        ai_system_id: str,
     ) -> List[Dict]:
-        # Step 1 — S3 prefix for all per-question answer files under this audit scope.
+        # Step 1 — Prefer answers/_index.json when present (avoids full prefix listing).
+        idx_doc = self.s3.read_json(answers_index_key(org_id, audit_id, project_id, ai_system_id))
+        idx_items = idx_doc.get("items") if isinstance(idx_doc, dict) else None
+        if isinstance(idx_items, list) and idx_items and all(
+            isinstance(i, dict) and i.get("question_id") for i in idx_items
+        ):
+            results: List[Dict] = []
+            seen = set()
+            for it in sorted(idx_items, key=lambda x: str(x.get("question_id") or "")):
+                qid = str(it.get("question_id") or "")
+                if not qid or qid in seen:
+                    continue
+                seen.add(qid)
+                data = self.s3.read_json(
+                    answer_key(org_id, audit_id, qid, project_id, ai_system_id)
+                )
+                if data and "question_id" in data:
+                    results.append(data)
+            return results
+
+        # Step 2 — Fallback: list prefix for all per-question answer JSON objects.
         prefix = answers_prefix(org_id, audit_id, project_id, ai_system_id)
 
         results = []
         continuation_token = None
 
-        # Step 2 — Paginate list_objects_v2 and collect valid answer JSON objects.
         while True:
             params = {
                 "Bucket": self.s3.bucket,
@@ -42,8 +62,10 @@ class AnswerService:
             response = self.s3.client.list_objects_v2(**params)
 
             for obj in response.get("Contents", []):
-                # Step 3 — Load each key; keep only documents that look like answers.
-                data = self.s3.read_json(obj["Key"])
+                k = obj["Key"]
+                if k.rstrip("/").endswith("_index.json"):
+                    continue
+                data = self.s3.read_json(k)
 
                 if data and "question_id" in data:
                     results.append(data)
@@ -64,12 +86,12 @@ class AnswerService:
         self,
         org_id: str,
         audit_id: str,
+        project_id: str,
+        ai_system_id: str,
         question_id: str,
         answer: str,
         state: str = "draft",
         user: str = "system",
-        project_id: str = "0",
-        ai_system_id: str = "0",
     ) -> Dict:
         # Step 1 — One object per question: deterministic S3 key for this answer file.
         key = answer_key(org_id, audit_id, question_id, project_id, ai_system_id)
@@ -98,6 +120,16 @@ class AnswerService:
 
         # Step 4 — Persist answer JSON to S3.
         self.s3.write_json(key, data)
+        sync_answers_index(
+            self.s3,
+            org_id,
+            audit_id,
+            question_id=question_id,
+            version=version,
+            state=state,
+            project_id=project_id,
+            ai_system_id=ai_system_id,
+        )
         # Step 5 — Record timeline / hooks on the audit (updated_answer).
         AuditLifecycleService(self.s3).touch_after_mutation(
             org_id,
@@ -117,8 +149,8 @@ class AnswerService:
         org_id: str,
         audit_id: str,
         question_id: str,
-        project_id: str = "0",
-        ai_system_id: str = "0",
+        project_id: str,
+        ai_system_id: str,
     ) -> Optional[Dict]:
         # Step 1 — Direct GetObject for one question; None if the answer file does not exist.
         return self.s3.read_json(

@@ -17,8 +17,8 @@ class ReportService:
         self,
         org_id: str,
         audit_id: str,
-        project_id: str = "0",
-        ai_system_id: str = "0",
+        project_id: str,
+        ai_system_id: str,
     ) -> Dict:
 
         from app.etl.s3.utils.s3_paths import answers_prefix
@@ -40,7 +40,10 @@ class ReportService:
             response = self.s3.client.list_objects_v2(**params)
 
             for obj in response.get("Contents", []):
-                answer = self.s3.read_json(obj["Key"])
+                k = obj["Key"]
+                if k.rstrip("/").endswith("_index.json"):
+                    continue
+                answer = self.s3.read_json(k)
 
                 if not answer:
                     continue
@@ -93,8 +96,8 @@ class ReportService:
         self,
         org_id: str,
         audit_id: str,
-        project_id: str = "0",
-        ai_system_id: str = "0",
+        project_id: str,
+        ai_system_id: str,
     ) -> List[Dict]:
         from app.etl.s3.utils.s3_paths import ai_prefix
 
@@ -118,8 +121,11 @@ class ReportService:
             contents = response.get("Contents", [])
 
             for obj in contents:
-                data = self.s3.read_json(obj["Key"])
-                if data:
+                k = obj["Key"]
+                if k.rstrip("/").endswith("_index.json"):
+                    continue
+                data = self.s3.read_json(k)
+                if data and data.get("question_id"):
                     results.append(data)
 
             if response.get("IsTruncated"):

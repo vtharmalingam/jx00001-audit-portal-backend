@@ -8,6 +8,7 @@ from typing import Dict, Optional
 from app.etl.s3.utils.helpers import utc_now
 
 from app.etl.s3.services.audit_lifecycle_service import AuditLifecycleService
+from app.etl.s3.services.current_index import sync_ai_analysis_index
 from app.etl.s3.utils.s3_paths import ai_key, answer_key, answers_prefix
 
 
@@ -21,9 +22,9 @@ class AIService:
         self,
         org_id: str,
         audit_id: str,
+        project_id: str,
+        ai_system_id: str,
         question_id: Optional[str] = None,
-        project_id: str = "0",
-        ai_system_id: str = "0",
     ) -> Dict:
         
         # Step 1 — Point at the S3 folder where this audit’s answer JSON files live.
@@ -50,8 +51,10 @@ class AIService:
             response = self.s3.client.list_objects_v2(**params)
 
             for obj in response.get("Contents", []):
-                # Step 4 — Load one answer document from S3.
-                answer = self.s3.read_json(obj["Key"])
+                ok = obj["Key"]
+                if ok.rstrip("/").endswith("_index.json"):
+                    continue
+                answer = self.s3.read_json(ok)
 
                 if not answer:
                     skipped += 1
@@ -146,8 +149,8 @@ class AIService:
         audit_id: str,
         question_id: str,
         ai_payload: Dict,
-        project_id: str = "0",
-        ai_system_id: str = "0",
+        project_id: str,
+        ai_system_id: str,
     ) -> Dict:
         # Step 1 — Ensure we have a target question and a dict payload (no LLM call here).
         if not question_id:
@@ -179,6 +182,15 @@ class AIService:
             ai_key(org_id, audit_id, question_id, project_id, ai_system_id),
             ai_data,
         )
+        sync_ai_analysis_index(
+            self.s3,
+            org_id,
+            audit_id,
+            question_id=question_id,
+            last_analyzed_version=version,
+            project_id=project_id,
+            ai_system_id=ai_system_id,
+        )
         AuditLifecycleService(self.s3).touch_after_mutation(
             org_id,
             audit_id,
@@ -201,8 +213,10 @@ if __name__ == "__main__":
 
     BUCKET = "audit-system-data"
 
-    org_id = "D01"
-    audit_id = "0"
+    org_id = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+    audit_id = "01J7RZ8G6E9VX4D3N2C5M8P1QR"
+    project_id = "001"
+    ai_system_id = "0001"
     question_id = "Q1_3"
 
     s3 = S3Client(BUCKET)
@@ -229,6 +243,8 @@ if __name__ == "__main__":
             audit_id=audit_id,
             question_id=question_id,
             ai_payload=ai_payload,
+            project_id=project_id,
+            ai_system_id=ai_system_id,
         )
         print(result)
     except Exception as e:

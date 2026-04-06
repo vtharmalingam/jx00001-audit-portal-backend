@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 def run_gap_analysis(
     self,
     org_id: str,
-    project_id: str = "0",
-    ai_system_id: str = "0",
-    audit_id: str = "0",
+    audit_id: str,
+    project_id: str,
+    ai_system_id: str,
     question_ids: List[str] = None,
 ):
     """Run gap analysis for all submitted questions in an assessment.
@@ -51,8 +51,11 @@ def run_gap_analysis(
 
     # Update status to running
     pipeline_svc.transition_stage(
-        org_id, PipelineStage.AI_GAP_ANALYSIS,
-        project_id=project_id, ai_system_id=ai_system_id,
+        org_id,
+        PipelineStage.AI_GAP_ANALYSIS,
+        audit_id,
+        project_id,
+        ai_system_id,
         gap_analysis_status=GapAnalysisStatus.RUNNING.value,
     )
 
@@ -92,8 +95,12 @@ def run_gap_analysis(
                 logger.warning("No answer found for q=%s, skipping", qid)
                 completed += 1
                 pipeline_svc.update_gap_progress(
-                    org_id, project_id, ai_system_id,
-                    completed=completed, total=total,
+                    org_id,
+                    audit_id,
+                    project_id,
+                    ai_system_id,
+                    completed=completed,
+                    total=total,
                 )
                 continue
 
@@ -112,7 +119,7 @@ def run_gap_analysis(
 
             # Save per-question result
             pipeline_svc.save_gap_question_result(
-                org_id, qid, result, project_id, ai_system_id,
+                org_id, audit_id, qid, result, project_id, ai_system_id,
             )
 
             results.append(result)
@@ -120,8 +127,12 @@ def run_gap_analysis(
 
             # Update progress
             pipeline_svc.update_gap_progress(
-                org_id, project_id, ai_system_id,
-                completed=completed, total=total,
+                org_id,
+                audit_id,
+                project_id,
+                ai_system_id,
+                completed=completed,
+                total=total,
             )
 
             logger.info("Gap analysis completed for q=%s (%d/%d)", qid, completed, total)
@@ -136,8 +147,12 @@ def run_gap_analysis(
                 "match_score": 0.0,
             })
             pipeline_svc.update_gap_progress(
-                org_id, project_id, ai_system_id,
-                completed=completed, total=total,
+                org_id,
+                audit_id,
+                project_id,
+                ai_system_id,
+                completed=completed,
+                total=total,
             )
 
     # Save full gap report
@@ -157,7 +172,7 @@ def run_gap_analysis(
         "questions": results,
     }
 
-    pipeline_svc.save_gap_report(org_id, report, project_id, ai_system_id)
+    pipeline_svc.save_gap_report(org_id, audit_id, report, project_id, ai_system_id)
 
     # Update gap reports index for fast listing
     try:
@@ -166,6 +181,7 @@ def run_gap_analysis(
         sys_doc = s3.read_json(system_json_key(org_id, project_id, ai_system_id)) or {}
         _update_gap_index(s3, {
             "org_id": org_id,
+            "audit_id": audit_id,
             "ai_system_id": ai_system_id,
             "ai_system_name": sys_doc.get("name", ai_system_id),
             "project_id": project_id,
@@ -189,6 +205,7 @@ def run_gap_analysis(
             "status": "in_review",
             "org_id": org_id,
             "org_name": "",
+            "audit_id": audit_id,
             "project_id": project_id,
             "ai_system_id": ai_system_id,
             "total_questions": total,
@@ -209,3 +226,22 @@ def run_gap_analysis(
         "completed": len(results),
         "average_match_score": round(avg_score, 3),
     }
+
+
+@celery_app.task(name="pipeline.recompute_derived_audit")
+def recompute_derived_audit_task(
+    org_id: str,
+    audit_id: str,
+    project_id: str,
+    ai_system_id: str,
+):
+    """Write placeholder derived/* bundle (replace with real metrics pipeline later)."""
+    from app.config import get_config
+    from app.etl.s3.services.derived_service import DerivedAuditService
+    from app.etl.s3.services.s3_client import S3Client
+
+    cfg = get_config()
+    s3 = S3Client(bucket=cfg.ai_assessment.s3.bucket)
+    return DerivedAuditService(s3).write_placeholder_bundle(
+        org_id, audit_id, project_id, ai_system_id
+    )

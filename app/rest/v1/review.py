@@ -128,24 +128,20 @@ async def save_attestation(
         systems = org_svc.list_ai_systems(org_id)
         transitioned = False
         for sys in (systems or []):
-            sid = sys.get("system_id") or sys.get("ai_system_id") or "0"
-            pid = sys.get("project_id", "0")
-            audit_id = sys.get("audit_id")
-            # Skip legacy/invalid systems without proper audit_id
-            if not audit_id or sid == "0":
+            sid = str(sys.get("system_id") or sys.get("ai_system_id") or "")
+            pid = str(sys.get("project_id") or "")
+            audit_id = str(sys.get("audit_id") or "")
+            if len(pid) != 3 or len(sid) != 4 or len(audit_id) != 26:
                 continue
             pipe_svc.transition_stage(
-                org_id, PipelineStage.REVIEW_COMPLETE,
-                project_id=pid, ai_system_id=sid,
+                org_id,
+                PipelineStage.REVIEW_COMPLETE,
+                audit_id,
+                pid,
+                sid,
                 review_completed_at=utc_now(),
             )
             transitioned = True
-        if not transitioned:
-            # Fallback: transition default record
-            pipe_svc.transition_stage(
-                org_id, PipelineStage.REVIEW_COMPLETE,
-                review_completed_at=utc_now(),
-            )
         org_svc.merge_org_profile(org_id, {"stage": PipelineStage.REVIEW_COMPLETE.value})
     except Exception as e:
         logger.warning("Pipeline transition to review_complete failed: %s", e)

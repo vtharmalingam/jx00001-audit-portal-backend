@@ -428,7 +428,8 @@ async def onboard_firm_client(
     if existing_orgs:
         raise HTTPException(
             status.HTTP_409_CONFLICT,
-            detail={"code": "ONBOARD_FAILED", "message": f"An organisation with this email already exists: {body.admin_email}"},
+            detail={"code": "ONBOARD_FAILED", 
+                    "message": f"An organisation with this email already exists: {body.admin_email}"},
         )
 
     # 2. If an orphan user exists, remove it first
@@ -455,7 +456,7 @@ async def onboard_firm_client(
         ) from e
 
     # 4. Resolve the firm's org ID
-    firm_id = body.firm_org_id
+    firm_id = body.firm_org_id         # <-------------------------------- TODO: Kingsly: Please pay attention to this (defensive check is needed. Note that new onboarding does not send the ID)
     if not firm_id and current_user:
         # Look up the firm org by the logged-in admin's email
         caller_email = current_user.get("email", "")

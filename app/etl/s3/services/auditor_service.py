@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 from app.etl.s3.utils.helpers import utc_now
 
 from app.etl.s3.services.audit_lifecycle_service import AuditLifecycleService
+from app.etl.s3.services.current_index import sync_auditor_feedback_index
 from app.etl.s3.utils.s3_paths import answers_prefix, auditor_key
 
 
@@ -20,8 +21,8 @@ class AuditorService:
         self,
         org_id: str,
         audit_id: str,
-        project_id: str = "0",
-        ai_system_id: str = "0",
+        project_id: str,
+        ai_system_id: str,
     ) -> List[Dict]:
 
         prefix = answers_prefix(org_id, audit_id, project_id, ai_system_id)
@@ -41,7 +42,10 @@ class AuditorService:
             response = self.s3.client.list_objects_v2(**params)
 
             for obj in response.get("Contents", []):
-                data = self.s3.read_json(obj["Key"])
+                k = obj["Key"]
+                if k.rstrip("/").endswith("_index.json"):
+                    continue
+                data = self.s3.read_json(k)
                 if data and data.get("state") == "submitted":
                     results.append(data)
 
@@ -58,8 +62,8 @@ class AuditorService:
         audit_id: str,
         question_id: str,
         feedback: Dict,
-        project_id: str = "0",
-        ai_system_id: str = "0",
+        project_id: str,
+        ai_system_id: str,
     ) -> Dict:
 
         key = auditor_key(org_id, audit_id, question_id, project_id, ai_system_id)
@@ -84,6 +88,16 @@ class AuditorService:
         }
 
         self.s3.write_json(key, data)
+        sync_auditor_feedback_index(
+            self.s3,
+            org_id,
+            audit_id,
+            question_id=question_id,
+            reviewed_version=int(feedback["version"]),
+            review_state=str(feedback["review_state"] or ""),
+            project_id=project_id,
+            ai_system_id=ai_system_id,
+        )
         AuditLifecycleService(self.s3).touch_after_mutation(
             org_id,
             audit_id,

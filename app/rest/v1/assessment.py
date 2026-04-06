@@ -14,6 +14,7 @@ from app.etl.s3.services.evidence_service import EvidenceService
 from app.etl.s3.services.report_service import ReportService
 from app.procs.category_question_loader import CategoryQuestionLoader
 from app.rest.deps import data_dir, s3_client
+from app.rest.strict_audit_ids import enforce_strict_audit_scope
 from app.rest.v1.assessment_schemas import (
     CreateCategoryBody,
     CreateQuestionBody,
@@ -93,15 +94,21 @@ async def save_answer(body: SaveAnswerBody):
             status.HTTP_400_BAD_REQUEST,
             detail={"code": "VALIDATION", "message": "question_id, user_answer, org_id, state required"},
         )
+    enforce_strict_audit_scope(
+        body.org_id,
+        str(body.audit_id),
+        project_id=str(body.project_id),
+        ai_system_id=str(body.ai_system_id),
+    )
     try:
         AnswerService(s3_client).upsert_answer(
             org_id=body.org_id,
             audit_id=str(body.audit_id),
+            project_id=str(body.project_id),
+            ai_system_id=str(body.ai_system_id),
             question_id=body.question_id,
             answer=body.user_answer,
             state=body.state,
-            project_id=str(body.project_id),
-            ai_system_id=str(body.ai_system_id),
         )
     except Exception as e:
         raise HTTPException(
@@ -116,14 +123,20 @@ async def save_answer(body: SaveAnswerBody):
         from app.etl.s3.services.operational_service import OperationalService
 
         pipe_svc = PipelineService(s3_client)
-        rec = pipe_svc.get_record(body.org_id, str(body.project_id), str(body.ai_system_id))
+        rec = pipe_svc.get_record(
+            body.org_id,
+            str(body.audit_id),
+            str(body.project_id),
+            str(body.ai_system_id),
+        )
         current_stage = (rec or {}).get("stage", "not_started")
 
         if current_stage == PipelineStage.NOT_STARTED.value:
             pipe_svc.ensure_record(
-                org_id=body.org_id,
-                project_id=str(body.project_id),
-                ai_system_id=str(body.ai_system_id),
+                body.org_id,
+                str(body.audit_id),
+                str(body.project_id),
+                str(body.ai_system_id),
                 stage=PipelineStage.IN_PROGRESS.value,
             )
             OperationalService(s3_client).merge_org_profile(
@@ -141,10 +154,16 @@ async def save_answer(body: SaveAnswerBody):
 @router.get("/answers", summary="Fetch all answers for an org / audit scope")
 async def fetch_answers(
     org_id: str = Query(...),
-    audit_id: str = Query("0"),
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    audit_id: str = Query(...),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
 ):
+    enforce_strict_audit_scope(
+        org_id,
+        audit_id,
+        project_id=project_id,
+        ai_system_id=ai_system_id,
+    )
     try:
         answers = AnswerService(s3_client).get_all_answers(
             org_id=org_id,
@@ -174,10 +193,16 @@ async def fetch_answers(
 )
 async def get_audit_view(
     org_id: str,
-    audit_id: str = Query("0"),
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    audit_id: str = Query(...),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
 ):
+    enforce_strict_audit_scope(
+        org_id,
+        audit_id,
+        project_id=project_id,
+        ai_system_id=ai_system_id,
+    )
     try:
         result = ReportService(s3_client).get_full_audit_view(
             org_id,
@@ -211,6 +236,12 @@ async def save_review(body: SaveReviewBody):
             status.HTTP_400_BAD_REQUEST,
             detail={"code": "VALIDATION", "message": "org_id, audit_id, question_id, review_state required"},
         )
+    enforce_strict_audit_scope(
+        body.org_id,
+        body.audit_id,
+        project_id=body.project_id,
+        ai_system_id=body.ai_system_id,
+    )
     answer_service = AnswerService(s3_client)
     auditor_service = AuditorService(s3_client)
     answer = answer_service.get_answer(
@@ -279,6 +310,12 @@ async def register_evidence(body: EvidenceRegisterBody):
                 status.HTTP_400_BAD_REQUEST,
                 detail={"code": "INVALID_BASE64", "message": str(e)},
             ) from e
+    enforce_strict_audit_scope(
+        body.org_id,
+        body.audit_id,
+        project_id=body.project_id,
+        ai_system_id=body.ai_system_id,
+    )
     try:
         entry = EvidenceService(s3_client).register_evidence(
             body.org_id,
@@ -304,9 +341,15 @@ async def fetch_evidence(
     org_id: str = Query(...),
     audit_id: str = Query(...),
     question_id: Optional[str] = Query(None),
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
 ):
+    enforce_strict_audit_scope(
+        org_id,
+        audit_id,
+        project_id=project_id,
+        ai_system_id=ai_system_id,
+    )
     try:
         index = EvidenceService(s3_client).list_index(
             org_id,

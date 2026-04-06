@@ -15,9 +15,13 @@ from app.etl.s3.services.evidence_service import EvidenceService
 from app.etl.s3.services.operational_service import OperationalService
 from app.etl.s3.services.report_service import ReportService
 from app.etl.s3.utils.s3_paths import (
+    ai_analysis_index_key,
     ai_key,
+    answers_index_key,
     audit_metadata_key,
     audit_summary_key,
+    auditor_feedback_index_key,
+    derived_metrics_key,
     domain_lookup_key,
     org_lookup_key,
 )
@@ -82,11 +86,10 @@ class MockLLM:
 
 
 def _run_lifecycle_flow(s3):
-    # Fixed IDs keep the scenario easy to inspect and debug.
-    org_id = "org_1"
-    project_id = "proj_1"
-    ai_system_id = "sys_1"
-    audit_id = "audit_1"
+    # Crockford ULID org + ULID audit; 3-digit project + 4-digit system per README-datastruct.
+    org_id = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+    project_id = "001"
+    ai_system_id = "0001"
     question_id = "Q1_1"
 
     # 1) Organization onboarding layer + lookup synchronization.
@@ -104,7 +107,7 @@ def _run_lifecycle_flow(s3):
     assert s3.read_json(org_lookup_key(org_id))["org_id"] == org_id
 
     # 2) Structural hierarchy: project and AI system.
-    project = ops.create_project(org_id, project_id, "Fraud Platform")
+    project = ops.create_project(org_id, "Fraud Platform", project_id=project_id)
     assert project["project_id"] == project_id
 
     system = ops.add_ai_system(
@@ -118,10 +121,13 @@ def _run_lifecycle_flow(s3):
     )
     assert system["project_id"] == project_id
     assert system["system_id"] == ai_system_id
+    audit_id = system["audit_id"]
+    assert len(audit_id) == 26
 
-    # 3) Audit control plane bootstrap (metadata + summary + timeline).
+    # 3) Audit control plane (metadata + summary + timeline) created in add_ai_system.
     lifecycle = AuditLifecycleService(s3)
-    meta = lifecycle.create_audit(org_id, project_id, ai_system_id, audit_id=audit_id, auditor_id="aud_1")
+    meta = lifecycle.get_metadata(org_id, audit_id, project_id, ai_system_id)
+    assert meta is not None
     assert meta["audit_id"] == audit_id
     assert meta["project_id"] == project_id
     assert meta["ai_system_id"] == ai_system_id
@@ -131,14 +137,17 @@ def _run_lifecycle_flow(s3):
     ans = AnswerService(s3).upsert_answer(
         org_id,
         audit_id,
+        project_id,
+        ai_system_id,
         question_id,
         "Initial answer",
         state="submitted",
         user="user@acme.com",
-        project_id=project_id,
-        ai_system_id=ai_system_id,
     )
     assert ans["version"] == 1
+    ans_idx = s3.read_json(answers_index_key(org_id, audit_id, project_id, ai_system_id))
+    assert ans_idx and len(ans_idx.get("items") or []) == 1
+    assert ans_idx["items"][0]["question_id"] == question_id
 
     # Use override key so the test does not depend on binary upload bytes.
     ev = EvidenceService(s3).register_evidence(
@@ -149,7 +158,7 @@ def _run_lifecycle_flow(s3):
         project_id=project_id,
         ai_system_id=ai_system_id,
         uploaded_by="user@acme.com",
-        s3_key="organizations/org_1/external/policy.pdf",
+        s3_key=f"organizations/{org_id}/external/policy.pdf",
     )
     assert ev["file_name"] == "policy.pdf"
 
@@ -157,9 +166,9 @@ def _run_lifecycle_flow(s3):
     ai_result = AIService(s3, MockLLM()).process_org(
         org_id,
         audit_id,
+        project_id,
+        ai_system_id,
         question_id=question_id,
-        project_id=project_id,
-        ai_system_id=ai_system_id,
     )
     assert ai_result["processed"] == 1
     assert s3.read_json(ai_key(org_id, audit_id, question_id, project_id, ai_system_id))["last_analyzed_version"] == 1
@@ -177,10 +186,12 @@ def _run_lifecycle_flow(s3):
             "feedback": [],
             "recommendations": ["Add architecture diagram"],
         },
-        project_id=project_id,
-        ai_system_id=ai_system_id,
+        project_id,
+        ai_system_id,
     )
     assert review["review_state"] == "needs_revision"
+    fb_idx = s3.read_json(auditor_feedback_index_key(org_id, audit_id, project_id, ai_system_id))
+    assert fb_idx and any(i.get("question_id") == question_id for i in (fb_idx.get("items") or []))
 
     # 5) Read model: consolidated audit view for UI/reporting.
     view = ReportService(s3).get_full_audit_view(
@@ -198,6 +209,8 @@ def _run_lifecycle_flow(s3):
     assert summary["answered"] == 1
     assert summary["ai_processed"] == 1
     assert summary["reviewed"] == 1
+    derived = s3.read_json(derived_metrics_key(org_id, audit_id, project_id, ai_system_id))
+    assert derived and derived.get("source") == "derived_stub"
 
 
 def test_org_project_ai_system_assessment_lifecycle_fake():

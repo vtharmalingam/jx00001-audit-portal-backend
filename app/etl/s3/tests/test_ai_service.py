@@ -12,6 +12,11 @@ import pytest
 from app.etl.s3.services.answer_service import AnswerService
 from app.etl.s3.services.ai_service import AIService
 
+ORG_ID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+AUDIT_ID = "01J7RZ8G6E9VX4D3N2C5M8P1QR"
+PROJECT_ID = "001"
+AI_SYSTEM_ID = "0001"
+
 
 class MockLLM:
     def analyze(self, text):
@@ -29,22 +34,22 @@ class MockLLM:
 
 
 def test_ai_processing_real_s3(real_s3):
-    org_id = "org_unit_test"
-    audit_id = "audit_unit_test"
-
     answer_service = AnswerService(real_s3)
 
-    # Create submitted answer
     answer_service.upsert_answer(
-        org_id,
-        audit_id,
+        ORG_ID,
+        AUDIT_ID,
+        PROJECT_ID,
+        AI_SYSTEM_ID,
         "Q1",
         "Some answer",
-        state="submitted"
+        state="submitted",
     )
 
     ai_service = AIService(real_s3, MockLLM())
-    result = ai_service.process_org(org_id, audit_id)
+    result = ai_service.process_org(
+        ORG_ID, AUDIT_ID, PROJECT_ID, AI_SYSTEM_ID,
+    )
 
     assert result["processed"] == 1
     assert result["failed"] == 0

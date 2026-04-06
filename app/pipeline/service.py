@@ -1,7 +1,7 @@
 """Pipeline service: state transitions, board queries, gap analysis orchestration.
 
 All data is stored inside the audit folder:
-  organizations/{org}/projects/{proj}/ai_systems/{sys}/audits/{audit_id}/current/
+  organizations/{org}/projects/{proj}/systems/{sys}/audits/{audit_id}/current/
       pipeline.json          — pipeline state
       gap_report.json        — full gap analysis report
       ai_analysis/{qid}.json — per-question gap results
@@ -39,16 +39,16 @@ class PipelineService:
 
     # ── Pipeline Record (inside audit folder) ────────────────────────────────
 
-    def get_record(self, org_id: str, project_id: str = "0", ai_system_id: str = "0") -> Optional[Dict]:
-        audit_id = f"{org_id}-{project_id}-{ai_system_id}"
+    def get_record(
+        self, org_id: str, audit_id: str, project_id: str, ai_system_id: str
+    ) -> Optional[Dict]:
         return self.s3.read_json(pipeline_key(org_id, audit_id, project_id, ai_system_id))
 
     def upsert_record(self, data: Dict) -> Dict:
         org_id = data["org_id"]
-        project_id = data.get("project_id", "0")
-        ai_system_id = data.get("ai_system_id", "0")
-        audit_id = data.get("audit_id") or f"{org_id}-{project_id}-{ai_system_id}"
-        data["audit_id"] = audit_id
+        audit_id = data["audit_id"]
+        project_id = data["project_id"]
+        ai_system_id = data["ai_system_id"]
         data["updated_at"] = utc_now()
         if not data.get("created_at"):
             data["created_at"] = data["updated_at"]
@@ -64,16 +64,25 @@ class PipelineService:
         try:
             idx = self.s3.read_json(PIPELINE_INDEX_KEY) or {"items": []}
             items = idx.get("items", [])
-            key = f"{entry.get('org_id')}|{entry.get('project_id','0')}|{entry.get('ai_system_id','0')}"
-            items = [i for i in items if f"{i.get('org_id')}|{i.get('project_id','0')}|{i.get('ai_system_id','0')}" != key]
+
+            def _key(i: Dict) -> str:
+                return (
+                    f"{i.get('org_id')}|{i.get('audit_id')}|"
+                    f"{i.get('project_id')}|{i.get('ai_system_id')}"
+                )
+
+            k = _key(entry)
+            items = [i for i in items if _key(i) != k]
             items.append(entry)
             idx["items"] = items
             self.s3.write_json(PIPELINE_INDEX_KEY, idx)
         except Exception:
             pass
 
-    def ensure_record(self, org_id: str, project_id: str = "0", ai_system_id: str = "0", **kwargs) -> Dict:
-        existing = self.get_record(org_id, project_id, ai_system_id)
+    def ensure_record(
+        self, org_id: str, audit_id: str, project_id: str, ai_system_id: str, **kwargs
+    ) -> Dict:
+        existing = self.get_record(org_id, audit_id, project_id, ai_system_id)
         if existing:
             if kwargs:
                 existing.update(kwargs)
@@ -84,7 +93,7 @@ class PipelineService:
             "org_id": org_id,
             "project_id": project_id,
             "ai_system_id": ai_system_id,
-            "audit_id": f"{org_id}-{project_id}-{ai_system_id}",
+            "audit_id": audit_id,
             "stage": PipelineStage.NOT_STARTED.value,
             "created_at": now,
             "updated_at": now,
@@ -93,11 +102,17 @@ class PipelineService:
         return self.upsert_record(rec)
 
     def transition_stage(
-        self, org_id: str, new_stage: PipelineStage,
-        project_id: str = "0", ai_system_id: str = "0", **extra,
+        self,
+        org_id: str,
+        new_stage: PipelineStage,
+        audit_id: str,
+        project_id: str,
+        ai_system_id: str,
+        **extra,
     ) -> Dict:
-        rec = self.get_record(org_id, project_id, ai_system_id) or {}
+        rec = self.get_record(org_id, audit_id, project_id, ai_system_id) or {}
         rec["org_id"] = org_id
+        rec["audit_id"] = audit_id
         rec["project_id"] = project_id
         rec["ai_system_id"] = ai_system_id
         rec["stage"] = new_stage.value
@@ -105,11 +120,18 @@ class PipelineService:
         return self.upsert_record(rec)
 
     def update_gap_progress(
-        self, org_id: str, project_id: str = "0", ai_system_id: str = "0",
-        *, completed: int, total: int,
+        self,
+        org_id: str,
+        audit_id: str,
+        project_id: str,
+        ai_system_id: str,
+        *,
+        completed: int,
+        total: int,
     ) -> Dict:
-        rec = self.get_record(org_id, project_id, ai_system_id) or {}
+        rec = self.get_record(org_id, audit_id, project_id, ai_system_id) or {}
         rec["org_id"] = org_id
+        rec["audit_id"] = audit_id
         rec["project_id"] = project_id
         rec["ai_system_id"] = ai_system_id
         rec["gap_analysis_completed"] = completed
@@ -126,29 +148,41 @@ class PipelineService:
     # ── Gap Analysis Results (inside audit/current/) ─────────────────────────
 
     def save_gap_question_result(
-        self, org_id: str, question_id: str, result: Dict,
-        project_id: str = "0", ai_system_id: str = "0",
+        self,
+        org_id: str,
+        audit_id: str,
+        question_id: str,
+        result: Dict,
+        project_id: str,
+        ai_system_id: str,
     ) -> None:
-        audit_id = f"{org_id}-{project_id}-{ai_system_id}"
         result["saved_at"] = utc_now()
         self.s3.write_json(ai_key(org_id, audit_id, question_id, project_id, ai_system_id), result)
 
     def save_gap_report(
-        self, org_id: str, report: Dict,
-        project_id: str = "0", ai_system_id: str = "0",
+        self,
+        org_id: str,
+        audit_id: str,
+        report: Dict,
+        project_id: str,
+        ai_system_id: str,
     ) -> None:
-        audit_id = f"{org_id}-{project_id}-{ai_system_id}"
         report["completed_at"] = utc_now()
         self.s3.write_json(gap_report_key(org_id, audit_id, project_id, ai_system_id), report)
 
-    def get_gap_report(self, org_id: str, project_id: str = "0", ai_system_id: str = "0") -> Optional[Dict]:
-        audit_id = f"{org_id}-{project_id}-{ai_system_id}"
+    def get_gap_report(
+        self, org_id: str, audit_id: str, project_id: str, ai_system_id: str
+    ) -> Optional[Dict]:
         return self.s3.read_json(gap_report_key(org_id, audit_id, project_id, ai_system_id))
 
     def get_gap_question_result(
-        self, org_id: str, question_id: str, project_id: str = "0", ai_system_id: str = "0",
+        self,
+        org_id: str,
+        audit_id: str,
+        question_id: str,
+        project_id: str,
+        ai_system_id: str,
     ) -> Optional[Dict]:
-        audit_id = f"{org_id}-{project_id}-{ai_system_id}"
         return self.s3.read_json(ai_key(org_id, audit_id, question_id, project_id, ai_system_id))
 
     # ── Board (hydrate from orgs — NO full scan) ────────────────────────────
@@ -209,24 +243,39 @@ class PipelineService:
             org = org_map.get(oid, {})
             item.setdefault("org_name", org.get("name", oid))
             item.setdefault("onboarded_by_type", org.get("onboarded_by_type", ""))
-            key = f"{oid}|{item.get('project_id','0')}|{item.get('ai_system_id','0')}"
+            key = (
+                f"{oid}|{item.get('audit_id', '')}|"
+                f"{item.get('project_id', '')}|{item.get('ai_system_id', '')}"
+            )
             seen_keys.add(key)
             items.append(item)
 
-        # 4. Synthesize entries for orgs that have no pipeline records
+        # 4. Synthesize entries from registered AI systems when no pipeline row exists yet
+        op = OperationalService(self.s3)
         for org in orgs:
             oid = org.get("org_id", "")
             if not oid:
                 continue
-            # Check if any pipeline item exists for this org
             has_pipeline = any(k.startswith(f"{oid}|") for k in seen_keys)
-            if not has_pipeline:
-                stage = _STAGE_MAP.get(org.get("stage") or "not_started", PipelineStage.NOT_STARTED.value)
+            if has_pipeline:
+                continue
+            stage = _STAGE_MAP.get(org.get("stage") or "not_started", PipelineStage.NOT_STARTED.value)
+            systems = op.list_ai_systems(oid) or []
+            for sys in systems:
+                pid = str(sys.get("project_id") or "")
+                sid = str(sys.get("system_id") or sys.get("ai_system_id") or "")
+                aid = str(sys.get("audit_id") or "")
+                if len(pid) != 3 or len(sid) != 4 or len(aid) != 26:
+                    continue
+                row_key = f"{oid}|{aid}|{pid}|{sid}"
+                if row_key in seen_keys:
+                    continue
+                seen_keys.add(row_key)
                 items.append({
                     "org_id": oid,
-                    "project_id": "0",
-                    "ai_system_id": "0",
-                    "audit_id": f"{oid}-0-0",
+                    "project_id": pid,
+                    "ai_system_id": sid,
+                    "audit_id": aid,
                     "org_name": org.get("name", oid),
                     "stage": stage,
                     "onboarded_by_type": org.get("onboarded_by_type", ""),

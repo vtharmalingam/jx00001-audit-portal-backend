@@ -11,27 +11,25 @@ import pytest
 from app.etl.s3.services.report_service import ReportService
 from app.etl.s3.utils.s3_paths import ai_key
 
+ORG_ID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+AUDIT_ID = "01J7RZ8G6E9VX4D3N2C5M8P1QR"
+PROJECT_ID = "001"
+AI_SYSTEM_ID = "0001"
+
 
 def test_gap_report_empty(real_s3):
-    org_id = "org_unit_test"
-    audit_id = "audit_unit_test"
-
     service = ReportService(real_s3)
 
-    result = service.get_gap_report(org_id, audit_id)
+    result = service.get_gap_report(ORG_ID, AUDIT_ID, PROJECT_ID, AI_SYSTEM_ID)
 
     assert result == []
 
 
 def test_gap_report_with_data(real_s3):
-    org_id = "org_unit_test"
-    audit_id = "audit_unit_test"
-
     service = ReportService(real_s3)
 
-    # Seed AI data
     real_s3.write_json(
-        ai_key(org_id, audit_id, "Q1"),
+        ai_key(ORG_ID, AUDIT_ID, "Q1", PROJECT_ID, AI_SYSTEM_ID),
         {
             "question_id": "Q1",
             "last_analyzed_version": 1,
@@ -49,7 +47,7 @@ def test_gap_report_with_data(real_s3):
     )
 
     real_s3.write_json(
-        ai_key(org_id, audit_id, "Q2"),
+        ai_key(ORG_ID, AUDIT_ID, "Q2", PROJECT_ID, AI_SYSTEM_ID),
         {
             "question_id": "Q2",
             "last_analyzed_version": 1,
@@ -66,24 +64,19 @@ def test_gap_report_with_data(real_s3):
         }
     )
 
-    result = service.get_gap_report(org_id, audit_id)
+    result = service.get_gap_report(ORG_ID, AUDIT_ID, PROJECT_ID, AI_SYSTEM_ID)
 
     assert len(result) == 2
 
-    # Ensure sorted order
     assert result[0]["question_id"] == "Q1"
     assert result[1]["question_id"] == "Q2"
 
 
 def test_gap_report_ignores_corrupt_entries(real_s3):
-    org_id = "org_unit_test"
-    audit_id = "audit_unit_test"
-
     service = ReportService(real_s3)
 
-    # valid entry
     real_s3.write_json(
-        ai_key(org_id, audit_id, "Q1"),
+        ai_key(ORG_ID, AUDIT_ID, "Q1", PROJECT_ID, AI_SYSTEM_ID),
         {
             "question_id": "Q1",
             "last_analyzed_version": 1,
@@ -100,12 +93,12 @@ def test_gap_report_ignores_corrupt_entries(real_s3):
         }
     )
 
-    # corrupt (None)
-    real_s3.store[
-        ai_key(org_id, audit_id, "Q2")
-    ] = None
+    real_s3.put_bytes(
+        ai_key(ORG_ID, AUDIT_ID, "Q2", PROJECT_ID, AI_SYSTEM_ID),
+        b"not valid json {{{",
+    )
 
-    result = service.get_gap_report(org_id, audit_id)
+    result = service.get_gap_report(ORG_ID, AUDIT_ID, PROJECT_ID, AI_SYSTEM_ID)
 
     assert len(result) == 1
     assert result[0]["question_id"] == "Q1"

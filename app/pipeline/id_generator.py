@@ -3,17 +3,17 @@
 Organization:  ULID (26 chars, timestamp-sortable, globally unique)
 Project:       Sequential 3-digit per org (001, 002, ...)
 AI System:     Sequential 4-digit per project (0001, 0002, ...)
-Audit ID:      Composite {org_ulid}-{project_seq}-{system_seq}
+Audit ID:      ULID only (see ``app.etl.s3.utils.ids.new_audit_ulid``)
 """
 
-from ulid import ULID
+import ulid
 
 from app.etl.s3.services.s3_client import S3Client
 
 
 def generate_org_id() -> str:
     """Generate a ULID-based organization ID."""
-    return str(ULID()).upper()
+    return str(ulid.new()).upper()
 
 
 def next_project_seq(s3: S3Client, org_id: str) -> str:
@@ -47,7 +47,7 @@ def next_project_seq(s3: S3Client, org_id: str) -> str:
 
 def next_system_seq(s3: S3Client, org_id: str, project_id: str) -> str:
     """Return the next sequential system ID (0001, 0002, ...) for a project."""
-    prefix = f"organizations/{org_id}/projects/{project_id}/ai_systems/"
+    prefix = f"organizations/{org_id}/projects/{project_id}/systems/"
     max_seq = 0
 
     token = None
@@ -72,8 +72,3 @@ def next_system_seq(s3: S3Client, org_id: str, project_id: str) -> str:
             break
 
     return f"{max_seq + 1:04d}"
-
-
-def make_audit_id(org_id: str, project_id: str, system_id: str) -> str:
-    """Compose an audit ID from org, project, and system IDs."""
-    return f"{org_id}-{project_id}-{system_id}"

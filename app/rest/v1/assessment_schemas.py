@@ -14,18 +14,18 @@ class EvaluateAnswerBody(BaseModel):
 class SaveAnswerBody(BaseModel):
     question_id: str
     user_answer: str
-    org_id: str = "0"
+    org_id: str
     state: str = "draft"
-    audit_id: str = "0"
-    project_id: str = "0"
-    ai_system_id: str = "0"
+    audit_id: str
+    project_id: str
+    ai_system_id: str
 
 
 class SaveReviewBody(BaseModel):
     org_id: str
-    audit_id: str = "0"
-    project_id: str = "0"
-    ai_system_id: str = "0"
+    audit_id: str
+    project_id: str
+    ai_system_id: str
     question_id: str
     review_state: str
     reviewer_comment: Optional[str] = None
@@ -74,8 +74,8 @@ class EvidenceRegisterBody(BaseModel):
     audit_id: str
     question_id: str
     file_name: str
-    project_id: str = "0"
-    ai_system_id: str = "0"
+    project_id: str
+    ai_system_id: str
     uploaded_by: str = "system"
     content_base64: Optional[str] = None
     s3_key_override: Optional[str] = None

@@ -7,6 +7,21 @@ from typing import Any, Dict, List, Optional
 from app.auth.passwords import hash_password, verify_password
 from app.etl.s3.utils.s3_paths import _prefix
 
+'''
+-------------------------------------------------------------------------------------------------------------
+- AuthUserService manages user accounts: id, name, email, password hash, assigned role (a string id like 
+aict_admin or firm_practitioner), derived tier, status, invite/refresh token hashes, timestamps.
+
+- Persisted in S3 as platform/auth_users.json.
+
+- Handles register, login (authenticate), invite/activate, refresh token storage, user CRUD for auth.
+
+So this file answers: “Which person has which role, and can they sign in?”
+-------------------------------------------------------------------------------------------------------------
+'''
+
+
+
 
 def _auth_users_key() -> str:
     """S3 key for the auth users registry."""

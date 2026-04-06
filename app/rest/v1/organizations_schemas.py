@@ -28,18 +28,9 @@ class AuditCreateBody(BaseModel):
     audit_id: Optional[str] = None
 
 
-class RoundSnapshotBody(BaseModel):
-    project_id: str = "0"
-    ai_system_id: str = "0"
-    round_n: int
-    trigger: str = "manual"
-    triggered_by: str = "system"
-    notes: str = ""
-
-
 class BlockchainExportBody(BaseModel):
-    project_id: str = "0"
-    ai_system_id: str = "0"
+    project_id: str
+    ai_system_id: str
 
 
 class AiSystemCreateBody(BaseModel):

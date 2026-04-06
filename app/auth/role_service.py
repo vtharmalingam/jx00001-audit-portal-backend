@@ -7,6 +7,20 @@ from typing import Any, Dict, List, Optional
 from app.etl.s3.utils.s3_paths import _prefix
 
 
+'''
+-------------------------------------------------------------------------------------------------------------
+- RoleService manages the platform role catalog: role id, display name, tier, level, description, and the list 
+of permission strings for that role.
+- Persisted in S3 as platform/roles.json.
+- On first use, if the file is empty, it seeds from _DEFAULT_ROLES (the big static list in the same file).
+- Supports list / get / create / update / delete roles (exposed via the roles API / router).
+- get_permissions_for_role(role_id) is what ties roles to permissions at runtime (used from permissions.py).
+
+So this file answers: “What is firm_manager, what tier is it, and which capabilities does it grant?”
+-------------------------------------------------------------------------------------------------------------
+'''
+
+
 def _roles_key() -> str:
     return _prefix("platform/roles.json")
 

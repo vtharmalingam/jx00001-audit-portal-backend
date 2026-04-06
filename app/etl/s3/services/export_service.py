@@ -25,8 +25,8 @@ class BlockchainExportService:
         self,
         org_id: str,
         audit_id: str,
-        project_id: str = "0",
-        ai_system_id: str = "0",
+        project_id: str,
+        ai_system_id: str,
         *,
         org_profile: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
@@ -49,8 +49,8 @@ class BlockchainExportService:
         self,
         audit_id: str,
         org_id: str,
-        project_id: str = "0",
-        ai_system_id: str = "0",
+        project_id: str,
+        ai_system_id: str,
         *,
         org_profile: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:

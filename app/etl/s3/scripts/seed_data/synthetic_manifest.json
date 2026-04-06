@@ -1,0 +1,87 @@
+{
+  "organization": {
+    "name": "Synthetic Audit Labs (seed)",
+    "email": "synthetic-seed@example.com",
+    "status": "active",
+    "stage": "in_progress",
+    "aict_approved": true,
+    "onboarded_by_type": "aict",
+    "domains": ["synthetic-seed.example.com"]
+  },
+  "project": {
+    "project_id": "001",
+    "project_name": "Seed Compliance Project"
+  },
+  "ai_system": {
+    "system_id": "0001",
+    "name": "Seed Risk Engine",
+    "description": "Synthetic AI system for integration tests",
+    "status": "in_progress",
+    "version": "v1"
+  },
+  "answers": [
+    {
+      "question_id": "Q1_1",
+      "answer": "We maintain a documented access control policy reviewed annually.",
+      "state": "submitted"
+    },
+    {
+      "question_id": "Q1_2",
+      "answer": "MFA is enforced for all remote access; exceptions are time-bound.",
+      "state": "submitted"
+    },
+    {
+      "question_id": "Q1_3",
+      "answer": "Draft: logging roadmap in progress.",
+      "state": "draft"
+    }
+  ],
+  "ai_analysis": [
+    {
+      "question_id": "Q1_1",
+      "risk_level": "low",
+      "confidence": 0.88,
+      "gap_report": {
+        "synthesized_summary": "Answer aligns with policy expectations; minor evidence gaps.",
+        "key_themes": ["access control", "governance"],
+        "user_gap": ["Attach latest policy version hash"],
+        "insights": ["Strong narrative"],
+        "match_score": 0.82
+      }
+    },
+    {
+      "question_id": "Q1_2",
+      "risk_level": "medium",
+      "confidence": 0.76,
+      "gap_report": {
+        "synthesized_summary": "MFA coverage claimed; verify exception workflow.",
+        "key_themes": ["MFA", "exceptions"],
+        "user_gap": ["Exception approval records"],
+        "insights": [],
+        "match_score": 0.61
+      }
+    }
+  ],
+  "auditor_feedback": [
+    {
+      "question_id": "Q1_1",
+      "review_state": "approved",
+      "summary": "Synthetic seed approval.",
+      "feedback": [],
+      "recommendations": ["Keep policy attestation on file"]
+    }
+  ],
+  "pipeline": {
+    "stage": "in_progress",
+    "gap_analysis_status": "completed",
+    "total_questions": 3,
+    "answered_questions": 2,
+    "gap_analysis_progress": 100,
+    "gap_analysis_total": 3,
+    "gap_analysis_completed": 3
+  },
+  "gap_report_stub": {
+    "average_match_score": 0.715,
+    "questions": []
+  }
+}

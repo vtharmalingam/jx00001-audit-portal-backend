@@ -39,10 +39,11 @@ class GapAnalysisStatus(str, Enum):
 
 
 class PipelineRecord(BaseModel):
-    """Stored at pipeline/{org_id}/{project_id}/{ai_system_id}/pipeline.json"""
+    """Stored under audits/{audit_id}/current/pipeline.json (see README-datastruct)."""
     org_id: str
-    project_id: str = "0"
-    ai_system_id: str = "0"
+    audit_id: str
+    project_id: str
+    ai_system_id: str
     org_name: str = ""
     ai_system_name: str = ""
     stage: PipelineStage = PipelineStage.NOT_STARTED
@@ -68,9 +69,9 @@ class PipelineRecord(BaseModel):
 
 class SubmitAssessmentBody(BaseModel):
     org_id: str
-    project_id: str = "0"
-    ai_system_id: str = "0"
-    audit_id: str = "0"
+    project_id: str
+    ai_system_id: str
+    audit_id: str
 
 
 class PipelineBoardResponse(BaseModel):

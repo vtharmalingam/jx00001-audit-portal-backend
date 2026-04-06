@@ -20,4 +20,4 @@ ai_assessment:
     normalize: true
     show_progress: false
   s3:
-    bucket: "audit-system-data"
+    bucket: "audit-system-data-dev"

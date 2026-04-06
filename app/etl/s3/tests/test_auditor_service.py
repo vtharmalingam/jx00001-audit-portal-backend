@@ -8,11 +8,13 @@ import pytest
 
 from app.etl.s3.services.auditor_service import AuditorService
 
+ORG_ID = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+AUDIT_ID = "01J7RZ8G6E9VX4D3N2C5M8P1QR"
+PROJECT_ID = "001"
+AI_SYSTEM_ID = "0001"
+
 
 def test_auditor_feedback_real_s3(real_s3):
-    org_id = "org_unit_test"
-    audit_id = "audit_unit_test"
-
     service = AuditorService(real_s3)
 
     feedback = {
@@ -23,10 +25,12 @@ def test_auditor_feedback_real_s3(real_s3):
     }
 
     res = service.update_feedback(
-        org_id,
-        audit_id,
+        ORG_ID,
+        AUDIT_ID,
         "Q1",
-        feedback
+        feedback,
+        PROJECT_ID,
+        AI_SYSTEM_ID,
     )
 
     assert res["review_state"] == "approved"

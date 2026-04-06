@@ -4,12 +4,12 @@
 Legacy source (fixed ids):
   organizations/{org_id}/audits/0/
 
-Target (fixed ids):
-  organizations/{org_id}/projects/0/ai_systems/0/audits/0/
+Target (fixed ids, current v2 segment name):
+  organizations/{org_id}/projects/0/systems/0/audits/0/
 
 Also ensures:
 - organizations/{org_id}/projects/0/project.json
-- organizations/{org_id}/projects/0/ai_systems/0/system.json
+- organizations/{org_id}/projects/0/systems/0/system.json
 - metadata.json includes project_id/ai_system_id when present
 - purges legacy source keys after successful copy verification (default)
 
@@ -42,8 +42,9 @@ from typing import Iterable, List, Optional
 import boto3
 
 LEGACY_AUDIT_ID = "0"
-PROJECT_ID = "0"
-AI_SYSTEM_ID = "0"
+# Target v2 scope for migrated keys (3-digit project, 4-digit system per README-datastruct).
+PROJECT_ID = "001"
+AI_SYSTEM_ID = "0001"
 
 
 @dataclass
@@ -159,7 +160,7 @@ def migrate_org(
     legacy_root = f"organizations/{org_id}/audits/{LEGACY_AUDIT_ID}/"
     target_root = (
         f"organizations/{org_id}/projects/{PROJECT_ID}/"
-        f"ai_systems/{AI_SYSTEM_ID}/audits/{LEGACY_AUDIT_ID}/"
+        f"systems/{AI_SYSTEM_ID}/audits/{LEGACY_AUDIT_ID}/"
     )
 
     legacy_keys = list(_list_objects(client, bucket, legacy_root))
@@ -184,7 +185,7 @@ def migrate_org(
         )
         stats.project_docs_created += 1
 
-    system_key = f"organizations/{org_id}/projects/{PROJECT_ID}/ai_systems/{AI_SYSTEM_ID}/system.json"
+    system_key = f"organizations/{org_id}/projects/{PROJECT_ID}/systems/{AI_SYSTEM_ID}/system.json"
     if overwrite or not _exists(client, bucket, system_key):
         _write_json(
             client,

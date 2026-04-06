@@ -4,7 +4,7 @@ Purpose: CSAP-style review — review.json under audit current/, global reviews/
 opinions/verdicts/attestations and trust-score helpers.
 
 Review data is stored at:
-  organizations/{org}/projects/{proj}/ai_systems/{sys}/audits/{audit_id}/current/review.json
+  organizations/{org}/projects/{proj}/systems/{sys}/audits/{audit_id}/current/review.json
 
 The global review index (for CSAP queue listing) remains at:
   reviews/index.json
@@ -54,25 +54,23 @@ class ReviewService:
 
     # ── Review key resolution ───────────────────────────────────────────────
 
-    def _resolve_review_key(self, project_id: str) -> str:
-        """Resolve review.json path.
-
-        If the project_id looks like an org_id, try to find the audit path.
-        Falls back to the audit-folder path using project_id as identifiers.
-        """
-        # Check the index for scope info
+    def _resolve_review_key(self, org_id: str) -> str:
+        """Resolve review.json path from the CSAP queue row (org + ULID audit + 3/4-digit scope)."""
         index = self._load_index()
         for entry in index:
-            if entry.get("project_id") == project_id:
-                oid = entry.get("org_id", project_id)
-                pid = entry.get("project_id_seq", "0")
-                sid = entry.get("ai_system_id", "0")
-                audit_id = entry.get("audit_id", f"{oid}-{pid}-{sid}")
-                return _audit_review_key(oid, audit_id, pid, sid)
+            if entry.get("org_id") != org_id:
+                continue
+            oid = str(entry.get("org_id") or "")
+            pid = str(entry.get("project_id") or "")
+            sid = str(entry.get("ai_system_id") or "")
+            aid = str(entry.get("audit_id") or "")
+            if len(pid) == 3 and pid.isdigit() and len(sid) == 4 and sid.isdigit() and len(aid) == 26:
+                return _audit_review_key(oid, aid, pid, sid)
 
-        # Default: use project_id as org_id with zeros
-        audit_id = f"{project_id}-0-0"
-        return _audit_review_key(project_id, audit_id, "0", "0")
+        raise ValueError(
+            f"No review index entry for org_id={org_id!r} with audit_id, project_id, ai_system_id; "
+            "complete gap analysis first so the queue row is written."
+        )
 
     # ── Index (global list for CSAP queue) ──────────────────────────────────
 
@@ -88,16 +86,16 @@ class ReviewService:
             {"reviews": reviews, "updated_at": utc_now()},
         )
 
-    def _upsert_index_entry(self, project_id: str, patch: Dict) -> None:
+    def _upsert_index_entry(self, org_id: str, patch: Dict) -> None:
         index = self._load_index()
         for entry in index:
-            if entry["project_id"] == project_id:
+            if entry.get("org_id") == org_id:
                 entry.update(patch)
                 entry["updated_at"] = utc_now()
                 self._save_index(index)
                 return
         entry = {
-            "project_id": project_id,
+            "org_id": org_id,
             "status": "in_review",
             "trust_score": 0,
             "attestation": None,

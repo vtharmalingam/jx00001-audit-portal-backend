@@ -1,0 +1,103 @@
+{
+  "organization": {
+    "name": "Risk Firm (demo)",
+    "email": "contact@riskfirm.com",
+    "status": "active",
+    "stage": "in_progress",
+    "aict_approved": true,
+    "onboarded_by_type": "firm",
+    "domains": ["riskfirm.com"]
+  },
+  "project": {
+    "project_id": "001",
+    "project_name": "Client Engagements"
+  },
+  "ai_system": {
+    "system_id": "0001",
+    "name": "Demo — Enterprise Risk Model",
+    "description": "Primary seeded AI system for firm.admin@riskfirm.com / firm.manager@ / firm.practitioner@ demos",
+    "status": "in_progress",
+    "version": "v1"
+  },
+  "additional_systems": [
+    {
+      "system_id": "0002",
+      "name": "Demo — Credit Decisioning Engine",
+      "description": "Second system under the same project (audit + metadata only)",
+      "status": "in_progress",
+      "version": "v1"
+    },
+    {
+      "system_id": "0003",
+      "name": "Demo — Transaction Monitoring",
+      "description": "Third system for multi-system UI tests",
+      "status": "wip",
+      "version": "v1"
+    }
+  ],
+  "answers": [
+    {
+      "question_id": "Q1_1",
+      "answer": "Firm demo: access control policy is maintained and reviewed annually.",
+      "state": "submitted"
+    },
+    {
+      "question_id": "Q1_2",
+      "answer": "Firm demo: MFA enforced for privileged access.",
+      "state": "submitted"
+    },
+    {
+      "question_id": "Q1_3",
+      "answer": "Firm demo: logging standard — draft.",
+      "state": "draft"
+    }
+  ],
+  "ai_analysis": [
+    {
+      "question_id": "Q1_1",
+      "risk_level": "low",
+      "confidence": 0.85,
+      "gap_report": {
+        "synthesized_summary": "Firm demo seed — aligned with control narrative.",
+        "key_themes": ["governance"],
+        "user_gap": [],
+        "insights": [],
+        "match_score": 0.8
+      }
+    },
+    {
+      "question_id": "Q1_2",
+      "risk_level": "medium",
+      "confidence": 0.72,
+      "gap_report": {
+        "synthesized_summary": "Firm demo seed — verify MFA scope.",
+        "key_themes": ["MFA"],
+        "user_gap": ["Exception list"],
+        "insights": [],
+        "match_score": 0.62
+      }
+    }
+  ],
+  "auditor_feedback": [
+    {
+      "question_id": "Q1_1",
+      "review_state": "approved",
+      "summary": "Firm demo seed approval.",
+      "feedback": [],
+      "recommendations": []
+    }
+  ],
+  "pipeline": {
+    "stage": "in_progress",
+    "gap_analysis_status": "completed",
+    "total_questions": 3,
+    "answered_questions": 2,
+    "gap_analysis_progress": 100,
+    "gap_analysis_total": 3,
+    "gap_analysis_completed": 3
+  },
+  "gap_report_stub": {
+    "average_match_score": 0.71,
+    "questions": []
+  }
+}

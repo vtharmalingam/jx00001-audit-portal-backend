@@ -16,12 +16,20 @@ from app.etl.s3.utils.s3_paths import (
     audit_root,
     evidence_index_key,
     progress_key,
-    round_prefix,
     timeline_key,
 )
 from app.rest.deps import s3_client
+from app.rest.strict_audit_ids import enforce_strict_audit_scope
 
 router = APIRouter(prefix="/admin/s3", tags=["admin"])
+
+
+def _enforce_audit_scope(
+    org_id: str, audit_id: str, project_id: str, ai_system_id: str
+) -> None:
+    enforce_strict_audit_scope(
+        org_id, audit_id, project_id=project_id, ai_system_id=ai_system_id
+    )
 
 
 def _check_admin_token(x_admin_token: Optional[str]) -> None:
@@ -87,8 +95,8 @@ async def list_ai_systems(org_id: str, x_admin_token: Optional[str] = Header(def
 async def get_scope_keys(
     org_id: str,
     audit_id: str,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     x_admin_token: Optional[str] = Header(default=None),
 ):
     _check_admin_token(x_admin_token)
@@ -104,11 +112,12 @@ async def get_scope_keys(
 async def get_metadata(
     org_id: str,
     audit_id: str,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     x_admin_token: Optional[str] = Header(default=None),
 ):
     _check_admin_token(x_admin_token)
+    _enforce_audit_scope(org_id, audit_id, project_id, ai_system_id)
     row = AuditLifecycleService(s3_client).get_metadata(org_id, audit_id, project_id, ai_system_id)
     if not row:
         raise HTTPException(
@@ -122,12 +131,13 @@ async def get_metadata(
 async def get_summary(
     org_id: str,
     audit_id: str,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     recompute: bool = Query(False),
     x_admin_token: Optional[str] = Header(default=None),
 ):
     _check_admin_token(x_admin_token)
+    _enforce_audit_scope(org_id, audit_id, project_id, ai_system_id)
     svc = AuditLifecycleService(s3_client)
     if recompute:
         row = svc.recompute_audit_summary(org_id, audit_id, project_id, ai_system_id)
@@ -142,11 +152,12 @@ async def get_summary(
 async def get_timeline(
     org_id: str,
     audit_id: str,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     x_admin_token: Optional[str] = Header(default=None),
 ):
     _check_admin_token(x_admin_token)
+    _enforce_audit_scope(org_id, audit_id, project_id, ai_system_id)
     row = s3_client.read_json(timeline_key(org_id, audit_id, project_id, ai_system_id)) or {"events": []}
     return {"timeline": row}
 
@@ -155,8 +166,8 @@ async def get_timeline(
 async def get_progress(
     org_id: str,
     audit_id: str,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     x_admin_token: Optional[str] = Header(default=None),
 ):
     _check_admin_token(x_admin_token)
@@ -167,11 +178,12 @@ async def get_progress(
 async def get_evidence_index(
     org_id: str,
     audit_id: str,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     x_admin_token: Optional[str] = Header(default=None),
 ):
     _check_admin_token(x_admin_token)
+    _enforce_audit_scope(org_id, audit_id, project_id, ai_system_id)
     return {"evidence_index": s3_client.read_json(evidence_index_key(org_id, audit_id, project_id, ai_system_id)) or {}}
 
 
@@ -179,8 +191,8 @@ async def get_evidence_index(
 async def get_answers(
     org_id: str,
     audit_id: str,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     x_admin_token: Optional[str] = Header(default=None),
 ):
     _check_admin_token(x_admin_token)
@@ -192,11 +204,12 @@ async def get_answers(
 async def get_ai_analysis(
     org_id: str,
     audit_id: str,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     x_admin_token: Optional[str] = Header(default=None),
 ):
     _check_admin_token(x_admin_token)
+    _enforce_audit_scope(org_id, audit_id, project_id, ai_system_id)
     rows = ReportService(s3_client).get_gap_report(org_id, audit_id, project_id, ai_system_id)
     return {"total": len(rows), "ai_analysis": rows}
 
@@ -205,11 +218,12 @@ async def get_ai_analysis(
 async def get_auditor_feedback(
     org_id: str,
     audit_id: str,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     x_admin_token: Optional[str] = Header(default=None),
 ):
     _check_admin_token(x_admin_token)
+    _enforce_audit_scope(org_id, audit_id, project_id, ai_system_id)
     from app.etl.s3.utils.s3_paths import current_prefix
 
     prefix = f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/auditor_feedback/"
@@ -221,29 +235,10 @@ async def get_auditor_feedback(
 async def get_full_report(
     org_id: str,
     audit_id: str,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     x_admin_token: Optional[str] = Header(default=None),
 ):
     _check_admin_token(x_admin_token)
+    _enforce_audit_scope(org_id, audit_id, project_id, ai_system_id)
     return ReportService(s3_client).get_full_audit_view(org_id, audit_id, project_id, ai_system_id)
-
-
-@router.get("/audits/{org_id}/{audit_id}/rounds/{round_n}", summary="Read immutable round snapshot files")
-async def get_round_snapshot(
-    org_id: str,
-    audit_id: str,
-    round_n: int,
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
-    x_admin_token: Optional[str] = Header(default=None),
-):
-    _check_admin_token(x_admin_token)
-    pref = round_prefix(org_id, audit_id, round_n, project_id, ai_system_id)
-    return {
-        "round_prefix": pref,
-        "answers": s3_client.read_json(f"{pref}answers.json"),
-        "ai_analysis": s3_client.read_json(f"{pref}ai_analysis.json"),
-        "auditor_feedback": s3_client.read_json(f"{pref}auditor_feedback.json"),
-        "round_summary": s3_client.read_json(f"{pref}round_summary.json"),
-    }

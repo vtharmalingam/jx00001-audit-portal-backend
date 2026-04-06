@@ -5,7 +5,7 @@ Run: python -m app.pipeline.migrate_s3
 What this does:
 1. Re-IDs existing orgs with ULID (writes ID mapping to lookups/migration_map.json)
 2. Creates project.json and system.json for each AI system
-3. Restructures flat ai_systems.json into nested project/ai_system folders
+3. Restructures flat ai_systems.json into nested project/systems folders
 4. Moves pipeline records into audit folders
 5. Moves gap analysis results into audit folders
 6. Moves review data into audit folders
@@ -174,39 +174,39 @@ def migrate(dry_run: bool = False):
                     "legacy_org_id": old_id,
                     "created_at": sys.get("added_at", _now()),
                 }
-                sys_key = f"organizations/{new_id}/projects/{new_pid}/ai_systems/{new_sid}/system.json"
+                sys_key = f"organizations/{new_id}/projects/{new_pid}/systems/{new_sid}/system.json"
                 if not dry_run:
                     s3.write_json(sys_key, sys_doc)
                 logger.info("    System: %s → %s (audit: %s)", old_sid, new_sid, audit_id)
 
                 # 3e. Migrate answers from old path to new path
-                old_answers_prefix = f"organizations/{old_id}/projects/{old_pid}/ai_systems/{old_sid}/audits/0/current/answers/"
+                old_answers_prefix = f"organizations/{old_id}/projects/{old_pid}/systems/{old_sid}/audits/0/current/answers/"
                 _copy_prefix(s3, old_answers_prefix,
-                             f"organizations/{new_id}/projects/{new_pid}/ai_systems/{new_sid}/audits/{audit_id}/current/answers/",
+                             f"organizations/{new_id}/projects/{new_pid}/systems/{new_sid}/audits/{audit_id}/current/answers/",
                              dry_run)
 
                 # 3f. Migrate auditor_feedback
-                old_feedback_prefix = f"organizations/{old_id}/projects/{old_pid}/ai_systems/{old_sid}/audits/0/current/auditor_feedback/"
+                old_feedback_prefix = f"organizations/{old_id}/projects/{old_pid}/systems/{old_sid}/audits/0/current/auditor_feedback/"
                 _copy_prefix(s3, old_feedback_prefix,
-                             f"organizations/{new_id}/projects/{new_pid}/ai_systems/{new_sid}/audits/{audit_id}/current/auditor_feedback/",
+                             f"organizations/{new_id}/projects/{new_pid}/systems/{new_sid}/audits/{audit_id}/current/auditor_feedback/",
                              dry_run)
 
                 # 3g. Migrate ai_analysis
-                old_ai_prefix = f"organizations/{old_id}/projects/{old_pid}/ai_systems/{old_sid}/audits/0/current/ai_analysis/"
+                old_ai_prefix = f"organizations/{old_id}/projects/{old_pid}/systems/{old_sid}/audits/0/current/ai_analysis/"
                 _copy_prefix(s3, old_ai_prefix,
-                             f"organizations/{new_id}/projects/{new_pid}/ai_systems/{new_sid}/audits/{audit_id}/current/ai_analysis/",
+                             f"organizations/{new_id}/projects/{new_pid}/systems/{new_sid}/audits/{audit_id}/current/ai_analysis/",
                              dry_run)
 
                 # 3h. Migrate evidence
-                old_evidence_prefix = f"organizations/{old_id}/projects/{old_pid}/ai_systems/{old_sid}/audits/0/current/evidence/"
+                old_evidence_prefix = f"organizations/{old_id}/projects/{old_pid}/systems/{old_sid}/audits/0/current/evidence/"
                 _copy_prefix(s3, old_evidence_prefix,
-                             f"organizations/{new_id}/projects/{new_pid}/ai_systems/{new_sid}/audits/{audit_id}/current/evidence/",
+                             f"organizations/{new_id}/projects/{new_pid}/systems/{new_sid}/audits/{audit_id}/current/evidence/",
                              dry_run)
 
                 # 3i. Migrate metadata, timeline, summary
                 for fname in ("metadata.json", "timeline.json", "audit_summary.json", "progress.json", "evidence_index.json"):
-                    old_key = f"organizations/{old_id}/projects/{old_pid}/ai_systems/{old_sid}/audits/0/{fname}"
-                    new_key = f"organizations/{new_id}/projects/{new_pid}/ai_systems/{new_sid}/audits/{audit_id}/{fname}"
+                    old_key = f"organizations/{old_id}/projects/{old_pid}/systems/{old_sid}/audits/0/{fname}"
+                    new_key = f"organizations/{new_id}/projects/{new_pid}/systems/{new_sid}/audits/{audit_id}/{fname}"
                     _copy_file(s3, old_key, new_key, dry_run)
 
         # 3j. Migrate pipeline records
@@ -215,7 +215,7 @@ def migrate(dry_run: bool = False):
         if pipeline_data:
             # Find matching new system
             if proj_systems:
-                new_pipeline_key = f"organizations/{new_id}/projects/001/ai_systems/0001/audits/{new_id}-001-0001/current/pipeline.json"
+                new_pipeline_key = f"organizations/{new_id}/projects/001/systems/0001/audits/{new_id}-001-0001/current/pipeline.json"
                 pipeline_data["org_id"] = new_id
                 pipeline_data["audit_id"] = f"{new_id}-001-0001"
                 if not dry_run:
@@ -226,7 +226,7 @@ def migrate(dry_run: bool = False):
         old_gap_prefix = f"gap_analysis/{old_id}/"
         gap_report = s3.read_json(f"gap_analysis/{old_id}/0/V-SYS-001/gap_report.json")
         if gap_report:
-            new_gap_key = f"organizations/{new_id}/projects/001/ai_systems/0001/audits/{new_id}-001-0001/current/gap_report.json"
+            new_gap_key = f"organizations/{new_id}/projects/001/systems/0001/audits/{new_id}-001-0001/current/gap_report.json"
             gap_report["org_id"] = new_id
             if not dry_run:
                 s3.write_json(new_gap_key, gap_report)
@@ -234,7 +234,7 @@ def migrate(dry_run: bool = False):
 
         # Migrate per-question gap results
         _copy_prefix(s3, f"gap_analysis/{old_id}/0/V-SYS-001/questions/",
-                     f"organizations/{new_id}/projects/001/ai_systems/0001/audits/{new_id}-001-0001/current/ai_analysis/",
+                     f"organizations/{new_id}/projects/001/systems/0001/audits/{new_id}-001-0001/current/ai_analysis/",
                      dry_run)
 
         # 3l. Update domain lookup

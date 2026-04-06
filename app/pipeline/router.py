@@ -151,9 +151,10 @@ async def init_pipeline(
 ):
     svc = _svc()
     rec = svc.ensure_record(
-        org_id=body.org_id,
-        project_id=body.project_id,
-        ai_system_id=body.ai_system_id,
+        body.org_id,
+        body.audit_id,
+        body.project_id,
+        body.ai_system_id,
     )
     return {"pipeline": rec}
 
@@ -194,11 +195,11 @@ async def submit_assessment(
             answer_svc.upsert_answer(
                 org_id=body.org_id,
                 audit_id=body.audit_id,
+                project_id=body.project_id,
+                ai_system_id=body.ai_system_id,
                 question_id=qid,
                 answer=ans.get("answer", ""),
                 state="submitted",
-                project_id=body.project_id,
-                ai_system_id=body.ai_system_id,
             )
             submitted_count += 1
 
@@ -206,10 +207,11 @@ async def submit_assessment(
 
     # Transition pipeline: In Progress → AI Gap Analysis
     rec = svc.transition_stage(
-        org_id=body.org_id,
-        new_stage=PipelineStage.AI_GAP_ANALYSIS,
-        project_id=body.project_id,
-        ai_system_id=body.ai_system_id,
+        body.org_id,
+        PipelineStage.AI_GAP_ANALYSIS,
+        body.audit_id,
+        body.project_id,
+        body.ai_system_id,
         submitted_at=now,
         gap_analysis_status=GapAnalysisStatus.PENDING.value,
         gap_analysis_total=len(question_ids),
@@ -232,9 +234,9 @@ async def submit_assessment(
         from app.pipeline.tasks import run_gap_analysis
         task = run_gap_analysis.delay(
             org_id=body.org_id,
+            audit_id=body.audit_id,
             project_id=body.project_id,
             ai_system_id=body.ai_system_id,
-            audit_id=body.audit_id,
             question_ids=question_ids,
         )
         # Save task ID for progress tracking
@@ -261,12 +263,13 @@ async def submit_assessment(
 @router.get("/status", summary="Get pipeline status for an assessment")
 async def get_status(
     org_id: str = Query(...),
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    audit_id: str = Query(...),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     user: dict = Depends(require_permission("pipeline.view")),
 ):
     svc = _svc()
-    rec = svc.get_record(org_id, project_id, ai_system_id)
+    rec = svc.get_record(org_id, audit_id, project_id, ai_system_id)
     if not rec:
         return {"pipeline": None, "exists": False}
     return {"pipeline": rec, "exists": True}
@@ -275,12 +278,13 @@ async def get_status(
 @router.get("/gap-progress", summary="Get gap analysis progress")
 async def get_gap_progress(
     org_id: str = Query(...),
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    audit_id: str = Query(...),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     user: dict = Depends(require_permission("pipeline.view")),
 ):
     svc = _svc()
-    rec = svc.get_record(org_id, project_id, ai_system_id)
+    rec = svc.get_record(org_id, audit_id, project_id, ai_system_id)
     if not rec:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"message": "Pipeline record not found"})
 
@@ -297,6 +301,7 @@ async def get_gap_progress(
 
     return {
         "org_id": org_id,
+        "audit_id": audit_id,
         "project_id": project_id,
         "ai_system_id": ai_system_id,
         "stage": rec.get("stage"),
@@ -359,30 +364,14 @@ def _verify_gap_access(user: dict, org_id: str):
 @router.get("/gap-report", summary="Get completed gap analysis report")
 async def get_gap_report(
     org_id: str = Query(...),
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    audit_id: str = Query(...),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     user: dict = Depends(require_permission("gap_analysis.view")),
 ):
     _verify_gap_access(user, org_id)
     svc = _svc()
-
-    # Auto-resolve project_id and ai_system_id from org's systems if defaults passed
-    if project_id == "0" or ai_system_id == "0":
-        from app.etl.s3.services.operational_service import OperationalService
-        systems = OperationalService(s3_client).list_ai_systems(org_id)
-        for sys in systems:
-            sid = sys.get("system_id") or sys.get("ai_system_id") or ""
-            pid = sys.get("project_id", "0")
-            if not sid or sid == "0":
-                continue
-            if ai_system_id != "0" and sid != ai_system_id:
-                continue
-            report = svc.get_gap_report(org_id, pid, sid)
-            if report:
-                return {"report": report}
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"message": "Gap report not found"})
-
-    report = svc.get_gap_report(org_id, project_id, ai_system_id)
+    report = svc.get_gap_report(org_id, audit_id, project_id, ai_system_id)
     if not report:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"message": "Gap report not found"})
     return {"report": report}
@@ -392,13 +381,14 @@ async def get_gap_report(
 async def get_gap_question(
     question_id: str,
     org_id: str = Query(...),
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    audit_id: str = Query(...),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     user: dict = Depends(require_permission("gap_analysis.view")),
 ):
     _verify_gap_access(user, org_id)
     svc = _svc()
-    result = svc.get_gap_question_result(org_id, question_id, project_id, ai_system_id)
+    result = svc.get_gap_question_result(org_id, audit_id, question_id, project_id, ai_system_id)
     if not result:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"message": "Gap question result not found"})
     return {"result": result}
@@ -426,8 +416,13 @@ def _update_gap_index(s3, entry: dict):
     entry["onboarded_by_id"] = profile.get("onboarded_by_id", "")
     entry["stage"] = profile.get("stage", "")
 
-    key = f"{entry['org_id']}|{entry['ai_system_id']}"
-    reports = [r for r in reports if f"{r['org_id']}|{r['ai_system_id']}" != key]
+    key = f"{entry['org_id']}|{entry.get('audit_id', '')}|{entry['project_id']}|{entry['ai_system_id']}"
+    reports = [
+        r
+        for r in reports
+        if f"{r.get('org_id')}|{r.get('audit_id', '')}|{r.get('project_id')}|{r.get('ai_system_id')}"
+        != key
+    ]
     reports.append(entry)
 
     data["reports"] = reports
@@ -478,9 +473,10 @@ async def list_available_gap_reports(
 @router.post("/transition", summary="Manually transition pipeline stage (admin)")
 async def manual_transition(
     org_id: str = Query(...),
+    audit_id: str = Query(...),
     stage: str = Query(...),
-    project_id: str = Query("0"),
-    ai_system_id: str = Query("0"),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
     user: dict = Depends(require_permission("pipeline.view")),
 ):
     try:
@@ -492,7 +488,7 @@ async def manual_transition(
         )
 
     svc = _svc()
-    rec = svc.transition_stage(org_id, new_stage, project_id, ai_system_id)
+    rec = svc.transition_stage(org_id, new_stage, audit_id, project_id, ai_system_id)
 
     try:
         from app.etl.s3.services.operational_service import OperationalService

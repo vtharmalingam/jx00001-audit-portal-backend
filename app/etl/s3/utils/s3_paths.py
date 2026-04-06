@@ -1,28 +1,14 @@
 # utils/s3_paths.py
 #
-# New folder structure (v2):
-#   organizations/{ULID}/
-#       org_profile.json
-#       projects/{seq_001}/
-#           project.json
-#           ai_systems/
-#               {seq_0001}/
-#                   system.json
-#                   audits/
-#                       {ULID-001-0001}/
-#                           current/
-#                               answers/{Q1}.json
-#                               ai_analysis/{Q1}.json
-#                               auditor_feedback/{Q1}.json
-#                               evidence/{Q1}/...
-#                               gap_report.json
-#                               pipeline.json
-#                               review.json
-#                               metadata.json
-#                               timeline.json
-#                               progress.json
-#                               evidence_index.json
-#                               audit_summary.json
+# Target layout (see app/etl/s3/README-datastruct.md):
+#   organizations/{org_id}/projects/{project_id}/systems/{ai_system_id}/
+#       system.json
+#       audits/{audit_id}/          # audit_id = ULID only
+#           metadata.json
+#           audit_summary.json
+#           timeline.json
+#           current/…
+#           derived/…
 
 BASE_PREFIX = ""  # e.g. "unit_test/" in tests; empty in prod
 
@@ -55,118 +41,138 @@ def project_json_key(org_id: str, project_id: str) -> str:
     return f"{project_root(org_id, project_id)}/project.json"
 
 
-# ── AI System ────────────────────────────────────────────────────────────────
+# ── System (per project) ─────────────────────────────────────────────────────
 
-def ai_systems_prefix(org_id: str, project_id: str) -> str:
-    return f"{project_root(org_id, project_id)}/ai_systems/"
+def systems_prefix(org_id: str, project_id: str) -> str:
+    return f"{project_root(org_id, project_id)}/systems/"
 
 
 def system_root(org_id: str, project_id: str, ai_system_id: str) -> str:
-    return f"{project_root(org_id, project_id)}/ai_systems/{ai_system_id}"
+    return f"{project_root(org_id, project_id)}/systems/{ai_system_id}"
 
 
 def system_json_key(org_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{system_root(org_id, project_id, ai_system_id)}/system.json"
 
 
-# ── Audit ────────────────────────────────────────────────────────────────────
+# ── Audit (audit_id = ULID) ─────────────────────────────────────────────────
 
-def make_audit_id(org_id: str, project_id: str, ai_system_id: str) -> str:
-    return f"{org_id}-{project_id}-{ai_system_id}"
-
-
-def audit_root(org_id: str, audit_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def audit_root(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{system_root(org_id, project_id, ai_system_id)}/audits/{audit_id}"
 
 
-def current_prefix(org_id: str, audit_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def current_prefix(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{audit_root(org_id, audit_id, project_id, ai_system_id)}/current"
+
+
+def derived_prefix(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
+    return f"{audit_root(org_id, audit_id, project_id, ai_system_id)}/derived"
 
 
 # ── Answers ──────────────────────────────────────────────────────────────────
 
-def answers_prefix(org_id: str, audit_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def answers_prefix(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/answers/"
 
 
-def answer_key(org_id: str, audit_id: str, question_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def answers_index_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
+    return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/answers/_index.json"
+
+
+def answer_key(org_id: str, audit_id: str, question_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/answers/{question_id}.json"
 
 
-# ── AI Analysis (gap analysis per question) ──────────────────────────────────
+# ── AI Analysis ──────────────────────────────────────────────────────────────
 
-def ai_prefix(org_id: str, audit_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def ai_prefix(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/ai_analysis/"
 
 
-def ai_key(org_id: str, audit_id: str, question_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def ai_analysis_index_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
+    return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/ai_analysis/_index.json"
+
+
+def ai_key(org_id: str, audit_id: str, question_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/ai_analysis/{question_id}.json"
 
 
 # ── Auditor Feedback ─────────────────────────────────────────────────────────
 
-def auditor_key(org_id: str, audit_id: str, question_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def auditor_feedback_index_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
+    return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/auditor_feedback/_index.json"
+
+
+def auditor_key(org_id: str, audit_id: str, question_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/auditor_feedback/{question_id}.json"
 
 
-# ── Gap Report (full assessment) ─────────────────────────────────────────────
+# ── Gap report / pipeline / review ───────────────────────────────────────────
 
-def gap_report_key(org_id: str, audit_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def gap_report_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/gap_report.json"
 
 
-# ── Pipeline State ───────────────────────────────────────────────────────────
-
-def pipeline_key(org_id: str, audit_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def pipeline_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/pipeline.json"
 
 
-# ── Review (CSAP) ───────────────────────────────────────────────────────────
-
-def review_key(org_id: str, audit_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def review_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/review.json"
 
 
-# ── Metadata & Timeline ─────────────────────────────────────────────────────
+# ── Metadata & timeline (audit root) ─────────────────────────────────────────
 
-def audit_metadata_key(org_id: str, audit_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def audit_metadata_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{audit_root(org_id, audit_id, project_id, ai_system_id)}/metadata.json"
 
 
-def audit_summary_key(org_id: str, audit_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def audit_summary_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{audit_root(org_id, audit_id, project_id, ai_system_id)}/audit_summary.json"
 
 
-def timeline_key(org_id: str, audit_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def timeline_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{audit_root(org_id, audit_id, project_id, ai_system_id)}/timeline.json"
 
 
-def progress_key(org_id: str, audit_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def progress_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/progress.json"
 
 
 # ── Evidence ─────────────────────────────────────────────────────────────────
 
-def evidence_index_key(org_id: str, audit_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def evidence_index_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/evidence_index.json"
 
 
-def evidence_prefix(org_id: str, audit_id: str, question_id: str, project_id: str = "0", ai_system_id: str = "0") -> str:
+def evidence_prefix(org_id: str, audit_id: str, question_id: str, project_id: str, ai_system_id: str) -> str:
     return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/evidence/{question_id}/"
 
 
 def evidence_object_key(
     org_id: str, audit_id: str, question_id: str, file_name: str,
-    project_id: str = "0", ai_system_id: str = "0",
+    project_id: str, ai_system_id: str,
 ) -> str:
     safe = str(file_name).replace("..", "").lstrip("/")
     return f"{current_prefix(org_id, audit_id, project_id, ai_system_id)}/evidence/{question_id}/{safe}"
 
 
-# ── Rounds ───────────────────────────────────────────────────────────────────
+# ── Derived (rebuildable) ────────────────────────────────────────────────────
 
-def round_prefix(org_id: str, audit_id: str, round_n: int, project_id: str = "0", ai_system_id: str = "0") -> str:
-    return f"{audit_root(org_id, audit_id, project_id, ai_system_id)}/rounds/round_{int(round_n)}/"
+def derived_metrics_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
+    return f"{derived_prefix(org_id, audit_id, project_id, ai_system_id)}/metrics.json"
+
+
+def derived_risk_scores_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
+    return f"{derived_prefix(org_id, audit_id, project_id, ai_system_id)}/risk_scores.json"
+
+
+def derived_insights_key(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
+    return f"{derived_prefix(org_id, audit_id, project_id, ai_system_id)}/insights.json"
+
+
+def derived_embeddings_prefix(org_id: str, audit_id: str, project_id: str, ai_system_id: str) -> str:
+    return f"{derived_prefix(org_id, audit_id, project_id, ai_system_id)}/embeddings/"
 
 
 # ── Lookups (global) ─────────────────────────────────────────────────────────
@@ -194,8 +200,6 @@ def auditor_master_key() -> str:
 def aict_users_key() -> str:
     return _prefix("platform/aict_users.json")
 
-
-# ── Review Index (global for CSAP queue) ─────────────────────────────────────
 
 def reviews_index_key() -> str:
     return _prefix("reviews/index.json")
