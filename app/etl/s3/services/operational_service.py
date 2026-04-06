@@ -21,6 +21,7 @@ from app.etl.s3.utils.s3_paths import (
     domain_lookup_key,
     org_profile_key,
     project_json_key,
+    project_root,
     projects_prefix,
     system_json_key,
     systems_prefix,
@@ -285,37 +286,45 @@ class OperationalService:
     def list_ai_systems(self, org_id: str) -> List[Dict[str, Any]]:
         """List AI systems by scanning nested project/systems folders.
 
+        Scans both new ``systems/`` and legacy ``ai_systems/`` prefixes per project.
         Falls back to legacy org-level ai_systems.json if no nested structure found.
         """
         systems: List[Dict[str, Any]] = []
+        seen_sids: set = set()
         project_ids = self.list_project_ids(org_id)
 
         for pid in project_ids:
-            prefix = systems_prefix(org_id, pid)
-            token = None
-            while True:
-                params: Dict[str, Any] = {"Bucket": self.s3.bucket, "Prefix": prefix, "Delimiter": "/"}
-                if token:
-                    params["ContinuationToken"] = token
-                resp = self.s3.client.list_objects_v2(**params)
-                for cp in resp.get("CommonPrefixes", []):
-                    sid = cp.get("Prefix", "").rstrip("/").split("/")[-1]
-                    if not sid:
-                        continue
-                    sys_doc = self.s3.read_json(system_json_key(org_id, pid, sid))
-                    if sys_doc:
-                        sys_doc["project_id"] = pid
-                        systems.append(sys_doc)
+            for folder in ("systems", "ai_systems"):
+                prefix = f"{project_root(org_id, pid)}/{folder}/"
+                token = None
+                while True:
+                    params: Dict[str, Any] = {"Bucket": self.s3.bucket, "Prefix": prefix, "Delimiter": "/"}
+                    if token:
+                        params["ContinuationToken"] = token
+                    resp = self.s3.client.list_objects_v2(**params)
+                    for cp in resp.get("CommonPrefixes", []):
+                        sid = cp.get("Prefix", "").rstrip("/").split("/")[-1]
+                        if not sid or sid in seen_sids:
+                            continue
+                        seen_sids.add(sid)
+                        # Try new path first, then legacy path
+                        sys_doc = self.s3.read_json(system_json_key(org_id, pid, sid))
+                        if not sys_doc:
+                            legacy_sys_key = f"organizations/{org_id}/projects/{pid}/{folder}/{sid}/system.json"
+                            sys_doc = self.s3.read_json(legacy_sys_key)
+                        if sys_doc:
+                            sys_doc["project_id"] = pid
+                            systems.append(sys_doc)
+                        else:
+                            systems.append({
+                                "system_id": sid, "ai_system_id": sid,
+                                "org_id": org_id, "project_id": pid,
+                                "name": sid, "status": "wip",
+                            })
+                    if resp.get("IsTruncated"):
+                        token = resp.get("NextContinuationToken")
                     else:
-                        systems.append({
-                            "system_id": sid, "ai_system_id": sid,
-                            "org_id": org_id, "project_id": pid,
-                            "name": sid, "status": "wip",
-                        })
-                if resp.get("IsTruncated"):
-                    token = resp.get("NextContinuationToken")
-                else:
-                    break
+                        break
 
         # Fallback: legacy flat ai_systems.json
         if not systems:
