@@ -18,6 +18,7 @@ from app.rest.v1 import (
     knowledge_router,
     organizations_router,
     aict_users_router,
+    platform_settings_router,
     review_router,
 )
 from app.pipeline import pipeline_router
@@ -52,6 +53,7 @@ app = FastAPI(
         {"name": "knowledge", "description": "Semantic search and gap analysis."},
         {"name": "admin", "description": "Admin-only operational endpoints."},
         {"name": "pipeline", "description": "Pipeline stages, submission, gap analysis."},
+        {"name": "platform-settings", "description": "Platform-level configuration and SMTP settings."},
     ],
 )
 
@@ -85,6 +87,7 @@ app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(role_router, prefix=API_PREFIX)
 app.include_router(organizations_router, prefix=API_PREFIX)
 app.include_router(aict_users_router, prefix=API_PREFIX)
+app.include_router(platform_settings_router, prefix=API_PREFIX)
 app.include_router(assessment_router, prefix=API_PREFIX)
 app.include_router(knowledge_router, prefix=API_PREFIX, include_in_schema=False)
 app.include_router(admin_tests_router, prefix=API_PREFIX, include_in_schema=False)

@@ -201,5 +201,9 @@ def aict_users_key() -> str:
     return _prefix("platform/aict_users.json")
 
 
+def platform_settings_key() -> str:
+    return _prefix("platform/platform_settings.json")
+
+
 def reviews_index_key() -> str:
     return _prefix("reviews/index.json")
