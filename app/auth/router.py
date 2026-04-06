@@ -4,7 +4,7 @@ import hashlib
 import logging
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from app.auth.dependencies import get_current_user, get_optional_user
 from app.auth.permissions import list_permissions, require_permission
@@ -92,7 +92,7 @@ def _send_scenario_email(
     scenario: str,
     to_email: str,
     variables: Dict[str, str],
-) -> bool:
+) -> Tuple[bool, Optional[str]]:
     """Best-effort email sender for auth flows."""
     try:
         settings = PlatformSettingsService(s3_client).get_settings().get("settings", {})
@@ -104,10 +104,10 @@ def _send_scenario_email(
             text_body=rendered.get("text", ""),
             html_body=rendered.get("html", ""),
         )
-        return True
+        return True, None
     except Exception as e:
         logger.warning("Email send skipped (%s): %s", scenario, e)
-        return False
+        return False, str(e)
 
 
 # ── POST /auth/register ───────────────────────────────────────────────────
@@ -206,7 +206,7 @@ async def invite_user(
     cfg = get_auth_config()
     invite_url = f"{cfg.frontend_base_url}/auth/set-password?token={invite_token}"
     inviter_name = (current_user or {}).get("name", "Admin")
-    _send_scenario_email(
+    email_sent, email_error = _send_scenario_email(
         scenario="invite_user",
         to_email=str(body.email),
         variables={
@@ -217,7 +217,12 @@ async def invite_user(
         },
     )
 
-    return InviteResponse(user=_user_response(user), invite_url=invite_url)
+    return InviteResponse(
+        user=_user_response(user),
+        invite_url=invite_url,
+        email_sent=email_sent,
+        email_error=email_error,
+    )
 
 
 # ── POST /auth/activate ──────────────────────────────────────────────────
@@ -291,7 +296,7 @@ async def resend_invite(
     svc.store_invite_token(user["id"], _hash_token(invite_token))
 
     invite_url = f"{cfg.frontend_base_url}/auth/set-password?token={invite_token}"
-    _send_scenario_email(
+    email_sent, email_error = _send_scenario_email(
         scenario="resend_invite",
         to_email=email,
         variables={
@@ -299,7 +304,12 @@ async def resend_invite(
             "invite_url": invite_url,
         },
     )
-    return {"invite_url": invite_url, "email": email}
+    return {
+        "invite_url": invite_url,
+        "email": email,
+        "email_sent": email_sent,
+        "email_error": email_error,
+    }
 
 
 # ── POST /auth/onboard-firm ────────────────────────────────────────────────
@@ -354,7 +364,7 @@ async def onboard_firm(
         ) from e
 
     invite_url = f"{cfg.frontend_base_url}/auth/set-password?token={invite_token}"
-    _send_scenario_email(
+    email_sent, email_error = _send_scenario_email(
         scenario="onboard_firm_admin",
         to_email=body.admin_email,
         variables={
@@ -380,6 +390,8 @@ async def onboard_firm(
         "firm": {"org_id": org_id, "name": body.firm_name, "status": "pending_approval"},
         "user": _user_response(user),
         "invite_url": invite_url,
+        "email_sent": email_sent,
+        "email_error": email_error,
     }
 
 
@@ -447,7 +459,7 @@ async def onboard_individual(
     })
 
     invite_url = f"{cfg.frontend_base_url}/auth/set-password?token={invite_token}"
-    _send_scenario_email(
+    email_sent, email_error = _send_scenario_email(
         scenario="onboard_individual_admin",
         to_email=body.admin_email,
         variables={
@@ -461,6 +473,8 @@ async def onboard_individual(
         "org": {"org_id": org_id, "name": body.org_name, "status": "pending_approval"},
         "user": _user_response(user),
         "invite_url": invite_url,
+        "email_sent": email_sent,
+        "email_error": email_error,
     }
 
 
@@ -542,7 +556,7 @@ async def onboard_firm_client(
     })
 
     invite_url = f"{cfg.frontend_base_url}/auth/set-password?token={invite_token}"
-    _send_scenario_email(
+    email_sent, email_error = _send_scenario_email(
         scenario="onboard_firm_client_admin",
         to_email=body.admin_email,
         variables={
@@ -556,6 +570,8 @@ async def onboard_firm_client(
         "org": {"org_id": org_id, "name": body.org_name, "status": "pending_approval", "onboarded_by_id": firm_id},
         "user": _user_response(user),
         "invite_url": invite_url,
+        "email_sent": email_sent,
+        "email_error": email_error,
     }
 
 

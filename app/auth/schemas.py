@@ -92,3 +92,5 @@ class InviteResponse(BaseModel):
     """Returned on invite — includes the link for the admin to share."""
     user: UserResponse
     invite_url: str
+    email_sent: bool = False
+    email_error: Optional[str] = None
