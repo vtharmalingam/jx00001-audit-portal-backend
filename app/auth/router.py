@@ -4,7 +4,7 @@ import hashlib
 import logging
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from app.auth.dependencies import get_current_user, get_optional_user
 from app.auth.permissions import list_permissions, require_permission
@@ -33,6 +33,8 @@ from app.auth.tokens import (
     decode_token,
     set_auth_cookies,
 )
+from app.etl.s3.services.email_service import EmailService, EmailTemplateService
+from app.etl.s3.services.platform_settings_service import PlatformSettingsService
 from app.rest.deps import s3_client
 
 logger = logging.getLogger(__name__)
@@ -84,6 +86,28 @@ def _user_response(user: Dict, include_permissions: bool = True) -> UserResponse
 def _hash_token(token: str) -> str:
     """SHA-256 hash of a refresh token for safe storage."""
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+def _send_scenario_email(
+    scenario: str,
+    to_email: str,
+    variables: Dict[str, str],
+) -> Tuple[bool, Optional[str]]:
+    """Best-effort email sender for auth flows."""
+    try:
+        settings = PlatformSettingsService(s3_client).get_settings().get("settings", {})
+        smtp = settings.get("smtp", {})
+        rendered = EmailTemplateService(s3_client).render(scenario, variables)
+        EmailService(smtp).send_email(
+            to_email=to_email,
+            subject=rendered.get("subject", ""),
+            text_body=rendered.get("text", ""),
+            html_body=rendered.get("html", ""),
+        )
+        return True, None
+    except Exception as e:
+        logger.warning("Email send skipped (%s): %s", scenario, e)
+        return False, str(e)
 
 
 # ── POST /auth/register ───────────────────────────────────────────────────
@@ -181,8 +205,24 @@ async def invite_user(
 
     cfg = get_auth_config()
     invite_url = f"{cfg.frontend_base_url}/auth/set-password?token={invite_token}"
+    inviter_name = (current_user or {}).get("name", "Admin")
+    email_sent, email_error = _send_scenario_email(
+        scenario="invite_user",
+        to_email=str(body.email),
+        variables={
+            "recipient_name": body.name,
+            "inviter_name": inviter_name,
+            "role": body.role,
+            "invite_url": invite_url,
+        },
+    )
 
-    return InviteResponse(user=_user_response(user), invite_url=invite_url)
+    return InviteResponse(
+        user=_user_response(user),
+        invite_url=invite_url,
+        email_sent=email_sent,
+        email_error=email_error,
+    )
 
 
 # ── POST /auth/activate ──────────────────────────────────────────────────
@@ -256,7 +296,20 @@ async def resend_invite(
     svc.store_invite_token(user["id"], _hash_token(invite_token))
 
     invite_url = f"{cfg.frontend_base_url}/auth/set-password?token={invite_token}"
-    return {"invite_url": invite_url, "email": email}
+    email_sent, email_error = _send_scenario_email(
+        scenario="resend_invite",
+        to_email=email,
+        variables={
+            "recipient_name": user.get("name", "User"),
+            "invite_url": invite_url,
+        },
+    )
+    return {
+        "invite_url": invite_url,
+        "email": email,
+        "email_sent": email_sent,
+        "email_error": email_error,
+    }
 
 
 # ── POST /auth/onboard-firm ────────────────────────────────────────────────
@@ -311,6 +364,15 @@ async def onboard_firm(
         ) from e
 
     invite_url = f"{cfg.frontend_base_url}/auth/set-password?token={invite_token}"
+    email_sent, email_error = _send_scenario_email(
+        scenario="onboard_firm_admin",
+        to_email=body.admin_email,
+        variables={
+            "recipient_name": body.admin_name or body.firm_name,
+            "org_name": body.firm_name,
+            "invite_url": invite_url,
+        },
+    )
 
     # 3. Create org record ONLY after user is created successfully
     org_id = f"FIRM-{str(_uuid.uuid4())[:8].upper()}"
@@ -328,6 +390,8 @@ async def onboard_firm(
         "firm": {"org_id": org_id, "name": body.firm_name, "status": "pending_approval"},
         "user": _user_response(user),
         "invite_url": invite_url,
+        "email_sent": email_sent,
+        "email_error": email_error,
     }
 
 
@@ -395,11 +459,22 @@ async def onboard_individual(
     })
 
     invite_url = f"{cfg.frontend_base_url}/auth/set-password?token={invite_token}"
+    email_sent, email_error = _send_scenario_email(
+        scenario="onboard_individual_admin",
+        to_email=body.admin_email,
+        variables={
+            "recipient_name": body.admin_name or body.org_name,
+            "org_name": body.org_name,
+            "invite_url": invite_url,
+        },
+    )
 
     return {
         "org": {"org_id": org_id, "name": body.org_name, "status": "pending_approval"},
         "user": _user_response(user),
         "invite_url": invite_url,
+        "email_sent": email_sent,
+        "email_error": email_error,
     }
 
 
@@ -481,11 +556,22 @@ async def onboard_firm_client(
     })
 
     invite_url = f"{cfg.frontend_base_url}/auth/set-password?token={invite_token}"
+    email_sent, email_error = _send_scenario_email(
+        scenario="onboard_firm_client_admin",
+        to_email=body.admin_email,
+        variables={
+            "recipient_name": body.admin_name or body.org_name,
+            "org_name": body.org_name,
+            "invite_url": invite_url,
+        },
+    )
 
     return {
         "org": {"org_id": org_id, "name": body.org_name, "status": "pending_approval", "onboarded_by_id": firm_id},
         "user": _user_response(user),
         "invite_url": invite_url,
+        "email_sent": email_sent,
+        "email_error": email_error,
     }
 
 
