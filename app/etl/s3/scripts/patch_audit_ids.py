@@ -48,8 +48,8 @@ def _is_valid_ulid(value: str) -> bool:
 
 def _new_ulid() -> str:
     try:
-        import ulid as _ulid
-        return str(_ulid.new()).upper()
+        from ulid import ULID
+        return str(ULID()).upper()
     except ImportError:
         # Fallback: generate a time-ordered 26-char Crockford Base32 string
         import time

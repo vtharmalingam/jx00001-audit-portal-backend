@@ -67,6 +67,7 @@ def _build_jwt_claims(user: Dict) -> Dict:
         "email": user["email"],
         "role": user["role"],
         "tier": user.get("tier", _derive_tier(user["role"])),
+        "org_id": user.get("org_id"),
     }
 
 
@@ -78,6 +79,9 @@ def _user_response(user: Dict, include_permissions: bool = True) -> UserResponse
         role=user["role"],
         tier=user.get("tier", _derive_tier(user["role"])),
         status=user.get("status", "active"),
+        org_id=user.get("org_id"),
+        onboarded_by_id=user.get("onboarded_by_id"),
+        aict_approved=user.get("aict_approved"),
         permissions=list_permissions(user["role"]) if include_permissions else None,
         created_at=user.get("created_at"),
     )
@@ -185,9 +189,13 @@ async def invite_user(
         )
 
     svc = _get_auth_service()
-    user_id = str(__import__("uuid").uuid4())
+    from ulid import ULID as _ULID
+    user_id = str(_ULID()).upper()
 
     invite_token = create_invite_token({"sub": user_id, "email": body.email})
+
+    # Invited user inherits the caller's org
+    caller_org_id = current_user.get("org_id") if current_user else None
 
     try:
         user = svc.create_pending_user(
@@ -196,6 +204,7 @@ async def invite_user(
             role=body.role,
             invite_token_hash=_hash_token(invite_token),
             user_id=user_id,
+            org_id=caller_org_id,
         )
     except ValueError as e:
         raise HTTPException(
@@ -323,7 +332,6 @@ async def onboard_firm(
     body: OnboardFirmBody,
     current_user: Optional[Dict] = Depends(get_optional_user),
 ):
-    import uuid as _uuid
     from datetime import datetime
 
     svc = _get_auth_service()
@@ -346,7 +354,9 @@ async def onboard_firm(
         svc.delete_user(existing_user["id"])
 
     # 3. Create fresh firm_admin user with invite
-    user_id = str(_uuid.uuid4())
+    from ulid import ULID as _ULID
+    user_id = str(_ULID()).upper()
+    org_id = str(_ULID()).upper()
     invite_token = create_invite_token({"sub": user_id, "email": body.admin_email})
 
     try:
@@ -356,6 +366,9 @@ async def onboard_firm(
             role="firm_admin",
             invite_token_hash=_hash_token(invite_token),
             user_id=user_id,
+            org_id=org_id,
+            onboarded_by_id=None,
+            aict_approved=False,
         )
     except ValueError as e:
         raise HTTPException(
@@ -374,8 +387,7 @@ async def onboard_firm(
         },
     )
 
-    # 3. Create org record ONLY after user is created successfully
-    org_id = f"FIRM-{str(_uuid.uuid4())[:8].upper()}"
+    # 4. Create org record ONLY after user is created successfully
     org_svc.merge_org_profile(org_id, {
         "name": body.firm_name,
         "email": body.admin_email,
@@ -406,7 +418,6 @@ async def onboard_individual(
     body: OnboardIndividualBody,
     current_user: Optional[Dict] = Depends(get_optional_user),
 ):
-    import uuid as _uuid
     from datetime import datetime
 
     svc = _get_auth_service()
@@ -429,7 +440,9 @@ async def onboard_individual(
         svc.delete_user(existing_user["id"])
 
     # 3. Create fresh individual_admin user with invite
-    user_id = str(_uuid.uuid4())
+    from ulid import ULID as _ULID
+    user_id = str(_ULID()).upper()
+    org_id = str(_ULID()).upper()
     invite_token = create_invite_token({"sub": user_id, "email": body.admin_email})
 
     try:
@@ -439,6 +452,9 @@ async def onboard_individual(
             role="individual_admin",
             invite_token_hash=_hash_token(invite_token),
             user_id=user_id,
+            org_id=org_id,
+            onboarded_by_id=None,
+            aict_approved=False,
         )
     except ValueError as e:
         raise HTTPException(
@@ -447,7 +463,6 @@ async def onboard_individual(
         ) from e
 
     # 4. Create org record ONLY after user is created successfully
-    org_id = f"IND-{str(_uuid.uuid4())[:8].upper()}"
     org_svc.merge_org_profile(org_id, {
         "name": body.org_name,
         "email": body.admin_email,
@@ -489,7 +504,6 @@ async def onboard_firm_client(
     body: OnboardFirmClientBody,
     current_user: Optional[Dict] = Depends(get_optional_user),
 ):
-    import uuid as _uuid
     from datetime import datetime
 
     svc = _get_auth_service()
@@ -513,8 +527,27 @@ async def onboard_firm_client(
         svc.delete_user(existing_user["id"])
 
     # 3. Create individual_admin user with invite
-    user_id = str(_uuid.uuid4())
+    from ulid import ULID as _ULID
+    user_id = str(_ULID()).upper()
     invite_token = create_invite_token({"sub": user_id, "email": body.admin_email})
+
+    # 4. Resolve the parent org ID (firm or individual)
+    firm_id = body.firm_org_id
+    if not firm_id and current_user:
+        # Prefer org_id from JWT (set during login) — avoids S3 lookup
+        firm_id = current_user.get("org_id")
+    if not firm_id and current_user:
+        # Fallback: look up the parent org by the logged-in admin's email
+        caller_email = current_user.get("email", "")
+        for _otype in ("firm", "individual"):
+            parent_orgs, _ = org_svc.list_organizations_filtered(
+                org_type=_otype, q=caller_email, page=1, page_size=1,
+            )
+            if parent_orgs:
+                firm_id = parent_orgs[0].get("org_id")
+                break
+
+    org_id = str(_ULID()).upper()
 
     try:
         user = svc.create_pending_user(
@@ -523,6 +556,9 @@ async def onboard_firm_client(
             role="individual_admin",
             invite_token_hash=_hash_token(invite_token),
             user_id=user_id,
+            org_id=org_id,
+            onboarded_by_id=firm_id,
+            aict_approved=False,
         )
     except ValueError as e:
         raise HTTPException(
@@ -530,19 +566,7 @@ async def onboard_firm_client(
             detail={"code": "ONBOARD_FAILED", "message": str(e)},
         ) from e
 
-    # 4. Resolve the firm's org ID
-    firm_id = body.firm_org_id         # <-------------------------------- TODO: Kingsly: Please pay attention to this (defensive check is needed. Note that new onboarding does not send the ID)
-    if not firm_id and current_user:
-        # Look up the firm org by the logged-in admin's email
-        caller_email = current_user.get("email", "")
-        firm_orgs, _ = org_svc.list_organizations_filtered(
-            org_type="firm", q=caller_email, page=1, page_size=1,
-        )
-        if firm_orgs:
-            firm_id = firm_orgs[0].get("org_id")
-
-    # 5. Create org record linked to the firm
-    org_id = f"CLT-{str(_uuid.uuid4())[:8].upper()}"
+    # 5. Create org record linked to the parent
 
     org_svc.merge_org_profile(org_id, {
         "name": body.org_name,
@@ -596,6 +620,43 @@ async def login(body: LoginBody, response: Response):
             status.HTTP_401_UNAUTHORIZED,
             detail={"code": "BAD_CREDENTIALS", "message": "Invalid email or password"},
         )
+
+    # Backfill org_id + aict_approved for legacy users (onboarded before ULID migration)
+    tier = user.get("tier", _derive_tier(user["role"]))
+    if tier in ("firm", "individual"):
+        backfill = {}
+        org_profile = None
+
+        if not user.get("org_id"):
+            from app.etl.s3.services.operational_service import OperationalService
+            from app.rest.deps import s3_client as _s3
+            org_svc = OperationalService(_s3)
+            org_type = "firm" if tier == "firm" else "individual"
+            matches, _ = org_svc.list_organizations_filtered(
+                org_type=org_type, q=user.get("email", ""), page=1, page_size=1,
+            )
+            if matches:
+                org_profile = matches[0]
+                backfill["org_id"] = org_profile.get("org_id")
+                user["org_id"] = backfill["org_id"]
+
+        # Sync aict_approved from org profile if missing on user record
+        if user.get("aict_approved") is None and org_profile:
+            backfill["aict_approved"] = bool(org_profile.get("aict_approved"))
+            user["aict_approved"] = backfill["aict_approved"]
+
+        if backfill:
+            svc.update_user(user["id"], backfill)
+
+        # Block if still not approved
+        if not user.get("aict_approved"):
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                detail={
+                    "code": "AICT_APPROVAL_PENDING",
+                    "message": "Your organisation is pending approval from AICT. You will be able to sign in once approved.",
+                },
+            )
 
     claims = _build_jwt_claims(user)
     access = create_access_token(claims)
@@ -713,7 +774,29 @@ async def list_users(
     else:
         effective_tier = caller_tier
 
-    users = svc.list_users(tier=effective_tier)
+    # Firm/individual callers only see users within their own organisation
+    caller_org_id = None
+    if caller_tier in ("firm", "individual"):
+        caller_org_id = current_user.get("org_id")
+        # Fallback: JWT may lack org_id for users onboarded before the ULID migration
+        if not caller_org_id:
+            full_user = svc.find_by_id(current_user["id"])
+            caller_org_id = full_user.get("org_id") if full_user else None
+        # Last resort: resolve org by email from the organizations index, then backfill
+        if not caller_org_id:
+            from app.etl.s3.services.operational_service import OperationalService
+            from app.rest.deps import s3_client as _s3
+            org_svc = OperationalService(_s3)
+            org_type = "firm" if caller_tier == "firm" else "individual"
+            matches, _ = org_svc.list_organizations_filtered(
+                org_type=org_type, q=current_user.get("email", ""), page=1, page_size=1,
+            )
+            if matches:
+                caller_org_id = matches[0].get("org_id")
+                # Backfill so this lookup only happens once
+                svc.update_user(current_user["id"], {"org_id": caller_org_id})
+
+    users = svc.list_users(tier=effective_tier, org_id=caller_org_id)
     return [_user_response(u) for u in users]
 
 

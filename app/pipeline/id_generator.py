@@ -6,14 +6,14 @@ AI System:     Sequential 4-digit per project (0001, 0002, ...)
 Audit ID:      ULID only (see ``app.etl.s3.utils.ids.new_audit_ulid``)
 """
 
-import ulid
+from ulid import ULID
 
 from app.etl.s3.services.s3_client import S3Client
 
 
 def generate_org_id() -> str:
     """Generate a ULID-based organization ID."""
-    return str(ulid.new()).upper()
+    return str(ULID()).upper()
 
 
 def next_project_seq(s3: S3Client, org_id: str) -> str:

@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from typing import Tuple
 
-import ulid as _ulid
+from ulid import ULID as _ULID
 
 # Crockford Base32 (ULID); excludes I, L, O, U
 _ULID_RE = re.compile(r"^[0-9A-HJKMNP-TV-Z]{26}$")
@@ -18,7 +18,7 @@ _ULID_RE = re.compile(r"^[0-9A-HJKMNP-TV-Z]{26}$")
 
 def new_audit_ulid() -> str:
     """New time-ordered audit id for ``audits/{audit_id}/`` (uppercase)."""
-    return str(_ulid.new()).upper()
+    return str(_ULID()).upper()
 
 
 def validate_ulid(value: str) -> str:

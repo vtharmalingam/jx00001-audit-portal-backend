@@ -1,8 +1,9 @@
 """Auth user service — S3-backed user storage with password hashing."""
 
-import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
+from ulid import ULID
 
 from app.auth.passwords import hash_password, verify_password
 from app.etl.s3.utils.s3_paths import _prefix
@@ -52,17 +53,26 @@ class AuthUserService:
 
     # ── Bootstrap ──────────────────────────────────────────────────────────
 
+    # Stable org ULIDs for demo data (shared across users of the same org).
+    _ORG_RISKFIRM = "01KNHFD14ARGVXCJTMN9282ABK"
+    _ORG_HOOLI = "01KNHFD14CDRBQZTDY26479SAM"
+    _ORG_GLOBEX = "01KNHFD14F1SMBM4BV672F14VD"
+    _ORG_INITECH = "01KNHFD14JRTA62B98C0HDC5TH"
+
     _DEMO_USERS = [
-        {"email": "admin@aict.com", "name": "AICT Admin", "role": "aict_admin"},
-        {"email": "manager@aict.com", "name": "AICT Manager", "role": "aict_manager"},
-        {"email": "csap@aict.com", "name": "AICT CSAP", "role": "aict_csap"},
-        {"email": "practitioner@aict.com", "name": "AICT Practitioner", "role": "aict_practitioner"},
-        {"email": "firm.admin@riskfirm.com", "name": "Firm Admin", "role": "firm_admin"},
-        {"email": "firm.manager@riskfirm.com", "name": "Firm Manager", "role": "firm_manager"},
-        {"email": "firm.practitioner@riskfirm.com", "name": "Firm Practitioner", "role": "firm_practitioner"},
-        {"email": "compliance@hooli.com", "name": "Hooli Technologies", "role": "individual_admin", "id": "ORG005"},
-        {"email": "contact@globex.com", "name": "Globex Industries", "role": "individual_manager", "id": "ORG002"},
-        {"email": "info@initech.com", "name": "Initech Solutions", "role": "individual_practitioner", "id": "ORG003"},
+        # AICT platform users — no org
+        {"id": "01KNHFD13B8J8HPAEN3CFFK0J5", "email": "admin@aict.com",              "name": "AICT Admin",        "role": "aict_admin",              "org_id": None,         "onboarded_by_id": None, "aict_approved": True},
+        {"id": "01KNHFD13KQVYPDAWCFA8X4YPP", "email": "manager@aict.com",            "name": "AICT Manager",      "role": "aict_manager",            "org_id": None,         "onboarded_by_id": None, "aict_approved": True},
+        {"id": "01KNHFD13P76QSQEXQY64DXQDW", "email": "csap@aict.com",               "name": "AICT CSAP",         "role": "aict_csap",               "org_id": None,         "onboarded_by_id": None, "aict_approved": True},
+        {"id": "01KNHFD13R02GD4RDM9A6SM6G9", "email": "practitioner@aict.com",        "name": "AICT Practitioner", "role": "aict_practitioner",       "org_id": None,         "onboarded_by_id": None, "aict_approved": True},
+        # Firm users — all share the RiskFirm org
+        {"id": "01KNHFD13VGA24DR79S775EXN0", "email": "firm.admin@riskfirm.com",      "name": "Firm Admin",        "role": "firm_admin",              "org_id": _ORG_RISKFIRM, "onboarded_by_id": None, "aict_approved": True},
+        {"id": "01KNHFD13XK2VS4YQ7TM5910ZP", "email": "firm.manager@riskfirm.com",    "name": "Firm Manager",      "role": "firm_manager",            "org_id": _ORG_RISKFIRM, "onboarded_by_id": None, "aict_approved": True},
+        {"id": "01KNHFD140KDJQQE6PDTMHMD2K", "email": "firm.practitioner@riskfirm.com","name": "Firm Practitioner", "role": "firm_practitioner",      "org_id": _ORG_RISKFIRM, "onboarded_by_id": None, "aict_approved": True},
+        # Individual org admins — each has their own org
+        {"id": "01KNHFD142GRJ1WTRGD8VJ7054", "email": "compliance@hooli.com",         "name": "Hooli Technologies","role": "individual_admin",        "org_id": _ORG_HOOLI,   "onboarded_by_id": None, "aict_approved": True},
+        {"id": "01KNHFD1457YZHTFDM6DXX93BT", "email": "contact@globex.com",           "name": "Globex Industries", "role": "individual_manager",      "org_id": _ORG_GLOBEX,  "onboarded_by_id": None, "aict_approved": True},
+        {"id": "01KNHFD147YVMN95RKTK7YATMX", "email": "info@initech.com",            "name": "Initech Solutions",  "role": "individual_practitioner", "org_id": _ORG_INITECH, "onboarded_by_id": None, "aict_approved": True},
     ]
 
     def ensure_demo_users(self, default_password: str = "Admin@123") -> int:
@@ -77,6 +87,9 @@ class AuthUserService:
                     role=demo["role"],
                     user_id=demo.get("id"),
                     status="active",
+                    org_id=demo.get("org_id"),
+                    onboarded_by_id=demo.get("onboarded_by_id"),
+                    aict_approved=demo.get("aict_approved"),
                 )
                 created += 1
         return created
@@ -96,10 +109,12 @@ class AuthUserService:
                 return user
         return None
 
-    def list_users(self, tier: Optional[str] = None) -> List[Dict]:
+    def list_users(self, tier: Optional[str] = None, org_id: Optional[str] = None) -> List[Dict]:
         users = self._load()
         if tier:
             users = [u for u in users if u.get("tier") == tier]
+        if org_id:
+            users = [u for u in users if u.get("org_id") == org_id]
         return [self._safe_user(u) for u in users]
 
     # ── Commands ───────────────────────────────────────────────────────────
@@ -119,6 +134,9 @@ class AuthUserService:
         user_id: Optional[str] = None,
         status: str = "active",
         invite_token_hash: Optional[str] = None,
+        org_id: Optional[str] = None,
+        onboarded_by_id: Optional[str] = None,
+        aict_approved: Optional[bool] = None,
     ) -> Dict[str, Any]:
         if self.find_by_email(email):
             raise ValueError(f"Email already registered: {email}")
@@ -126,13 +144,16 @@ class AuthUserService:
         users = self._load()
         now = datetime.utcnow().isoformat()
         user = {
-            "id": user_id or str(uuid.uuid4()),
+            "id": user_id or str(ULID()).upper(),
             "name": name,
             "email": email.lower(),
             "password_hash": hash_password(password) if password else None,
             "role": role,
             "tier": self._derive_tier(role),
             "status": status,
+            "org_id": org_id,
+            "onboarded_by_id": onboarded_by_id,
+            "aict_approved": aict_approved,
             "invite_token_hash": invite_token_hash,
             "refresh_token_hash": None,
             "created_at": now,
@@ -149,6 +170,9 @@ class AuthUserService:
         role: str,
         invite_token_hash: str,
         user_id: Optional[str] = None,
+        org_id: Optional[str] = None,
+        onboarded_by_id: Optional[str] = None,
+        aict_approved: Optional[bool] = None,
     ) -> Dict[str, Any]:
         return self.create_user(
             name=name,
@@ -158,6 +182,9 @@ class AuthUserService:
             user_id=user_id,
             status="pending",
             invite_token_hash=invite_token_hash,
+            org_id=org_id,
+            onboarded_by_id=onboarded_by_id,
+            aict_approved=aict_approved,
         )
 
     def store_invite_token(self, user_id: str, invite_token_hash: str) -> None:
@@ -200,7 +227,7 @@ class AuthUserService:
         users = self._load()
         for user in users:
             if user["id"] == user_id:
-                for key in ("name", "email", "role"):
+                for key in ("name", "email", "role", "org_id", "onboarded_by_id", "aict_approved"):
                     if key in patch and patch[key] is not None:
                         user[key] = patch[key]
                 if "role" in patch and patch["role"]:

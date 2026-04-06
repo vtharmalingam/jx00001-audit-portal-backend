@@ -33,6 +33,7 @@ async def get_current_user(access_token: Optional[str] = Cookie(None)) -> Dict:
         "email": claims.get("email"),
         "role": claims.get("role"),
         "tier": claims.get("tier"),
+        "org_id": claims.get("org_id"),
     }
 
 
@@ -53,6 +54,7 @@ async def get_optional_user(access_token: Optional[str] = Cookie(None)) -> Optio
         "email": claims.get("email"),
         "role": claims.get("role"),
         "tier": claims.get("tier"),
+        "org_id": claims.get("org_id"),
     }
 
 

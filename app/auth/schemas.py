@@ -78,6 +78,9 @@ class UserResponse(BaseModel):
     role: str
     tier: str
     status: Optional[str] = None
+    org_id: Optional[str] = None
+    onboarded_by_id: Optional[str] = None
+    aict_approved: Optional[bool] = None
     permissions: Optional[List[str]] = None
     created_at: Optional[str] = None
 
