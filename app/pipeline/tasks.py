@@ -1,4 +1,26 @@
-"""Celery tasks for pipeline background processing."""
+"""Celery task implementations for the assessment pipeline.
+
+These run in a *worker* process (not inside uvicorn). The API enqueues them via
+``.delay()`` so long-running work does not block HTTP.
+
+Tasks defined here
+    * ``pipeline.run_gap_analysis`` — Dispatched from ``app.pipeline.router``
+      when an assessment is submitted. Reads answers from S3, runs per-question
+      gap analysis (LLM / analyzer), updates pipeline progress, writes the gap
+      report, refreshes gap index, org stage, and review queue. Task id is stored
+      on the pipeline record as ``gap_analysis_task_id`` for progress UIs.
+    * ``pipeline.recompute_derived_audit`` — Dispatched from
+      ``app.etl.s3.services.derived_service.schedule_derived_recompute`` (audit
+      lifecycle). Writes ``derived/*`` placeholder JSON in S3; replace with real
+      metrics/LLM later. If Celery is unavailable, callers fall back to sync stub.
+
+Environment
+    Same as the API: ``get_config()``, S3 bucket, category data dir, and any
+    keys required by ``analyze_question`` must be valid in the worker container.
+
+See also
+    ``app.pipeline.celery_app`` and ``app/pipeline/README.md``.
+"""
 
 import logging
 from typing import List

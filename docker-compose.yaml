@@ -29,6 +29,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    #  the celery-worker service started
     command: celery -A app.pipeline.celery_app worker --loglevel=info --concurrency=2
     restart: unless-stopped
 
