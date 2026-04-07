@@ -66,13 +66,15 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-origins = [
+import os as _os
+
+_default_origins = [
     "http://localhost",
     "http://localhost:8080",
     "http://localhost:3000",
-    "http://100.49.55.139:90",
-    "http://100.49.55.139",
 ]
+_extra = _os.getenv("CORS_ORIGINS", "")  # comma-separated, e.g. "https://app.aict.com,https://staging.aict.com"
+origins = _default_origins + [o.strip() for o in _extra.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,

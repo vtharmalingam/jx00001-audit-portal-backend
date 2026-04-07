@@ -625,9 +625,9 @@ async def login(body: LoginBody, response: Response):
     tier = user.get("tier", _derive_tier(user["role"]))
     if tier in ("firm", "individual"):
         backfill = {}
-        org_profile = None
+        needs_org_lookup = not user.get("org_id") or not user.get("aict_approved")
 
-        if not user.get("org_id"):
+        if needs_org_lookup:
             from app.etl.s3.services.operational_service import OperationalService
             from app.rest.deps import s3_client as _s3
             org_svc = OperationalService(_s3)
@@ -637,13 +637,12 @@ async def login(body: LoginBody, response: Response):
             )
             if matches:
                 org_profile = matches[0]
-                backfill["org_id"] = org_profile.get("org_id")
-                user["org_id"] = backfill["org_id"]
-
-        # Sync aict_approved from org profile if missing on user record
-        if user.get("aict_approved") is None and org_profile:
-            backfill["aict_approved"] = bool(org_profile.get("aict_approved"))
-            user["aict_approved"] = backfill["aict_approved"]
+                if not user.get("org_id"):
+                    backfill["org_id"] = org_profile.get("org_id")
+                    user["org_id"] = backfill["org_id"]
+                if not user.get("aict_approved") and org_profile.get("aict_approved"):
+                    backfill["aict_approved"] = True
+                    user["aict_approved"] = True
 
         if backfill:
             svc.update_user(user["id"], backfill)

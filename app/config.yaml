@@ -7,7 +7,7 @@ auth:
   cookie_samesite: "lax"
   cookie_domain: ""
   invite_token_expire_hours: 72
-  frontend_base_url: "http://localhost:3000"
+  frontend_base_url: "http://localhost:3000"  # Override via FRONTEND_BASE_URL env var in production
 
 ai_assessment:
   # 

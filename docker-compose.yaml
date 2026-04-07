@@ -9,6 +9,8 @@ services:
     env_file: .env
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
+      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL:-http://localhost:3000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-}
     volumes:
       - ./app:/app/app            # live-reload in dev
     depends_on:
