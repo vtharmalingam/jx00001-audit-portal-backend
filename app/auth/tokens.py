@@ -30,6 +30,13 @@ def create_invite_token(data: Dict[str, Any]) -> str:
     return jwt.encode(payload, cfg.jwt_secret_key, algorithm=cfg.algorithm)
 
 
+def create_email_verify_token(data: Dict[str, Any]) -> str:
+    cfg = get_auth_config()
+    expire = datetime.now(timezone.utc) + timedelta(hours=cfg.invite_token_expire_hours)
+    payload = {**data, "exp": expire, "type": "email_verify"}
+    return jwt.encode(payload, cfg.jwt_secret_key, algorithm=cfg.algorithm)
+
+
 def decode_token(token: str) -> Optional[Dict[str, Any]]:
     """Decode and validate a JWT. Returns claims dict or None if invalid/expired."""
     cfg = get_auth_config()

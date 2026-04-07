@@ -30,6 +30,7 @@ from app.auth.tokens import (
     create_access_token,
     create_invite_token,
     create_refresh_token,
+    create_email_verify_token,
     decode_token,
     set_auth_cookies,
 )
@@ -194,8 +195,9 @@ async def invite_user(
 
     invite_token = create_invite_token({"sub": user_id, "email": body.email})
 
-    # Invited user inherits the caller's org
+    # Invited user inherits the caller's org and approval status
     caller_org_id = current_user.get("org_id") if current_user else None
+    caller_approved = current_user.get("aict_approved") if current_user else None
 
     try:
         user = svc.create_pending_user(
@@ -205,6 +207,7 @@ async def invite_user(
             invite_token_hash=_hash_token(invite_token),
             user_id=user_id,
             org_id=caller_org_id,
+            aict_approved=caller_approved,
         )
     except ValueError as e:
         raise HTTPException(
@@ -625,24 +628,50 @@ async def login(body: LoginBody, response: Response):
     tier = user.get("tier", _derive_tier(user["role"]))
     if tier in ("firm", "individual"):
         backfill = {}
-        needs_org_lookup = not user.get("org_id") or not user.get("aict_approved")
 
-        if needs_org_lookup:
+        # --- Backfill org_id ---
+        if not user.get("org_id"):
             from app.etl.s3.services.operational_service import OperationalService
             from app.rest.deps import s3_client as _s3
             org_svc = OperationalService(_s3)
             org_type = "firm" if tier == "firm" else "individual"
+
+            # Try 1: match org by user's email
             matches, _ = org_svc.list_organizations_filtered(
                 org_type=org_type, q=user.get("email", ""), page=1, page_size=1,
             )
-            if matches:
-                org_profile = matches[0]
-                if not user.get("org_id"):
-                    backfill["org_id"] = org_profile.get("org_id")
-                    user["org_id"] = backfill["org_id"]
-                if not user.get("aict_approved") and org_profile.get("aict_approved"):
+
+            # Try 2: match org by email domain (managers/practitioners share the admin's domain)
+            if not matches:
+                domain = (user.get("email") or "").split("@")[-1] if "@" in (user.get("email") or "") else ""
+                if domain:
+                    all_orgs, _ = org_svc.list_organizations_filtered(
+                        org_type=org_type, page=1, page_size=200,
+                    )
+                    matches = [o for o in all_orgs if domain in (o.get("email") or "")]
+
+            # Try 3: inherit org_id from a same-tier colleague who already has one
+            if not matches:
+                colleagues = svc.list_users(tier=tier)
+                for c in colleagues:
+                    if c.get("org_id") and c.get("email", "").split("@")[-1] == (user.get("email") or "").split("@")[-1]:
+                        backfill["org_id"] = c["org_id"]
+                        user["org_id"] = c["org_id"]
+                        break
+
+            if matches and not user.get("org_id"):
+                backfill["org_id"] = matches[0].get("org_id")
+                user["org_id"] = backfill["org_id"]
+                if not user.get("aict_approved") and matches[0].get("aict_approved"):
                     backfill["aict_approved"] = True
                     user["aict_approved"] = True
+
+        # --- Backfill aict_approved from org-mates (managers/practitioners) ---
+        if not user.get("aict_approved") and user.get("org_id"):
+            org_users = svc.list_users(org_id=user["org_id"])
+            if any(u.get("aict_approved") for u in org_users):
+                backfill["aict_approved"] = True
+                user["aict_approved"] = True
 
         if backfill:
             svc.update_user(user["id"], backfill)
@@ -908,6 +937,99 @@ async def change_role(
     return _user_response(updated)
 
 
+# ── POST /auth/forgot-password ────────────────────────────────────────────
+
+@router.post("/forgot-password", summary="Request a password reset link via email")
+async def forgot_password(
+    email: str = __import__("fastapi").Body(..., embed=True),
+):
+    svc = _get_auth_service()
+    cfg = get_auth_config()
+    user = svc.find_by_email(email)
+
+    # Always return success to avoid email enumeration
+    if not user:
+        return {"message": "If that email is registered, a reset link has been sent."}
+
+    from ulid import ULID as _ULID
+    token = create_email_verify_token({
+        "sub": user["id"],
+        "email": user["email"],
+        "purpose": "password_reset",
+    })
+
+    # Store token hash so we can validate it later
+    svc.store_invite_token(user["id"], _hash_token(token))
+
+    reset_url = f"{cfg.frontend_base_url}/auth/reset-password?token={token}"
+    _send_scenario_email(
+        scenario="forgot_password",
+        to_email=user["email"],
+        variables={
+            "recipient_name": user.get("name", "User"),
+            "reset_url": reset_url,
+        },
+    )
+
+    return {"message": "If that email is registered, a reset link has been sent."}
+
+
+# ── POST /auth/reset-password-token ──────────────────────────────────────
+
+@router.post("/reset-password-token", summary="Reset password using a forgot-password token")
+async def reset_password_with_token(
+    token: str = __import__("fastapi").Body(..., embed=True),
+    password: str = __import__("fastapi").Body(..., embed=True),
+):
+    claims = decode_token(token)
+    if not claims or claims.get("type") != "email_verify" or claims.get("purpose") != "password_reset":
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"code": "INVALID_TOKEN", "message": "Invalid or expired reset link."},
+        )
+
+    user_id = claims.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"code": "INVALID_TOKEN", "message": "Malformed reset token."},
+        )
+
+    svc = _get_auth_service()
+    user = svc.find_by_id(user_id)
+    if not user:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail={"code": "NOT_FOUND", "message": "User not found."},
+        )
+
+    # Verify token hash matches what we stored
+    stored_hash = user.get("invite_token_hash")
+    if not stored_hash or stored_hash != _hash_token(token):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"code": "TOKEN_USED", "message": "This reset link has already been used or is invalid."},
+        )
+
+    if len(password) < 8:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"code": "WEAK_PASSWORD", "message": "Password must be at least 8 characters."},
+        )
+
+    updated = svc.reset_password(user_id, password)
+    if not updated:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "RESET_FAILED", "message": "Failed to reset password."},
+        )
+
+    # Clear the token so it can't be reused
+    svc.store_invite_token(user_id, None)
+
+    return {"message": "Password has been reset successfully."}
+
+
 @router.post("/users/{user_id}/reset-password", summary="Admin reset password for a user")
 async def reset_password(
     user_id: str,
@@ -923,6 +1045,140 @@ async def reset_password(
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail={"code": "RESET_FAILED", "message": "Failed to reset password"})
 
     return {"message": "Password reset to default", "user": _user_response(updated)}
+
+
+@router.post("/change-password", summary="Change own password (authenticated user)")
+async def change_password(
+    current_password: str = __import__("fastapi").Body(..., embed=True),
+    new_password: str = __import__("fastapi").Body(..., embed=True),
+    current_user: Dict = Depends(get_current_user),
+):
+    svc = _get_auth_service()
+    # Verify current password
+    authed = svc.authenticate(current_user["email"], current_password)
+    if not authed:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"code": "BAD_PASSWORD", "message": "Current password is incorrect."},
+        )
+    if len(new_password) < 8:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"code": "WEAK_PASSWORD", "message": "New password must be at least 8 characters."},
+        )
+    updated = svc.reset_password(current_user["id"], new_password)
+    if not updated:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "UPDATE_FAILED", "message": "Failed to update password."},
+        )
+    return {"message": "Password changed successfully."}
+
+
+# ── POST /auth/request-email-change ──────────────────────────────────────
+
+@router.post("/request-email-change", summary="Request email change for an org — sends verification to new email")
+async def request_email_change(
+    org_id: str = __import__("fastapi").Body(..., embed=True),
+    new_email: str = __import__("fastapi").Body(..., embed=True),
+    current_user: Dict = Depends(get_current_user),
+):
+    from app.etl.s3.services.operational_service import OperationalService
+    from app.rest.deps import s3_client as _s3
+
+    org_svc = OperationalService(_s3)
+    cfg = get_auth_config()
+
+    # Validate org exists
+    profile = org_svc.get_org_profile_raw(org_id)
+    if not profile:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": "Organisation not found."})
+
+    old_email = profile.get("email", "")
+    if old_email.lower() == new_email.strip().lower():
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail={"code": "SAME_EMAIL", "message": "New email is the same as current email."})
+
+    # Generate verification token
+    token = create_email_verify_token({
+        "sub": org_id,
+        "new_email": new_email.strip().lower(),
+        "old_email": old_email,
+    })
+
+    # Store pending change on org profile
+    org_svc.merge_org_profile(org_id, {
+        "pending_email": new_email.strip().lower(),
+        "pending_email_token_hash": _hash_token(token),
+    })
+
+    # Send verification email to the NEW address
+    verify_url = f"{cfg.frontend_base_url}/auth/verify-email?token={token}"
+    email_sent, email_error = _send_scenario_email(
+        scenario="verify_email_change",
+        to_email=new_email.strip(),
+        variables={
+            "org_name": profile.get("name", org_id),
+            "verify_url": verify_url,
+        },
+    )
+
+    return {
+        "message": "Verification email sent to the new address.",
+        "new_email": new_email.strip().lower(),
+        "email_sent": email_sent,
+        "email_error": email_error,
+    }
+
+
+# ── POST /auth/confirm-email-change ──────────────────────────────────────
+
+@router.post("/confirm-email-change", summary="Confirm email change via verification token")
+async def confirm_email_change(
+    token: str = __import__("fastapi").Body(..., embed=True),
+):
+    from app.etl.s3.services.operational_service import OperationalService
+    from app.rest.deps import s3_client as _s3
+
+    claims = decode_token(token)
+    if not claims or claims.get("type") != "email_verify":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail={"code": "INVALID_TOKEN", "message": "Invalid or expired verification link."})
+
+    org_id = claims.get("sub")
+    new_email = claims.get("new_email")
+
+    if not org_id or not new_email:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail={"code": "INVALID_TOKEN", "message": "Malformed verification token."})
+
+    org_svc = OperationalService(_s3)
+    profile = org_svc.get_org_profile_raw(org_id)
+    if not profile:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": "Organisation not found."})
+
+    # Verify token matches what was stored
+    stored_hash = profile.get("pending_email_token_hash")
+    if not stored_hash or stored_hash != _hash_token(token):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail={"code": "TOKEN_MISMATCH", "message": "This verification link has already been used or is invalid."})
+
+    # Apply the email change
+    old_email = profile.get("email", "")
+    org_svc.merge_org_profile(org_id, {
+        "email": new_email,
+        "pending_email": None,
+        "pending_email_token_hash": None,
+    })
+
+    # Also update the auth user's email if they match the old org email
+    svc = _get_auth_service()
+    auth_user = svc.find_by_email(old_email)
+    if auth_user:
+        svc.update_user(auth_user["id"], {"email": new_email})
+
+    return {
+        "message": "Email changed successfully.",
+        "org_id": org_id,
+        "old_email": old_email,
+        "new_email": new_email,
+    }
 
 
 @router.delete("/users/{user_id}", summary="Delete a user (admin only)", status_code=status.HTTP_204_NO_CONTENT)

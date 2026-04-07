@@ -98,6 +98,19 @@ async def create_organization(body: OrgUpsertBody):
     return {"organization": org}
 
 
+@router.get("/{org_id}", summary="Get a single organization profile")
+async def get_organization(org_id: str):
+    svc = _svc()
+    raw = svc.get_org_profile_raw(org_id)
+    if not raw:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail={"code": "NOT_FOUND", "message": f"Unknown org_id: {org_id}"},
+        )
+    from app.etl.s3.services.org_normalize import normalize_org
+    return {"organization": normalize_org(raw)}
+
+
 @router.put("/{org_id}", summary="Upsert / replace org profile fields")
 @router.patch("/{org_id}", summary="Merge org profile fields")
 async def upsert_organization(org_id: str, body: OrgUpsertBody):

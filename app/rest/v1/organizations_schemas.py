@@ -17,7 +17,7 @@ class PersonRef(BaseModel):
 
 
 class ProjectCreateBody(BaseModel):
-    project_id: str
+    project_id: Optional[str] = None
     project_name: str
 
 

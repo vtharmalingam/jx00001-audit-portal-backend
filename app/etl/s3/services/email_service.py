@@ -54,6 +54,26 @@ DEFAULT_EMAIL_TEMPLATES: Dict[str, Dict[str, str]] = {
             "Set your password using this link:\n{invite_url}\n"
         ),
     },
+    "forgot_password": {
+        "subject": "Reset your password — Audit Portal",
+        "text": (
+            "Hi {recipient_name},\n\n"
+            "We received a request to reset your password.\n\n"
+            "Click the link below to set a new password:\n{reset_url}\n\n"
+            "This link will expire in 72 hours.\n"
+            "If you did not request this, please ignore this email — your password will remain unchanged.\n"
+        ),
+    },
+    "verify_email_change": {
+        "subject": "Verify your new email address — Audit Portal",
+        "text": (
+            "Hi,\n\n"
+            "An administrator has requested to change the email for \"{org_name}\" to this address.\n\n"
+            "Please verify by clicking the link below:\n{verify_url}\n\n"
+            "This link will expire in 72 hours.\n"
+            "If you did not expect this, please ignore this email.\n"
+        ),
+    },
 }
 
 
