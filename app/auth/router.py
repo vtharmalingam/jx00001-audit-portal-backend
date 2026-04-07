@@ -689,8 +689,8 @@ async def login(body: LoginBody, response: Response):
         if backfill:
             svc.update_user(user["id"], backfill)
 
-        # Block if still not approved
-        if not user.get("aict_approved"):
+        # Block if still not approved (firms only — individuals do not require AICT approval)
+        if tier == "firm" and not user.get("aict_approved"):
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN,
                 detail={
