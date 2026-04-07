@@ -65,6 +65,8 @@ async def list_organizations(
     status: Optional[str] = Query(None),
     archived: Optional[bool] = Query(None),
     q: Optional[str] = Query(None, description="Search org_id, name, email"),
+    manager_id: Optional[str] = Query(None, description="Filter by assigned manager user ID"),
+    practitioner_id: Optional[str] = Query(None, description="Filter by assigned practitioner user ID"),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=500),
 ):
@@ -80,6 +82,8 @@ async def list_organizations(
         status=status,
         archived=archived,
         q=q,
+        manager_id=manager_id,
+        practitioner_id=practitioner_id,
         page=page,
         page_size=page_size,
     )
@@ -170,6 +174,18 @@ async def onboarding_decision(org_id: str, body: OnboardingDecisionBody):
             status.HTTP_400_BAD_REQUEST,
             detail={"code": "BAD_REQUEST", "message": str(e)},
         ) from e
+
+    # Sync aict_approved to every auth user belonging to this org so they can log in.
+    # onboarding_decision() updates the org profile but not auth_users.json — this closes that gap.
+    try:
+        from app.auth.service import AuthUserService
+        auth_svc = AuthUserService(s3_client)
+        approved = body.decision.lower().strip() == "approve"
+        for u in auth_svc.list_users(org_id=org_id):
+            auth_svc.update_user(u["id"], {"aict_approved": approved})
+    except Exception:
+        pass  # Non-fatal: user can still be backfilled on next login
+
     return {"organization": org}
 
 

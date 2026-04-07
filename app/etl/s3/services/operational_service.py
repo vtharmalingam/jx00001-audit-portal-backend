@@ -205,6 +205,8 @@ class OperationalService:
         status: Optional[str] = None,
         archived: Optional[bool] = None,
         q: Optional[str] = None,
+        manager_id: Optional[str] = None,
+        practitioner_id: Optional[str] = None,
         page: int = 1,
         page_size: int = 50,
         include_system_counts: bool = True,
@@ -216,6 +218,7 @@ class OperationalService:
                 o, onboarded_by=onboarded_by, onboarded_by_id=onboarded_by_id,
                 org_type=org_type, org_types=org_types, aict_approved=aict_approved,
                 stage=stage, status=status, archived=archived, q=q,
+                manager_id=manager_id, practitioner_id=practitioner_id,
             )
         ]
         page_rows, total = paginate(filtered, page, page_size)

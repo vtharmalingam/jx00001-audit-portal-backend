@@ -666,12 +666,25 @@ async def login(body: LoginBody, response: Response):
                     backfill["aict_approved"] = True
                     user["aict_approved"] = True
 
-        # --- Backfill aict_approved from org-mates (managers/practitioners) ---
+        # --- Backfill aict_approved from org profile or org-mates ---
         if not user.get("aict_approved") and user.get("org_id"):
-            org_users = svc.list_users(org_id=user["org_id"])
-            if any(u.get("aict_approved") for u in org_users):
-                backfill["aict_approved"] = True
-                user["aict_approved"] = True
+            # Primary: read aict_approved directly from the org profile in S3
+            try:
+                from app.etl.s3.services.operational_service import OperationalService
+                from app.rest.deps import s3_client as _s3
+                org_svc = OperationalService(_s3)
+                org_profile = org_svc.get_org_profile_raw(user["org_id"])
+                if org_profile and org_profile.get("aict_approved"):
+                    backfill["aict_approved"] = True
+                    user["aict_approved"] = True
+            except Exception:
+                pass
+            # Fallback: check if any org-mate already has aict_approved
+            if not user.get("aict_approved"):
+                org_users = svc.list_users(org_id=user["org_id"])
+                if any(u.get("aict_approved") for u in org_users):
+                    backfill["aict_approved"] = True
+                    user["aict_approved"] = True
 
         if backfill:
             svc.update_user(user["id"], backfill)

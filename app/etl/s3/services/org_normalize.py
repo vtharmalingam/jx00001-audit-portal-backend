@@ -119,6 +119,8 @@ def org_matches_filters(
     status: Optional[str] = None,
     archived: Optional[bool] = None,
     q: Optional[str] = None,
+    manager_id: Optional[str] = None,
+    practitioner_id: Optional[str] = None,
 ) -> bool:
     wants: Optional[set[str]] = None
     if org_types is not None:
@@ -163,6 +165,11 @@ def org_matches_filters(
         ).lower()
         if ql not in blob:
             return False
+
+    if manager_id and (org.get("manager_id") or "") != manager_id:
+        return False
+    if practitioner_id and (org.get("practitioner_id") or "") != practitioner_id:
+        return False
 
     return True
 
