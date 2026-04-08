@@ -1,5 +1,6 @@
 """Auth router — register, login, refresh, logout, me."""
 
+import asyncio
 import hashlib
 import logging
 
@@ -137,7 +138,7 @@ async def register(body: RegisterBody, response: Response):
     svc = _get_auth_service()
 
     try:
-        user = svc.create_user(
+        user = await asyncio.to_thread(svc.create_user,
             name=body.name,
             email=body.email,
             password=body.password,
@@ -154,7 +155,7 @@ async def register(body: RegisterBody, response: Response):
     access = create_access_token(claims)
     refresh = create_refresh_token(claims)
 
-    svc.store_refresh_token(user["id"], _hash_token(refresh))
+    await asyncio.to_thread(svc.store_refresh_token, user["id"], _hash_token(refresh))
     set_auth_cookies(response, access, refresh)
 
     return AuthResponse(user=_user_response(user), message="registered")
@@ -200,7 +201,7 @@ async def invite_user(
     caller_approved = current_user.get("aict_approved") if current_user else None
 
     try:
-        user = svc.create_pending_user(
+        user = await asyncio.to_thread(svc.create_pending_user,
             name=body.name,
             email=body.email,
             role=body.role,
@@ -250,7 +251,7 @@ async def activate_account(body: ActivateBody):
 
     user_id = claims.get("sub")
     svc = _get_auth_service()
-    user = svc.find_by_id(user_id)
+    user = await asyncio.to_thread(svc.find_by_id, user_id)
 
     if not user:
         raise HTTPException(
@@ -270,7 +271,7 @@ async def activate_account(body: ActivateBody):
             detail={"code": "INVALID_INVITE_TOKEN", "message": "Invalid invite token"},
         )
 
-    activated = svc.activate_user(user_id, body.password)
+    activated = await asyncio.to_thread(svc.activate_user, user_id, body.password)
     if not activated:
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -290,7 +291,7 @@ async def resend_invite(
     svc = _get_auth_service()
     cfg = get_auth_config()
 
-    user = svc.find_by_email(email)
+    user = await asyncio.to_thread(svc.find_by_email, email)
     if not user:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
@@ -305,7 +306,7 @@ async def resend_invite(
 
     # Generate new invite token and store its hash
     invite_token = create_invite_token({"sub": user["id"], "email": email})
-    svc.store_invite_token(user["id"], _hash_token(invite_token))
+    await asyncio.to_thread(svc.store_invite_token, user["id"], _hash_token(invite_token))
 
     invite_url = f"{cfg.frontend_base_url}/auth/set-password?token={invite_token}"
     email_sent, email_error = _send_scenario_email(
@@ -342,7 +343,7 @@ async def onboard_firm(
     cfg = get_auth_config()
 
     # 1. Check if a firm org with this email already exists
-    existing_orgs, _ = org_svc.list_organizations_filtered(
+    existing_orgs, _ = await asyncio.to_thread(org_svc.list_organizations_filtered,
         org_type="firm", q=body.admin_email, page=1, page_size=1,
     )
     if existing_orgs:
@@ -352,9 +353,9 @@ async def onboard_firm(
         )
 
     # 2. If an orphan user exists (from a deleted firm), remove it first
-    existing_user = svc.find_by_email(body.admin_email)
+    existing_user = await asyncio.to_thread(svc.find_by_email, body.admin_email)
     if existing_user:
-        svc.delete_user(existing_user["id"])
+        await asyncio.to_thread(svc.delete_user, existing_user["id"])
 
     # 3. Create fresh firm_admin user with invite
     from ulid import ULID as _ULID
@@ -363,7 +364,7 @@ async def onboard_firm(
     invite_token = create_invite_token({"sub": user_id, "email": body.admin_email})
 
     try:
-        user = svc.create_pending_user(
+        user = await asyncio.to_thread(svc.create_pending_user,
             name=body.admin_name or body.firm_name,
             email=body.admin_email,
             role="firm_admin",
@@ -391,7 +392,7 @@ async def onboard_firm(
     )
 
     # 4. Create org record ONLY after user is created successfully
-    org_svc.merge_org_profile(org_id, {
+    await asyncio.to_thread(org_svc.merge_org_profile, org_id, {
         "name": body.firm_name,
         "email": body.admin_email,
         "onboarded_by_type": "firm",
@@ -428,7 +429,7 @@ async def onboard_individual(
     cfg = get_auth_config()
 
     # 1. Check if an individual org with this email already exists
-    existing_orgs, _ = org_svc.list_organizations_filtered(
+    existing_orgs, _ = await asyncio.to_thread(org_svc.list_organizations_filtered,
         org_type="individual", q=body.admin_email, page=1, page_size=1,
     )
     if existing_orgs:
@@ -438,9 +439,9 @@ async def onboard_individual(
         )
 
     # 2. If an orphan user exists (from a deleted org), remove it first
-    existing_user = svc.find_by_email(body.admin_email)
+    existing_user = await asyncio.to_thread(svc.find_by_email, body.admin_email)
     if existing_user:
-        svc.delete_user(existing_user["id"])
+        await asyncio.to_thread(svc.delete_user, existing_user["id"])
 
     # 3. Create fresh individual_admin user with invite
     from ulid import ULID as _ULID
@@ -449,7 +450,7 @@ async def onboard_individual(
     invite_token = create_invite_token({"sub": user_id, "email": body.admin_email})
 
     try:
-        user = svc.create_pending_user(
+        user = await asyncio.to_thread(svc.create_pending_user,
             name=body.admin_name or body.org_name,
             email=body.admin_email,
             role="individual_admin",
@@ -466,7 +467,7 @@ async def onboard_individual(
         ) from e
 
     # 4. Create org record ONLY after user is created successfully
-    org_svc.merge_org_profile(org_id, {
+    await asyncio.to_thread(org_svc.merge_org_profile, org_id, {
         "name": body.org_name,
         "email": body.admin_email,
         "onboarded_by_type": "individual",
@@ -514,20 +515,20 @@ async def onboard_firm_client(
     cfg = get_auth_config()
 
     # 1. Check if an org with this email already exists
-    existing_orgs, _ = org_svc.list_organizations_filtered(
+    existing_orgs, _ = await asyncio.to_thread(org_svc.list_organizations_filtered,
         q=body.admin_email, page=1, page_size=1,
     )
     if existing_orgs:
         raise HTTPException(
             status.HTTP_409_CONFLICT,
-            detail={"code": "ONBOARD_FAILED", 
+            detail={"code": "ONBOARD_FAILED",
                     "message": f"An organisation with this email already exists: {body.admin_email}"},
         )
 
     # 2. If an orphan user exists, remove it first
-    existing_user = svc.find_by_email(body.admin_email)
+    existing_user = await asyncio.to_thread(svc.find_by_email, body.admin_email)
     if existing_user:
-        svc.delete_user(existing_user["id"])
+        await asyncio.to_thread(svc.delete_user, existing_user["id"])
 
     # 3. Create individual_admin user with invite
     from ulid import ULID as _ULID
@@ -543,7 +544,7 @@ async def onboard_firm_client(
         # Fallback: look up the parent org by the logged-in admin's email
         caller_email = current_user.get("email", "")
         for _otype in ("firm", "individual"):
-            parent_orgs, _ = org_svc.list_organizations_filtered(
+            parent_orgs, _ = await asyncio.to_thread(org_svc.list_organizations_filtered,
                 org_type=_otype, q=caller_email, page=1, page_size=1,
             )
             if parent_orgs:
@@ -553,7 +554,7 @@ async def onboard_firm_client(
     org_id = str(_ULID()).upper()
 
     try:
-        user = svc.create_pending_user(
+        user = await asyncio.to_thread(svc.create_pending_user,
             name=body.admin_name or body.org_name,
             email=body.admin_email,
             role="individual_admin",
@@ -570,8 +571,7 @@ async def onboard_firm_client(
         ) from e
 
     # 5. Create org record linked to the parent
-
-    org_svc.merge_org_profile(org_id, {
+    await asyncio.to_thread(org_svc.merge_org_profile, org_id, {
         "name": body.org_name,
         "email": body.admin_email,
         "onboarded_by_type": "firm_client",
@@ -609,14 +609,14 @@ async def login(body: LoginBody, response: Response):
     svc = _get_auth_service()
 
     # Check for pending account before attempting auth
-    raw_user = svc.find_by_email(body.email)
+    raw_user = await asyncio.to_thread(svc.find_by_email, body.email)
     if raw_user and raw_user.get("status") == "pending":
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
             detail={"code": "ACCOUNT_PENDING", "message": "Please activate your account via the invite link sent to your email."},
         )
 
-    user = svc.authenticate(body.email, body.password)
+    user = await asyncio.to_thread(svc.authenticate, body.email, body.password)
 
     if not user:
         raise HTTPException(
@@ -637,7 +637,7 @@ async def login(body: LoginBody, response: Response):
             org_type = "firm" if tier == "firm" else "individual"
 
             # Try 1: match org by user's email
-            matches, _ = org_svc.list_organizations_filtered(
+            matches, _ = await asyncio.to_thread(org_svc.list_organizations_filtered,
                 org_type=org_type, q=user.get("email", ""), page=1, page_size=1,
             )
 
@@ -645,14 +645,14 @@ async def login(body: LoginBody, response: Response):
             if not matches:
                 domain = (user.get("email") or "").split("@")[-1] if "@" in (user.get("email") or "") else ""
                 if domain:
-                    all_orgs, _ = org_svc.list_organizations_filtered(
+                    all_orgs, _ = await asyncio.to_thread(org_svc.list_organizations_filtered,
                         org_type=org_type, page=1, page_size=200,
                     )
                     matches = [o for o in all_orgs if domain in (o.get("email") or "")]
 
             # Try 3: inherit org_id from a same-tier colleague who already has one
             if not matches:
-                colleagues = svc.list_users(tier=tier)
+                colleagues = await asyncio.to_thread(svc.list_users, tier=tier)
                 for c in colleagues:
                     if c.get("org_id") and c.get("email", "").split("@")[-1] == (user.get("email") or "").split("@")[-1]:
                         backfill["org_id"] = c["org_id"]
@@ -673,7 +673,7 @@ async def login(body: LoginBody, response: Response):
                 from app.etl.s3.services.operational_service import OperationalService
                 from app.rest.deps import s3_client as _s3
                 org_svc = OperationalService(_s3)
-                org_profile = org_svc.get_org_profile_raw(user["org_id"])
+                org_profile = await asyncio.to_thread(org_svc.get_org_profile_raw, user["org_id"])
                 if org_profile and org_profile.get("aict_approved"):
                     backfill["aict_approved"] = True
                     user["aict_approved"] = True
@@ -681,13 +681,13 @@ async def login(body: LoginBody, response: Response):
                 pass
             # Fallback: check if any org-mate already has aict_approved
             if not user.get("aict_approved"):
-                org_users = svc.list_users(org_id=user["org_id"])
+                org_users = await asyncio.to_thread(svc.list_users, org_id=user["org_id"])
                 if any(u.get("aict_approved") for u in org_users):
                     backfill["aict_approved"] = True
                     user["aict_approved"] = True
 
         if backfill:
-            svc.update_user(user["id"], backfill)
+            await asyncio.to_thread(svc.update_user, user["id"], backfill)
 
         # Block if still not approved (firms only — individuals do not require AICT approval)
         if tier == "firm" and not user.get("aict_approved"):
@@ -703,7 +703,7 @@ async def login(body: LoginBody, response: Response):
     access = create_access_token(claims)
     refresh = create_refresh_token(claims)
 
-    svc.store_refresh_token(user["id"], _hash_token(refresh))
+    await asyncio.to_thread(svc.store_refresh_token, user["id"], _hash_token(refresh))
     set_auth_cookies(response, access, refresh)
 
     return AuthResponse(user=_user_response(user), message="logged_in")
@@ -730,13 +730,13 @@ async def refresh(response: Response, refresh_token: Optional[str] = Cookie(None
     svc = _get_auth_service()
 
     # Validate the refresh token hash against stored value
-    if not svc.validate_refresh_token(user_id, _hash_token(refresh_token)):
+    if not await asyncio.to_thread(svc.validate_refresh_token, user_id, _hash_token(refresh_token)):
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
             detail={"code": "REVOKED_TOKEN", "message": "Refresh token has been revoked"},
         )
 
-    user = svc.find_by_id(user_id)
+    user = await asyncio.to_thread(svc.find_by_id, user_id)
     if not user:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
@@ -750,7 +750,7 @@ async def refresh(response: Response, refresh_token: Optional[str] = Cookie(None
     new_access = create_access_token(new_claims)
     new_refresh = create_refresh_token(new_claims)
 
-    svc.store_refresh_token(user_id, _hash_token(new_refresh))
+    await asyncio.to_thread(svc.store_refresh_token, user_id, _hash_token(new_refresh))
     set_auth_cookies(response, new_access, new_refresh)
 
     return AuthResponse(user=_user_response(safe_user), message="refreshed")
@@ -764,7 +764,7 @@ async def logout(
     current_user: Dict = Depends(get_current_user),
 ):
     svc = _get_auth_service()
-    svc.clear_refresh_token(current_user["id"])
+    await asyncio.to_thread(svc.clear_refresh_token, current_user["id"])
     clear_auth_cookies(response)
     return {"message": "logged_out"}
 
@@ -774,7 +774,7 @@ async def logout(
 @router.get("/me", summary="Get current authenticated user", response_model=UserResponse)
 async def me(current_user: Dict = Depends(get_current_user)):
     svc = _get_auth_service()
-    user = svc.find_by_id(current_user["id"])
+    user = await asyncio.to_thread(svc.find_by_id, current_user["id"])
 
     if not user:
         raise HTTPException(
@@ -804,7 +804,7 @@ async def list_users(
 
     if not current_user:
         # No auth cookie — dev/mock mode, return by tier param or all
-        users = svc.list_users(tier=tier)
+        users = await asyncio.to_thread(svc.list_users, tier=tier)
         return [_user_response(u) for u in users]
 
     caller_tier = current_user.get("tier", _derive_tier(current_user["role"]))
@@ -821,7 +821,7 @@ async def list_users(
         caller_org_id = current_user.get("org_id")
         # Fallback: JWT may lack org_id for users onboarded before the ULID migration
         if not caller_org_id:
-            full_user = svc.find_by_id(current_user["id"])
+            full_user = await asyncio.to_thread(svc.find_by_id, current_user["id"])
             caller_org_id = full_user.get("org_id") if full_user else None
         # Last resort: resolve org by email from the organizations index, then backfill
         if not caller_org_id:
@@ -829,15 +829,15 @@ async def list_users(
             from app.rest.deps import s3_client as _s3
             org_svc = OperationalService(_s3)
             org_type = "firm" if caller_tier == "firm" else "individual"
-            matches, _ = org_svc.list_organizations_filtered(
+            matches, _ = await asyncio.to_thread(org_svc.list_organizations_filtered,
                 org_type=org_type, q=current_user.get("email", ""), page=1, page_size=1,
             )
             if matches:
                 caller_org_id = matches[0].get("org_id")
                 # Backfill so this lookup only happens once
-                svc.update_user(current_user["id"], {"org_id": caller_org_id})
+                await asyncio.to_thread(svc.update_user, current_user["id"], {"org_id": caller_org_id})
 
-    users = svc.list_users(tier=effective_tier, org_id=caller_org_id)
+    users = await asyncio.to_thread(svc.list_users, tier=effective_tier, org_id=caller_org_id)
     return [_user_response(u) for u in users]
 
 
@@ -847,7 +847,7 @@ async def get_user(
     current_user: Optional[Dict] = Depends(get_optional_user),
 ):
     svc = _get_auth_service()
-    user = svc.find_by_id(user_id)
+    user = await asyncio.to_thread(svc.find_by_id, user_id)
 
     if not user:
         raise HTTPException(
@@ -878,7 +878,7 @@ async def update_user(
 ):
 
     svc = _get_auth_service()
-    target = svc.find_by_id(user_id)
+    target = await asyncio.to_thread(svc.find_by_id, user_id)
     if not target:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": "User not found"})
 
@@ -900,7 +900,7 @@ async def update_user(
             raise HTTPException(status.HTTP_403_FORBIDDEN, detail={"code": "CROSS_TIER", "message": "Cannot assign roles in another tier"})
 
     try:
-        updated = svc.update_user(user_id, patch)
+        updated = await asyncio.to_thread(svc.update_user, user_id, patch)
     except ValueError as e:
         raise HTTPException(
             status.HTTP_409_CONFLICT,
@@ -920,7 +920,7 @@ async def change_role(
 ):
 
     svc = _get_auth_service()
-    target = svc.find_by_id(user_id)
+    target = await asyncio.to_thread(svc.find_by_id, user_id)
     if not target:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": "User not found"})
 
@@ -949,7 +949,7 @@ async def change_role(
                 detail={"code": "CROSS_TIER", "message": "Cannot assign roles outside your tier"},
             )
 
-    updated = svc.update_user(user_id, {"role": body.role})
+    updated = await asyncio.to_thread(svc.update_user, user_id, {"role": body.role})
     if not updated:
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail={"code": "UPDATE_FAILED", "message": "Failed to update role"})
 
@@ -964,7 +964,7 @@ async def forgot_password(
 ):
     svc = _get_auth_service()
     cfg = get_auth_config()
-    user = svc.find_by_email(email)
+    user = await asyncio.to_thread(svc.find_by_email, email)
 
     # Always return success to avoid email enumeration
     if not user:
@@ -978,7 +978,7 @@ async def forgot_password(
     })
 
     # Store token hash so we can validate it later
-    svc.store_invite_token(user["id"], _hash_token(token))
+    await asyncio.to_thread(svc.store_invite_token, user["id"], _hash_token(token))
 
     reset_url = f"{cfg.frontend_base_url}/auth/reset-password?token={token}"
     _send_scenario_email(
@@ -1015,7 +1015,7 @@ async def reset_password_with_token(
         )
 
     svc = _get_auth_service()
-    user = svc.find_by_id(user_id)
+    user = await asyncio.to_thread(svc.find_by_id, user_id)
     if not user:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
@@ -1036,7 +1036,7 @@ async def reset_password_with_token(
             detail={"code": "WEAK_PASSWORD", "message": "Password must be at least 8 characters."},
         )
 
-    updated = svc.reset_password(user_id, password)
+    updated = await asyncio.to_thread(svc.reset_password, user_id, password)
     if not updated:
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1044,7 +1044,7 @@ async def reset_password_with_token(
         )
 
     # Clear the token so it can't be reused
-    svc.store_invite_token(user_id, None)
+    await asyncio.to_thread(svc.store_invite_token, user_id, None)
 
     return {"message": "Password has been reset successfully."}
 
@@ -1055,11 +1055,11 @@ async def reset_password(
     current_user: Optional[Dict] = Depends(get_optional_user),
 ):
     svc = _get_auth_service()
-    target = svc.find_by_id(user_id)
+    target = await asyncio.to_thread(svc.find_by_id, user_id)
     if not target:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": "User not found"})
 
-    updated = svc.reset_password(user_id, "Admin@123")
+    updated = await asyncio.to_thread(svc.reset_password, user_id, "Admin@123")
     if not updated:
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail={"code": "RESET_FAILED", "message": "Failed to reset password"})
 
@@ -1074,7 +1074,7 @@ async def change_password(
 ):
     svc = _get_auth_service()
     # Verify current password
-    authed = svc.authenticate(current_user["email"], current_password)
+    authed = await asyncio.to_thread(svc.authenticate, current_user["email"], current_password)
     if not authed:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
@@ -1085,7 +1085,7 @@ async def change_password(
             status.HTTP_400_BAD_REQUEST,
             detail={"code": "WEAK_PASSWORD", "message": "New password must be at least 8 characters."},
         )
-    updated = svc.reset_password(current_user["id"], new_password)
+    updated = await asyncio.to_thread(svc.reset_password, current_user["id"], new_password)
     if not updated:
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1109,7 +1109,7 @@ async def request_email_change(
     cfg = get_auth_config()
 
     # Validate org exists
-    profile = org_svc.get_org_profile_raw(org_id)
+    profile = await asyncio.to_thread(org_svc.get_org_profile_raw, org_id)
     if not profile:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": "Organisation not found."})
 
@@ -1125,7 +1125,7 @@ async def request_email_change(
     })
 
     # Store pending change on org profile
-    org_svc.merge_org_profile(org_id, {
+    await asyncio.to_thread(org_svc.merge_org_profile, org_id, {
         "pending_email": new_email.strip().lower(),
         "pending_email_token_hash": _hash_token(token),
     })
@@ -1169,7 +1169,7 @@ async def confirm_email_change(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail={"code": "INVALID_TOKEN", "message": "Malformed verification token."})
 
     org_svc = OperationalService(_s3)
-    profile = org_svc.get_org_profile_raw(org_id)
+    profile = await asyncio.to_thread(org_svc.get_org_profile_raw, org_id)
     if not profile:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": "Organisation not found."})
 
@@ -1180,7 +1180,7 @@ async def confirm_email_change(
 
     # Apply the email change
     old_email = profile.get("email", "")
-    org_svc.merge_org_profile(org_id, {
+    await asyncio.to_thread(org_svc.merge_org_profile, org_id, {
         "email": new_email,
         "pending_email": None,
         "pending_email_token_hash": None,
@@ -1188,10 +1188,10 @@ async def confirm_email_change(
 
     # Also update the auth user's email if they match the old org email
     svc = _get_auth_service()
-    auth_user = svc.find_by_email(old_email)
+    auth_user = await asyncio.to_thread(svc.find_by_email, old_email)
     if auth_user:
         try:
-            svc.update_user(auth_user["id"], {"email": new_email})
+            await asyncio.to_thread(svc.update_user, auth_user["id"], {"email": new_email})
         except ValueError as e:
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
@@ -1219,7 +1219,7 @@ async def delete_user(
         )
 
     svc = _get_auth_service()
-    target = svc.find_by_id(user_id)
+    target = await asyncio.to_thread(svc.find_by_id, user_id)
     if not target:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": "User not found"})
 
@@ -1236,5 +1236,5 @@ async def delete_user(
             detail={"code": "ADMIN_LOCKED", "message": "Cannot delete an admin account"},
         )
 
-    if not svc.delete_user(user_id):
+    if not await asyncio.to_thread(svc.delete_user, user_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"code": "NOT_FOUND", "message": "User not found"})
