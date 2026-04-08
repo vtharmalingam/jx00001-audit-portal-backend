@@ -49,6 +49,7 @@ _DEFAULT_ROLES = [
         "permissions": [
             "assessment.review", "reports.view", "reports.export", "reports.annotate",
             "onboard.create", "archived.view", "dashboard.view", "library.read", "pipeline.view",
+            "gap_analysis.view",
         ],
     },
     {
@@ -70,6 +71,7 @@ _DEFAULT_ROLES = [
         "permissions": [
             "review.opinion", "review.verdict", "review.attestation",
             "assessment.review", "reports.view", "library.read", "dashboard.view",
+            "gap_analysis.view",
         ],
     },
     {
@@ -81,6 +83,7 @@ _DEFAULT_ROLES = [
         "permissions": [
             "users.manage", "org.manage", "onboard.create", "reports.view",
             "reports.export", "archived.view", "dashboard.view", "library.read", "pipeline.view",
+            "gap_analysis.view",
         ],
     },
     {
@@ -92,6 +95,7 @@ _DEFAULT_ROLES = [
         "permissions": [
             "assessment.review", "reports.view", "reports.export", "reports.annotate",
             "onboard.create", "archived.view", "dashboard.view", "library.read", "pipeline.view",
+            "gap_analysis.view",
         ],
     },
     {
@@ -113,6 +117,7 @@ _DEFAULT_ROLES = [
         "permissions": [
             "users.manage", "org.manage", "onboard.create", "reports.view",
             "reports.export", "archived.view", "dashboard.view", "library.read", "pipeline.view",
+            "gap_analysis.view",
         ],
     },
     {
@@ -124,6 +129,7 @@ _DEFAULT_ROLES = [
         "permissions": [
             "assessment.review", "reports.view", "reports.export", "reports.annotate",
             "onboard.create", "archived.view", "dashboard.view", "library.read", "pipeline.view",
+            "gap_analysis.view",
         ],
     },
     {
