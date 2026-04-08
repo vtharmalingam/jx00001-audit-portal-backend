@@ -331,7 +331,7 @@ async def retrigger_gap_analysis(
     answer_svc = AnswerService(s3_client)
 
     answers = await asyncio.to_thread(
-        answer_svc.list_answers, org_id, audit_id, project_id, ai_system_id,
+        answer_svc.get_all_answers, org_id, audit_id, project_id, ai_system_id,
     )
     question_ids = [a["question_id"] for a in answers if a.get("question_id")]
     if not question_ids:
