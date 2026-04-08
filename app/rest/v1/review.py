@@ -52,7 +52,7 @@ async def get_review(
     user: dict = Depends(require_permission("review.opinion")),
 ):
     svc = _svc()
-    return {"review": svc.get_review(project_id)}
+    return svc.get_review_with_context(project_id)
 
 
 @router.post("/{project_id}/opinion", summary="Save per-question opinion")

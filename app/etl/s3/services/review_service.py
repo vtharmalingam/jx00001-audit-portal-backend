@@ -139,6 +139,24 @@ class ReviewService:
     def get_review(self, project_id: str) -> Dict:
         return self._load_review(project_id)
 
+    def get_review_with_context(self, org_id: str) -> Dict:
+        """Return review data together with audit identifiers from the index entry."""
+        index = self._load_index()
+        audit_context: Dict = {}
+        for entry in index:
+            if entry.get("org_id") == org_id:
+                audit_context = {
+                    "audit_id": entry.get("audit_id"),
+                    "project_id": entry.get("project_id"),
+                    "ai_system_id": entry.get("ai_system_id"),
+                    "org_name": entry.get("org_name", ""),
+                    "total_questions": entry.get("total_questions"),
+                    "gap_analysis_score": entry.get("gap_analysis_score"),
+                }
+                break
+        review = self._load_review(org_id)
+        return {"review": review, "audit_context": audit_context}
+
     def save_opinion(self, project_id: str, question_id: str, opinion: str, csap_user_id: str, note: Optional[str] = None) -> Dict:
         if opinion not in VALID_OPINIONS:
             raise ValueError(f"Invalid opinion '{opinion}'. Must be one of: {VALID_OPINIONS}")

@@ -221,12 +221,13 @@ def run_gap_analysis(
     # Create review queue entry so CSAP desk/review page shows this assessment
     try:
         from app.etl.s3.services.review_service import ReviewService
+        from app.etl.s3.services.operational_service import OperationalService as _OpSvc
         review_svc = ReviewService(s3)
-        # Use org_id as project_id for the review (matches how review router works)
+        org_profile = _OpSvc(s3).get_org_profile_raw(org_id) or {}
         review_svc._upsert_index_entry(org_id, {
             "status": "in_review",
             "org_id": org_id,
-            "org_name": "",
+            "org_name": org_profile.get("name", ""),
             "audit_id": audit_id,
             "project_id": project_id,
             "ai_system_id": ai_system_id,

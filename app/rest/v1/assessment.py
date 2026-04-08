@@ -1,5 +1,6 @@
 """Assessment API: categories, questions, answers, evaluation, audit views, reviews."""
 
+import asyncio
 import base64
 import logging
 from typing import Optional
@@ -205,7 +206,8 @@ async def get_audit_view(
         ai_system_id=ai_system_id,
     )
     try:
-        result = ReportService(s3_client).get_full_audit_view(
+        result = await asyncio.to_thread(
+            ReportService(s3_client).get_full_audit_view,
             org_id,
             audit_id,
             project_id=project_id,
