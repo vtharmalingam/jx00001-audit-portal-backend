@@ -5,6 +5,7 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import Response
 
 from app.auth.permissions import require_permission
 
@@ -384,6 +385,33 @@ async def fetch_evidence(
         "total": total,
         "evidence_index": index,
     }
+
+
+@router.get("/evidence/download", summary="Download an evidence file by its S3 key")
+async def download_evidence(
+    s3_key: str = Query(..., description="S3 object key returned in the evidence index"),
+):
+    import mimetypes
+
+    try:
+        data = s3_client.get_bytes(s3_key)
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail={"code": "EVIDENCE_NOT_FOUND", "message": str(e)},
+        ) from e
+    if not data:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail={"code": "EVIDENCE_NOT_FOUND", "message": "File not found or empty"},
+        )
+    file_name = s3_key.rsplit("/", 1)[-1] if "/" in s3_key else s3_key
+    content_type = mimetypes.guess_type(file_name)[0] or "application/octet-stream"
+    return Response(
+        content=data,
+        media_type=content_type,
+        headers={"Content-Disposition": f'inline; filename="{file_name}"'},
+    )
 
 
 # ── Category CRUD ──────────────────────────────────────────────────────────
