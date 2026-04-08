@@ -397,3 +397,55 @@ async def list_ai_systems(
         )
     systems = svc.filter_ai_systems(org_id, status=status_filter, stage=stage)
     return {"org_id": org_id, "systems": systems, "total": len(systems)}
+
+
+@router.patch(
+    "/{org_id}/ai-systems/{system_id}",
+    summary="Update an AI system",
+)
+async def update_ai_system(org_id: str, system_id: str, body: AiSystemCreateBody):
+    import asyncio
+
+    svc = _svc()
+    if org_id not in svc.iter_org_ids():
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail={"code": "NOT_FOUND", "message": f"Unknown org_id: {org_id}"},
+        )
+    # system_id from the URL may be a composite "{org_id}-{project_id}-{raw_id}" or plain raw id
+    raw_system_id = system_id.split("-")[-1] if "-" in system_id else system_id
+    # Resolve project_id — prefer explicit body field, otherwise discover from index
+    project_id = body.project_id or ""
+    if not project_id:
+        systems = await asyncio.to_thread(svc.list_ai_systems, org_id)
+        match = next(
+            (s for s in systems if str(s.get("system_id", "")) == raw_system_id),
+            None,
+        )
+        if not match:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                detail={"code": "NOT_FOUND", "message": f"AI system '{system_id}' not found under org '{org_id}'"},
+            )
+        project_id = str(match.get("project_id", ""))
+
+    patch: dict = {}
+    if body.description is not None:
+        patch["description"] = body.description
+    if body.manager is not None:
+        patch["manager"] = body.manager.model_dump() if hasattr(body.manager, "model_dump") else body.manager
+    if body.practitioner is not None:
+        patch["practitioner"] = body.practitioner.model_dump() if hasattr(body.practitioner, "model_dump") else body.practitioner
+    if body.status is not None:
+        patch["status"] = body.status
+    if body.stage is not None:
+        patch["stage"] = body.stage
+
+    try:
+        updated = await asyncio.to_thread(svc.update_ai_system, org_id, project_id, raw_system_id, patch)
+    except ValueError as exc:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail={"code": "NOT_FOUND", "message": str(exc)},
+        ) from exc
+    return {"system": updated}
