@@ -1,5 +1,6 @@
 """Auth user service — S3-backed user storage with password hashing."""
 
+import threading
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -7,6 +8,9 @@ from ulid import ULID
 
 from app.auth.passwords import hash_password, verify_password
 from app.etl.s3.utils.s3_paths import _prefix
+
+# Global lock to serialise read-modify-write on auth_users.json
+_auth_users_lock = threading.Lock()
 
 '''
 -------------------------------------------------------------------------------------------------------------
@@ -138,29 +142,33 @@ class AuthUserService:
         onboarded_by_id: Optional[str] = None,
         aict_approved: Optional[bool] = None,
     ) -> Dict[str, Any]:
-        if self.find_by_email(email):
-            raise ValueError(f"Email already registered: {email}")
+        email_lower = email.lower()
 
-        users = self._load()
-        now = datetime.utcnow().isoformat()
-        user = {
-            "id": user_id or str(ULID()).upper(),
-            "name": name,
-            "email": email.lower(),
-            "password_hash": hash_password(password) if password else None,
-            "role": role,
-            "tier": self._derive_tier(role),
-            "status": status,
-            "org_id": org_id,
-            "onboarded_by_id": onboarded_by_id,
-            "aict_approved": aict_approved,
-            "invite_token_hash": invite_token_hash,
-            "refresh_token_hash": None,
-            "created_at": now,
-            "updated_at": now,
-        }
-        users.append(user)
-        self._save(users)
+        with _auth_users_lock:
+            # Re-read inside the lock to prevent race conditions
+            users = self._load()
+            if any(u.get("email", "").lower() == email_lower for u in users):
+                raise ValueError(f"Email already registered: {email}")
+
+            now = datetime.utcnow().isoformat()
+            user = {
+                "id": user_id or str(ULID()).upper(),
+                "name": name,
+                "email": email_lower,
+                "password_hash": hash_password(password) if password else None,
+                "role": role,
+                "tier": self._derive_tier(role),
+                "status": status,
+                "org_id": org_id,
+                "onboarded_by_id": onboarded_by_id,
+                "aict_approved": aict_approved,
+                "invite_token_hash": invite_token_hash,
+                "refresh_token_hash": None,
+                "created_at": now,
+                "updated_at": now,
+            }
+            users.append(user)
+            self._save(users)
         return self._safe_user(user)
 
     def create_pending_user(
@@ -224,25 +232,36 @@ class AuthUserService:
 
     def update_user(self, user_id: str, patch: Dict[str, Any]) -> Optional[Dict]:
         """Update user fields (name, email, role). Recalculates tier on role change."""
-        users = self._load()
-        for user in users:
-            if user["id"] == user_id:
-                for key in ("name", "email", "role", "org_id", "onboarded_by_id", "aict_approved"):
-                    if key in patch and patch[key] is not None:
-                        user[key] = patch[key]
-                if "role" in patch and patch["role"]:
-                    user["tier"] = self._derive_tier(patch["role"])
-                user["updated_at"] = datetime.utcnow().isoformat()
-                self._save(users)
-                return self._safe_user(user)
+        with _auth_users_lock:
+            users = self._load()
+
+            # If email is being changed, check for duplicates across all users
+            new_email = patch.get("email")
+            if new_email:
+                new_email_lower = new_email.lower()
+                for u in users:
+                    if u["id"] != user_id and u.get("email", "").lower() == new_email_lower:
+                        raise ValueError(f"Email already registered: {new_email}")
+
+            for user in users:
+                if user["id"] == user_id:
+                    for key in ("name", "email", "role", "org_id", "onboarded_by_id", "aict_approved"):
+                        if key in patch and patch[key] is not None:
+                            user[key] = patch[key].lower() if key == "email" else patch[key]
+                    if "role" in patch and patch["role"]:
+                        user["tier"] = self._derive_tier(patch["role"])
+                    user["updated_at"] = datetime.utcnow().isoformat()
+                    self._save(users)
+                    return self._safe_user(user)
         return None
 
     def delete_user(self, user_id: str) -> bool:
-        users = self._load()
-        filtered = [u for u in users if u["id"] != user_id]
-        if len(filtered) == len(users):
-            return False
-        self._save(filtered)
+        with _auth_users_lock:
+            users = self._load()
+            filtered = [u for u in users if u["id"] != user_id]
+            if len(filtered) == len(users):
+                return False
+            self._save(filtered)
         return True
 
     def authenticate(self, email: str, password: str) -> Optional[Dict]:

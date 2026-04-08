@@ -899,7 +899,13 @@ async def update_user(
         if current_user and not _same_tier(current_user["role"], new_role) and _derive_tier(current_user["role"]) != "aict":
             raise HTTPException(status.HTTP_403_FORBIDDEN, detail={"code": "CROSS_TIER", "message": "Cannot assign roles in another tier"})
 
-    updated = svc.update_user(user_id, patch)
+    try:
+        updated = svc.update_user(user_id, patch)
+    except ValueError as e:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail={"code": "DUPLICATE_EMAIL", "message": str(e)},
+        ) from e
     if not updated:
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail={"code": "UPDATE_FAILED", "message": "Failed to update user"})
 
@@ -1184,7 +1190,13 @@ async def confirm_email_change(
     svc = _get_auth_service()
     auth_user = svc.find_by_email(old_email)
     if auth_user:
-        svc.update_user(auth_user["id"], {"email": new_email})
+        try:
+            svc.update_user(auth_user["id"], {"email": new_email})
+        except ValueError as e:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail={"code": "DUPLICATE_EMAIL", "message": str(e)},
+            ) from e
 
     return {
         "message": "Email changed successfully.",
