@@ -374,7 +374,7 @@ async def get_gap_report(
 ):
     _verify_gap_access(user, org_id)
     svc = _svc()
-    report = svc.get_gap_report(org_id, audit_id, project_id, ai_system_id)
+    report = await asyncio.to_thread(svc.get_gap_report, org_id, audit_id, project_id, ai_system_id)
     if not report:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail={"message": "Gap report not found"})
     return {"report": report}
