@@ -86,3 +86,18 @@ class EvidenceRegisterBody(BaseModel):
         if v is None or v == "":
             return None
         return v
+
+
+class EvidenceBatchItem(BaseModel):
+    file_name: str
+    content_base64: str
+
+
+class EvidenceBatchBody(BaseModel):
+    org_id: str
+    audit_id: str
+    question_id: str
+    project_id: str
+    ai_system_id: str
+    uploaded_by: str = "practitioner"
+    files: List[EvidenceBatchItem]

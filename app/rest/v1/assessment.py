@@ -21,6 +21,7 @@ from app.rest.v1.assessment_schemas import (
     CreateCategoryBody,
     CreateQuestionBody,
     EvaluateAnswerBody,
+    EvidenceBatchBody,
     EvidenceRegisterBody,
     SaveAnswerBody,
     SaveReviewBody,
@@ -42,6 +43,18 @@ async def list_categories():
         )
     loader = CategoryQuestionLoader(data_dir)
     return {"categories": loader.list_categories()}
+
+
+@router.get("/categories/full", summary="All categories with questions (parallel load)")
+async def list_categories_full():
+    if not data_dir:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "CONFIG", "message": "data_dir is not configured"},
+        )
+    loader = CategoryQuestionLoader(data_dir)
+    result = await asyncio.to_thread(loader.load_all)
+    return {"categories": result}
 
 
 @router.get("/questions", summary="Load questions for a category")
@@ -320,7 +333,8 @@ async def register_evidence(body: EvidenceRegisterBody):
         ai_system_id=body.ai_system_id,
     )
     try:
-        entry = EvidenceService(s3_client).register_evidence(
+        entry = await asyncio.to_thread(
+            EvidenceService(s3_client).register_evidence,
             body.org_id,
             body.audit_id,
             body.question_id,
@@ -339,6 +353,44 @@ async def register_evidence(body: EvidenceRegisterBody):
     return {"status": True, "evidence": entry}
 
 
+@router.post("/evidence/batch", summary="Upload multiple evidence files in parallel")
+async def register_evidence_batch(body: EvidenceBatchBody):
+    if not body.files:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"code": "VALIDATION", "message": "No files provided"},
+        )
+    enforce_strict_audit_scope(
+        body.org_id, body.audit_id,
+        project_id=body.project_id, ai_system_id=body.ai_system_id,
+    )
+    decoded_files = []
+    for f in body.files:
+        try:
+            decoded_files.append({
+                "file_name": f.file_name,
+                "body": base64.b64decode(f.content_base64),
+            })
+        except Exception as e:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_BASE64", "message": f"{f.file_name}: {e}"},
+            ) from e
+    try:
+        entries = await asyncio.to_thread(
+            EvidenceService(s3_client).register_evidence_batch,
+            body.org_id, body.audit_id, body.question_id,
+            files=decoded_files, uploaded_by=body.uploaded_by,
+            project_id=body.project_id, ai_system_id=body.ai_system_id,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "EVIDENCE_BATCH_FAILED", "message": str(e)},
+        ) from e
+    return {"status": True, "evidences": entries, "count": len(entries)}
+
+
 @router.get("/evidence", summary="Fetch evidence entries for an audit scope")
 async def fetch_evidence(
     org_id: str = Query(...),
@@ -354,7 +406,8 @@ async def fetch_evidence(
         ai_system_id=ai_system_id,
     )
     try:
-        index = EvidenceService(s3_client).list_index(
+        index = await asyncio.to_thread(
+            EvidenceService(s3_client).list_index,
             org_id,
             audit_id,
             project_id=project_id,

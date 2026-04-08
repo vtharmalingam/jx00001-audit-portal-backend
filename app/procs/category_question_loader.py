@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List
 
 
@@ -71,6 +72,21 @@ class CategoryQuestionLoader:
 
         categories.sort(key=lambda c: c["category_id"])
         return categories
+
+    def load_all(self) -> List[Dict]:
+        """Load all categories with their questions in parallel using ThreadPoolExecutor."""
+        cats = self.list_categories()
+        if not cats:
+            return []
+
+        def _load_one(cat_id: str) -> Dict:
+            return self.load_category(cat_id)
+
+        with ThreadPoolExecutor(max_workers=min(len(cats), 8)) as pool:
+            results = list(pool.map(_load_one, [c["category_id"] for c in cats]))
+
+        results.sort(key=lambda c: c.get("category_id", ""))
+        return results
 
     # ---------------------------------------------------------
     # CATEGORY CRUD
