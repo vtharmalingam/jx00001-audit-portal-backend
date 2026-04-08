@@ -1,5 +1,6 @@
 """Pipeline REST API: board view, assessment submission, gap analysis progress."""
 
+import asyncio
 import logging
 from typing import Optional
 
@@ -167,93 +168,95 @@ async def submit_assessment(
     body: SubmitAssessmentBody,
     user: dict = Depends(require_permission("assessment.fill")),
 ):
-    svc = _svc()
-    answer_svc = AnswerService(s3_client)
+    def _do_submit():
+        """All S3 I/O runs in a thread so the async event loop is not blocked."""
+        svc = _svc()
+        answer_svc = AnswerService(s3_client)
 
-    # Lock all draft answers
-    answers = answer_svc.get_all_answers(
-        org_id=body.org_id,
-        audit_id=body.audit_id,
-        project_id=body.project_id,
-        ai_system_id=body.ai_system_id, #!unique across platform
-    )
+        # Fetch all answers for the scope
+        answers = answer_svc.get_all_answers(
+            org_id=body.org_id,
+            audit_id=body.audit_id,
+            project_id=body.project_id,
+            ai_system_id=body.ai_system_id,
+        )
 
-    if not answers:
+        if not answers:
+            return None  # signal: no answers
+
+        question_ids = [a["question_id"] for a in answers if a.get("question_id")]
+
+        # Bulk-update all answers to "submitted" in one pass
+        submitted_count = answer_svc.bulk_set_state(
+            org_id=body.org_id,
+            audit_id=body.audit_id,
+            project_id=body.project_id,
+            ai_system_id=body.ai_system_id,
+            answers=answers,
+            new_state="submitted",
+        )
+
+        now = utc_now()
+
+        # Transition pipeline: In Progress → AI Gap Analysis
+        rec = svc.transition_stage(
+            body.org_id,
+            PipelineStage.AI_GAP_ANALYSIS,
+            body.audit_id,
+            body.project_id,
+            body.ai_system_id,
+            submitted_at=now,
+            gap_analysis_status=GapAnalysisStatus.PENDING.value,
+            gap_analysis_total=len(question_ids),
+            gap_analysis_completed=0,
+            gap_analysis_progress=0,
+            answered_questions=submitted_count,
+            total_questions=len(question_ids),
+        )
+
+        # Update org profile stage
+        try:
+            from app.etl.s3.services.operational_service import OperationalService
+            org_svc = OperationalService(s3_client)
+            org_svc.merge_org_profile(body.org_id, {"stage": PipelineStage.AI_GAP_ANALYSIS.value})
+        except Exception as e:
+            logger.warning("Failed to update org stage: %s", e)
+
+        # Dispatch Celery task for gap analysis
+        try:
+            from app.pipeline.tasks import run_gap_analysis
+            task = run_gap_analysis.delay(
+                org_id=body.org_id,
+                audit_id=body.audit_id,
+                project_id=body.project_id,
+                ai_system_id=body.ai_system_id,
+                question_ids=question_ids,
+            )
+            rec["gap_analysis_task_id"] = task.id
+            rec["gap_analysis_status"] = GapAnalysisStatus.RUNNING.value
+            rec["gap_analysis_started_at"] = now
+            svc.upsert_record(rec)
+            logger.info("Gap analysis task dispatched: %s for org=%s", task.id, body.org_id)
+        except Exception as e:
+            logger.error("Failed to dispatch gap analysis task: %s", e)
+            rec["gap_analysis_status"] = GapAnalysisStatus.FAILED.value
+            svc.upsert_record(rec)
+
+        return {"submitted_count": submitted_count, "pipeline": rec}
+
+    # Run all blocking S3/Redis I/O off the event loop
+    result = await asyncio.to_thread(_do_submit)
+
+    if result is None:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             detail={"code": "NO_ANSWERS", "message": "No answers found to submit"},
         )
 
-    submitted_count = 0
-    question_ids = []
-    for ans in answers:
-        qid = ans.get("question_id")
-        if not qid:
-            continue
-        question_ids.append(qid)
-        if ans.get("state") in ("draft", "submitted"):
-            answer_svc.upsert_answer(
-                org_id=body.org_id,
-                audit_id=body.audit_id,
-                project_id=body.project_id,
-                ai_system_id=body.ai_system_id,
-                question_id=qid,
-                answer=ans.get("answer", ""),
-                state="submitted",
-            )
-            submitted_count += 1
-
-    now = utc_now()
-
-    # Transition pipeline: In Progress → AI Gap Analysis
-    rec = svc.transition_stage(
-        body.org_id,
-        PipelineStage.AI_GAP_ANALYSIS,
-        body.audit_id,
-        body.project_id,
-        body.ai_system_id,
-        submitted_at=now,
-        gap_analysis_status=GapAnalysisStatus.PENDING.value,
-        gap_analysis_total=len(question_ids),
-        gap_analysis_completed=0,
-        gap_analysis_progress=0,
-        answered_questions=submitted_count,
-        total_questions=len(question_ids),
-    )
-
-    # Also update org profile stage
-    try:
-        from app.etl.s3.services.operational_service import OperationalService
-        org_svc = OperationalService(s3_client)
-        org_svc.merge_org_profile(body.org_id, {"stage": PipelineStage.AI_GAP_ANALYSIS.value})
-    except Exception as e:
-        logger.warning("Failed to update org stage: %s", e)
-
-    # Dispatch Celery task for gap analysis
-    try:
-        from app.pipeline.tasks import run_gap_analysis
-        task = run_gap_analysis.delay(
-            org_id=body.org_id,
-            audit_id=body.audit_id,
-            project_id=body.project_id,
-            ai_system_id=body.ai_system_id,
-            question_ids=question_ids,
-        )
-        # Save task ID for progress tracking
-        rec["gap_analysis_task_id"] = task.id
-        rec["gap_analysis_status"] = GapAnalysisStatus.RUNNING.value
-        rec["gap_analysis_started_at"] = now
-        svc.upsert_record(rec)
-        logger.info("Gap analysis task dispatched: %s for org=%s", task.id, body.org_id)
-    except Exception as e:
-        logger.error("Failed to dispatch gap analysis task: %s", e)
-        rec["gap_analysis_status"] = GapAnalysisStatus.FAILED.value
-        svc.upsert_record(rec)
-
     return {
         "status": True,
-        "message": f"Assessment submitted. {submitted_count} answers locked. Gap analysis initiated.",
-        "pipeline": rec,
+        "message": f"Assessment submitted. {result['submitted_count']} answers locked. Gap analysis initiated.",
+        "pipeline": result["pipeline"],
     }
 
 

@@ -144,6 +144,64 @@ class AnswerService:
         # Step 6 — Return the same payload that was written (API / callers).
         return data
 
+    def bulk_set_state(
+        self,
+        org_id: str,
+        audit_id: str,
+        project_id: str,
+        ai_system_id: str,
+        answers: List[Dict],
+        new_state: str = "submitted",
+    ) -> int:
+        """
+        Batch-update state on pre-fetched answers. Writes each answer JSON
+        and rebuilds the index once at the end — much faster than calling
+        upsert_answer per question (skips per-answer index sync and lifecycle).
+        """
+        now = utc_now()
+        count = 0
+        index_items = []
+
+        for ans in answers:
+            qid = ans.get("question_id")
+            if not qid:
+                continue
+            key = answer_key(org_id, audit_id, qid, project_id, ai_system_id)
+            version = (ans.get("version") or 0) + 1
+            attachments = ans.get("attachments") if isinstance(ans, dict) else None
+            if not isinstance(attachments, list):
+                attachments = []
+            data = {
+                "question_id": qid,
+                "answer": ans.get("answer", ""),
+                "state": new_state,
+                "version": version,
+                "attachments": attachments,
+                "last_updated_at": now,
+                "last_updated_by": "system",
+            }
+            self.s3.write_json(key, data)
+            index_items.append({"question_id": qid, "version": version, "state": new_state})
+            count += 1
+
+        # Rebuild index once
+        if index_items:
+            idx_key = answers_index_key(org_id, audit_id, project_id, ai_system_id)
+            self.s3.write_json(idx_key, {"items": index_items, "updated_at": now})
+
+        # Single lifecycle event for the whole submission
+        if count > 0:
+            AuditLifecycleService(self.s3).touch_after_mutation(
+                org_id, audit_id,
+                project_id=project_id,
+                ai_system_id=ai_system_id,
+                action="bulk_submitted",
+                question_id=f"{count}_questions",
+                version=0,
+                actor="system",
+            )
+        return count
+
     def get_answer(
         self,
         org_id: str,
