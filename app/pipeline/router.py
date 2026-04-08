@@ -316,6 +316,67 @@ async def get_gap_progress(
     }
 
 
+# ── Manual re-trigger ─────────────────────────────────────────────────────────
+
+
+@router.post("/retrigger-gap-analysis", summary="Admin: re-trigger gap analysis for a stuck assessment")
+async def retrigger_gap_analysis(
+    org_id: str = Query(...),
+    audit_id: str = Query(...),
+    project_id: str = Query(..., min_length=3, max_length=3),
+    ai_system_id: str = Query(..., min_length=4, max_length=4),
+    user: dict = Depends(require_permission("pipeline.view")),
+):
+    svc = _svc()
+    answer_svc = AnswerService(s3_client)
+
+    answers = await asyncio.to_thread(
+        answer_svc.list_answers, org_id, audit_id, project_id, ai_system_id,
+    )
+    question_ids = [a["question_id"] for a in answers if a.get("question_id")]
+    if not question_ids:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"code": "NO_ANSWERS", "message": "No answers found for this scope"},
+        )
+
+    now = utc_now()
+    svc.transition_stage(
+        org_id, PipelineStage.AI_GAP_ANALYSIS, audit_id, project_id, ai_system_id,
+        gap_analysis_status=GapAnalysisStatus.PENDING.value,
+        gap_analysis_total=len(question_ids),
+        gap_analysis_completed=0,
+        gap_analysis_progress=0,
+    )
+
+    try:
+        from app.pipeline.tasks import run_gap_analysis
+        task = run_gap_analysis.delay(
+            org_id=org_id, audit_id=audit_id,
+            project_id=project_id, ai_system_id=ai_system_id,
+            question_ids=question_ids,
+        )
+        rec = svc.get_record(org_id, audit_id, project_id, ai_system_id)
+        rec["gap_analysis_task_id"] = task.id
+        rec["gap_analysis_status"] = GapAnalysisStatus.RUNNING.value
+        rec["gap_analysis_started_at"] = now
+        svc.upsert_record(rec)
+        logger.info("Gap analysis re-triggered: %s for org=%s (%d questions)", task.id, org_id, len(question_ids))
+    except Exception as e:
+        logger.error("Failed to dispatch gap analysis: %s", e)
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "DISPATCH_FAILED", "message": str(e)},
+        ) from e
+
+    return {
+        "status": True,
+        "message": f"Gap analysis re-triggered for {len(question_ids)} questions.",
+        "task_id": task.id,
+        "question_count": len(question_ids),
+    }
+
+
 # ── Gap report ──────────────────────────────────────────────────────────────
 
 

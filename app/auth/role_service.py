@@ -59,7 +59,7 @@ _DEFAULT_ROLES = [
         "level": "practitioner",
         "description": "Fills assessments for assigned AI systems and clients.",
         "permissions": [
-            "assessment.fill", "dashboard.view", "library.read", "desk.assigned",
+            "assessment.fill", "dashboard.view", "library.read", "desk.assigned", "pipeline.view",
         ],
     },
     {
@@ -105,7 +105,7 @@ _DEFAULT_ROLES = [
         "level": "practitioner",
         "description": "Fills assessment declarations for assigned organisations.",
         "permissions": [
-            "assessment.fill", "dashboard.view", "library.read", "desk.assigned",
+            "assessment.fill", "dashboard.view", "library.read", "desk.assigned", "pipeline.view",
         ],
     },
     {
@@ -139,7 +139,7 @@ _DEFAULT_ROLES = [
         "level": "practitioner",
         "description": "Fills assessment declarations for own organisation.",
         "permissions": [
-            "assessment.fill", "dashboard.view", "library.read", "desk.assigned",
+            "assessment.fill", "dashboard.view", "library.read", "desk.assigned", "pipeline.view",
         ],
     },
 ]
